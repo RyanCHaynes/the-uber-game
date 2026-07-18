@@ -67,6 +67,22 @@ test('active-level drift and mismatched control provenance hide the panel fail-c
   });
 });
 
+test('canonical verifier hides relabeled scores and evaluator identity drift', () => {
+  const cases = [
+    (lines) => { lines[0].score = 8000; },
+    (lines) => { lines[1].score = 9000; lines[3].score = 9000; },
+    (lines) => { lines[0].evaluator = 'other-evaluator/v1'; },
+  ];
+  for (const mutate of cases) {
+    withFiles(({ history, active }) => {
+      const lines = readFileSync(history, 'utf8').split('\n').filter(Boolean).map((line) => JSON.parse(line));
+      mutate(lines);
+      writeFileSync(history, `${lines.map((line) => JSON.stringify(line)).join('\n')}\n`);
+      assert.equal(readTokenRushLevelEvolution({ historyFile: history, activeLevelFile: active }), null);
+    });
+  }
+});
+
 test('Vite virtual module contains only the validated read-only summary', () => {
   const plugin = tokenRushLevelEvolutionPlugin({ historyFile, activeLevelFile });
   const resolved = plugin.resolveId(TOKEN_RUSH_LEVEL_EVOLUTION_MODULE);
