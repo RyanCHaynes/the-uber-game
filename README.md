@@ -9,7 +9,8 @@ The original native C++/SFML implementation is preserved at Git tag
 
 The accepted design boundary for the next major version is recorded in
 [ADR 0001: Coin Rush vNext engine and Designer
-boundary](docs/architecture/0001-vnext-engine-and-designer-boundary.md).
+boundary](docs/architecture/0001-vnext-engine-and-designer-boundary.md), with unified solo/party behavior in
+[ADR 0002: single-player and multiplayer session semantics](docs/architecture/0002-single-and-multiplayer-session-semantics.md).
 
 ## Architecture
 
