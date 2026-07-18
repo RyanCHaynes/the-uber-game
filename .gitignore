@@ -1,7 +1,9 @@
-/build/
-/.cache/
+node_modules/
+dist/
+.env
 .DS_Store
 coinrush-server.log
 coinrush-server.pid
 __pycache__/
 *.pyc
+npm-debug.log*
