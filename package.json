@@ -9,6 +9,7 @@
   "scripts": {
     "build": "vite build",
     "start": "node server/index.js",
+    "evaluate:token-rush": "node scripts/token-rush-fixed-evaluator.mjs",
     "test": "node --test",
     "check": "npm run build && npm test"
   },
