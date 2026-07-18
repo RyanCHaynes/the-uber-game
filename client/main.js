@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import './style.css';
 
+import { ACTION_PROTOCOL } from '../shared/action-protocol.js';
 import { GAME, PLAYER_COLORS, SERVER_MESSAGE, TILE } from '../shared/game.js';
 import { prepareLevel } from '../shared/level.js';
-import { updateInputFromKeyboard } from './input.js';
+import { ActionInputController, createActionIntentPump } from './action-input.js';
 
 const elements = Object.fromEntries([
   'setup', 'lobby', 'hud', 'winner', 'error', 'player-name', 'join-button',
@@ -21,7 +22,8 @@ let latestSnapshot = null;
 let localReady = false;
 let gameActive = false;
 
-const input = { up: false, down: false, left: false, right: false };
+const actionInput = new ActionInputController();
+const actionPump = createActionIntentPump({ controller: actionInput, send });
 const renderer = new THREE.WebGLRenderer({ canvas: elements['game-canvas'], antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -74,7 +76,7 @@ function connect() {
   intentionalClose = false;
   errorVisible = false;
   socket = new WebSocket(websocketUrl());
-  socket.addEventListener('open', () => send({ type: 'hello', name }));
+  socket.addEventListener('open', () => send({ type: 'hello', name, protocol: ACTION_PROTOCOL }));
   socket.addEventListener('message', ({ data }) => {
     try {
       handleMessage(JSON.parse(data));
@@ -101,6 +103,7 @@ function handleMessage(message) {
   if (!message || typeof message.type !== 'string') throw new Error('missing message type');
   switch (message.type) {
     case SERVER_MESSAGE.WELCOME:
+      if (message.protocol !== ACTION_PROTOCOL) throw new Error('action protocol negotiation failed');
       myId = message.id;
       return;
     case SERVER_MESSAGE.LEVEL:
@@ -336,7 +339,7 @@ function resetConnectionButton() {
 }
 
 function clearInput() {
-  for (const key of Object.keys(input)) input[key] = false;
+  actionPump.clear();
 }
 
 function resetSession() {
@@ -347,7 +350,7 @@ function resetSession() {
   localReady = false;
   gameActive = false;
   errorVisible = false;
-  clearInput();
+  actionPump.reset();
 }
 
 function leave() {
@@ -359,19 +362,19 @@ function leave() {
 
 for (const eventName of ['keydown', 'keyup']) {
   window.addEventListener(eventName, (event) => {
-    updateInputFromKeyboard(event, eventName, input);
+    actionInput.handleKeyboard(event, eventName);
   });
 }
 window.addEventListener('blur', clearInput);
 document.addEventListener('focusin', (event) => {
-  if (event.target?.closest?.('input, textarea, select, [contenteditable="true"]')) clearInput();
+  if (event.target?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"])')) clearInput();
 });
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) clearInput();
 });
 setInterval(() => {
-  if (gameActive) send({ type: 'input', input });
-}, 33);
+  if (gameActive) actionPump.flush();
+}, Math.ceil(1000 / 30));
 
 const savedName = localStorage.getItem('coinrush-name');
 if (savedName) elements['player-name'].value = savedName.slice(0, 18);
