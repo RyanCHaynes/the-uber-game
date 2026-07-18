@@ -110,18 +110,26 @@ The Engine may use a database inside `registry/`, but the database and its trans
 
 ### 4.1 Ownership template
 
-Equivalent ACLs are allowed only when tests prove the same boundary. The default template is:
+Each producer has one dedicated exchange group, `coinrush-xchg-<producerId>`, whose only members are that producer UID and the distinct Engine service UID. The group grants shared access only inside that producer's inbox and read-only outbox; it grants no access to another producer or to Engine claims, snapshots, revisions, registry, active/rollback records, temporary output, or quarantine.
 
-| Path class | Owner | Producer access | Required property |
+The normative Linux template is:
+
+| Path class | Owner:group | Exact mode | Effective rights |
 | --- | --- | --- | --- |
-| `exchange-v1/` | Engine | traverse only to assigned roots | not producer-writable |
-| `inbox/<producerId>/staging` | producer, Engine-readable group | read/write/rename | isolated per producer |
-| `inbox/<producerId>/ready` | producer, Engine-readable group | publish/remove own offers | remains untrusted |
-| `claims`, `snapshot-tmp`, `store`, `registry`, `quarantine` | Engine | none | mode `0700` or stricter equivalent |
-| `outbox-tmp` | Engine | none | mode `0700` |
-| `outbox/<producerId>` final tree | Engine, producer-readable group | read/traverse only | directories no more permissive than `0750`, files `0440` |
+| `exchange-v1/`, `inbox/`, `outbox/` | Engine:Engine-private | `0711` | Engine `rwx`; local identities may traverse known assigned paths but cannot list or write |
+| `claims/`, `snapshot-tmp/`, `store/`, `registry/`, `outbox-tmp/`, `quarantine/` | Engine:Engine-private | `0700` | Engine only |
+| `inbox/<producerId>/` | Engine:`coinrush-xchg-<producerId>` | `0710` | assigned producer may traverse only |
+| `inbox/<producerId>/staging/` | producer:`coinrush-xchg-<producerId>` | `02750` | producer `rwx`; Engine `r-x`; setgid preserves group |
+| staging offer directories / regular files | producer:`coinrush-xchg-<producerId>` | directories `02750`; files `0640` | producer writes; Engine can later traverse/read exact bytes |
+| `inbox/<producerId>/ready/` | producer:`coinrush-xchg-<producerId>` | `02770`, **no sticky bit** | producer can publish/remove; Engine has the `rwx` required to list and rename claims |
+| `claims/<producerId>/` | Engine:Engine-private | `0700` | Engine only; moved offer retains readable exchange group but producer cannot traverse this parent |
+| `outbox/<producerId>/` final tree | Engine:`coinrush-xchg-<producerId>` | directories `02750`; files `0440` | Engine writes; assigned producer can read/traverse only |
 
-The Engine must not run with the producer UID, and the producer must not be placed in a group that can write Engine-owned paths. Root is not used to compensate for a broken ownership layout.
+A platform ACL may replace this mode template only if it grants the Engine effective `rwx` on `ready/`, producer `rwx` on `staging/` and `ready/`, producer read/traverse but never write on final outbox, and no producer access to Engine-owned paths. The `ready/` sticky bit is forbidden because it can deny the Engine's cross-UID claim rename. ACL masks or deny entries may not remove the Engine's source-parent `rwx` or grant producer write outside its inbox.
+
+At install and startup, the Engine verifies distinct UIDs, expected owner/group/mode, no sticky bit or conflicting ACL, same-device parents, Engine effective `rwx` on `ready/`, and Engine-only effective rights on claims/store/registry. Any mismatch fails content intake closed; root or a shared UID is not used to compensate for a broken ownership layout.
+
+The producer must not be placed in any group that can write Engine-owned paths. Moving an offered directory changes only its pathname and authority domain, not its hostile status; the immutable copy-and-digest protocol remains mandatory because a producer may retain an open descriptor.
 
 ## 5. Canonical identifiers and paths
 
@@ -445,7 +453,7 @@ Implementation cannot close this contract from documentation alone. Automated an
 8. Envelope, inventory, file, content-manifest, revision, report, receipt, and request digests are independently recomputed and exact.
 9. Same-offer retries return prior receipts; same idempotency key with different bytes rejects `attempt_conflict`; no final path is overwritten.
 10. Two concurrent valid offers receive unique durable receipt sequences. ADR 0005's recorded selection key chooses exactly one and replay chooses the same digest.
-11. Producer permissions cannot write claims, snapshots, revisions, registry, active/rollback records, or final outbox bytes. Browser/runtime identities cannot write inbox.
+11. A real two-UID Linux fixture installs the exact mode/group template, then proves: producer staging write and no-replace ready publication succeed; the distinct non-root Engine can list and no-replace rename that offer into claims; the producer cannot traverse the claimed path or write claims, snapshots, revisions, registry, active/rollback records, or final outbox bytes; another producer and browser/runtime identity cannot read that inbox or write any inbox. The same fixture fails startup when Engine `rwx` is removed, a sticky bit is added to `ready/`, or an ACL mask denies the claim rename.
 12. Request, report, and receipt publication is invisible until final rename. A producer never observes a partial final output.
 13. Crash at every claim/snapshot/outbox/staging/activation boundary recovers to the documented state without duplicate effects, mixed revisions, or active-pointer loss.
 14. Crash before snapshot commit never starts validation. Crash after snapshot commit reuses the exact Engine-owned bytes.
