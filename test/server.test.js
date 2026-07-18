@@ -71,11 +71,16 @@ test('public shape serves health and a real ten-client WebSocket round with rejo
   const health = await fetch(`${httpUrl}/healthz`).then((response) => response.json());
   assert.equal(health.ok, true);
   assert.equal(health.revision, 'castle-v1');
-  assert.equal(health.sliceRevision, 'solo-slice-v2');
+  assert.equal(health.sliceRevision, 'crypt-001@token-rush-level-v1');
+  assert.equal(health.sliceLevelSource, 'file');
+  assert.equal(health.sliceLevelRejection, null);
   const sliceHealth = await fetch(`${httpUrl}/slice-healthz`).then((response) => response.json());
   assert.deepEqual(sliceHealth, {
     ok: true,
-    revision: 'solo-slice-v2',
+    revision: 'crypt-001@token-rush-level-v1',
+    levelId: 'crypt-001',
+    levelSource: 'file',
+    levelRejection: null,
     connections: 0,
     running: false,
     complete: false,
@@ -143,4 +148,35 @@ test('wrong origin and malformed JSON are rejected', async (context) => {
   const closed = new Promise((resolve) => malformed.socket.once('close', (code) => resolve(code)));
   malformed.socket.send('{not-json');
   assert.equal(await closed, 1007);
+});
+
+
+test('invalid level file never replaces the compiled known-good solo level', async (context) => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'coinrush-invalid-level-'));
+  const levelFile = path.join(directory, 'bad.json');
+  await writeFile(levelFile, '{"schema":"token-rush-level/v1","script":"no"}');
+  const instance = createCoinRushServer({
+    host: '127.0.0.1',
+    port: 0,
+    allowedOrigin: 'https://game.test',
+    tokenRushLevelFile: levelFile,
+  });
+  context.after(async () => {
+    await instance.close();
+    await rm(directory, { recursive: true, force: true });
+  });
+  const address = await instance.listen();
+  const httpUrl = `http://127.0.0.1:${address.port}`;
+  const health = await fetch(`${httpUrl}/slice-healthz`).then((response) => response.json());
+  assert.equal(health.levelId, 'crypt-fallback');
+  assert.equal(health.levelSource, 'fallback');
+  assert.equal(health.levelRejection, 'LEVEL_KEYS');
+
+  const client = await open(`ws://127.0.0.1:${address.port}/slice-ws`);
+  client.socket.send(JSON.stringify({ type: 'hello', name: 'Fallback Tester' }));
+  const start = await client.messages.wait((message) => message.type === 'sliceStart');
+  assert.equal(start.level.id, 'crypt-fallback');
+  assert.equal(start.level.schema, 'token-rush-level/v1');
+  assert.equal(start.level.solids.length, 5);
+  client.socket.close();
 });

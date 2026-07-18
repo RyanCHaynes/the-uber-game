@@ -8,6 +8,7 @@ COPY index.html vite.config.js ./
 COPY client ./client
 COPY server ./server
 COPY shared ./shared
+COPY content ./content
 COPY test ./test
 RUN npm test && npm run build
 
@@ -23,6 +24,7 @@ RUN npm ci --omit=dev --ignore-scripts \
 COPY --from=build --chown=node:node /app/dist ./dist
 COPY --chown=node:node server ./server
 COPY --chown=node:node shared ./shared
+COPY --chown=node:node content ./content
 USER node
 EXPOSE 3000/tcp
 HEALTHCHECK --interval=10s --timeout=3s --retries=3 --start-period=5s \

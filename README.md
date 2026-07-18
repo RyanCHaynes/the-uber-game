@@ -51,6 +51,16 @@ Server messages:
 Unknown, malformed, binary, oversized, wrong-origin, and over-rate traffic is
 rejected. An eleventh concurrent connection is refused.
 
+## Token Rush JSON level
+
+`content/token-rush-level.json` is the only authored solo-level input. The
+`token-rush-level/v1` contract accepts a fixed `48×22` integer grid, up to 64
+non-overlapping solid rectangles, eight allowlisted enemies, and 32 tokens.
+The Engine expands rectangles into its tile grid and owns all movement, combat,
+and completion behavior; level data cannot contain scripts, URLs, or physics
+settings. Invalid or oversized JSON selects the bundled known-good level and
+reports the stable rejection code through `/slice-healthz`.
+
 ## Dedicated deployment
 
 The approved host is a separate 1 vCPU / 1 GB VM. `game.tinyfat.dev` is an
