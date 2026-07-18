@@ -83,10 +83,37 @@ button:hover, button:focus-visible { background: #c34250; outline: 2px solid #ff
 .complete { border-color: #e1bd72; }
 .complete h2 { color: #ffe5a4; text-shadow: 0 0 24px #cc8e43aa; }
 
+.level-evolution {
+  position: fixed; z-index: 6; right: 14px; bottom: 14px;
+  width: min(340px, calc(100vw - 28px)); border: 1px solid #655d6d;
+  background: #090a11ed; color: #d7ccd9; box-shadow: 0 8px 30px #000a;
+}
+.level-evolution summary {
+  padding: 9px 12px; color: #f0cf87; cursor: pointer; font-size: 11px;
+  font-weight: 700; letter-spacing: .14em; list-style-position: inside;
+}
+.level-evolution summary:focus-visible { outline: 2px solid #ffe1a0; outline-offset: 2px; }
+.evolution-body { padding: 0 12px 12px; }
+.evolution-revision { margin: 0 0 9px; color: #978e9e; font-size: 10px; overflow-wrap: anywhere; }
+.evolution-heading, .evolution-row {
+  display: grid; grid-template-columns: 1fr 72px 72px; gap: 8px; align-items: center;
+}
+.evolution-heading { padding-bottom: 5px; color: #877f8e; font-size: 9px; letter-spacing: .1em; }
+.evolution-row { padding: 6px 0; border-top: 1px solid #302d38; font-size: 12px; }
+.evolution-row span:not(:first-child), .evolution-heading span:not(:first-child) { text-align: right; }
+.evolution-row.active { color: #fff0bd; }
+.evolution-control {
+  margin-top: 7px; padding-top: 8px; border-top: 1px solid #655d6d;
+  color: #a9a0af; font-size: 10px; line-height: 1.45;
+}
+
 body.player-hit #game-canvas { filter: saturate(1.5) brightness(1.35); }
 
 @media (max-width: 700px) {
   .panel { padding: 24px; }
   #hud { grid-template-columns: 1fr 1fr; }
   .hud-block.center { display: none; }
+  .level-evolution { left: 10px; right: 10px; bottom: 48px; width: auto; }
+  .level-evolution[open] { max-height: min(300px, 45vh); overflow: auto; }
+  .evolution-heading, .evolution-row { grid-template-columns: 1fr 64px 64px; }
 }

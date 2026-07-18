@@ -1,10 +1,12 @@
 import './slice-style.css';
+import levelEvolution from 'virtual:token-rush-level-evolution';
 import { actionForSliceCode } from './slice-input.js';
 
 const elements = Object.fromEntries([
   'game-canvas', 'setup', 'player-name', 'play-button', 'hud', 'health',
   'enemy-health', 'feedback', 'complete', 'result-title', 'complete-text', 'again-button', 'error',
-  'error-text', 'retry-button', 'legend',
+  'error-text', 'retry-button', 'legend', 'level-evolution', 'evolution-revision', 'evolution-runs',
+  'evolution-control',
 ].map((id) => [id, document.getElementById(id)]));
 
 const canvas = elements['game-canvas'];
@@ -37,6 +39,39 @@ function show(name) {
   elements.hud.classList.toggle('hidden', !playing);
   elements.legend.classList.toggle('hidden', !playing);
   if (!playing) elements.complete.classList.add('hidden');
+}
+
+function renderLevelEvolution(data) {
+  try {
+    if (!data || data.schema !== 'token-rush-level-evolution/v1' || typeof data.activeRevision !== 'string' ||
+        typeof data.activeLevelSha !== 'string' || !Array.isArray(data.runs) || data.runs.length !== 3 || !data.control) {
+      throw new Error('invalid evolution data');
+    }
+    const runs = document.createDocumentFragment();
+    for (const run of data.runs) {
+      if (!Number.isSafeInteger(run.run) || !Number.isSafeInteger(run.score) || !Number.isSafeInteger(run.damage)) {
+        throw new Error('invalid evolution metric');
+      }
+      const row = document.createElement('div');
+      row.className = `evolution-row${run.run === 3 ? ' active' : ''}`;
+      for (const text of [`RUN ${run.run}`, String(run.score), String(run.damage)]) {
+        const value = document.createElement('span');
+        value.textContent = text;
+        row.append(value);
+      }
+      runs.append(row);
+    }
+    const control = data.control;
+    if (!Number.isSafeInteger(control.sourceRun) || !Number.isSafeInteger(control.score) || !Number.isSafeInteger(control.damage)) {
+      throw new Error('invalid control metric');
+    }
+    elements['evolution-revision'].textContent = `ACTIVE ${data.activeRevision} · ${data.activeLevelSha.slice(0, 8)}`;
+    elements['evolution-runs'].replaceChildren(runs);
+    elements['evolution-control'].textContent = `MATCHED NO-MEMORY CONTROL · RUN ${control.sourceRun} SOURCE · SCORE ${control.score} · DAMAGE ${control.damage}`;
+    elements['level-evolution'].classList.remove('hidden');
+  } catch {
+    elements['level-evolution'].classList.add('hidden');
+  }
 }
 
 function connect() {
@@ -320,5 +355,6 @@ elements['again-button'].addEventListener('click', restartLevel);
 elements['retry-button'].addEventListener('click', () => window.location.reload());
 window.addEventListener('resize', resize);
 resize();
+renderLevelEvolution(levelEvolution);
 show('setup');
 requestAnimationFrame(draw);
