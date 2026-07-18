@@ -1,6 +1,7 @@
 #include "ClientApp.hpp"
 #include "GameServer.hpp"
 #include "Protocol.hpp"
+#include "TileMap.hpp"
 
 #include <SFML/Network.hpp>
 
@@ -87,6 +88,33 @@ int runSmokeTest() {
     return 0;
 }
 
+int runLevelTest() {
+    coinrush::TileMap level;
+    std::string error;
+    if (!level.loadBundledCastle(error)) {
+        std::cerr << "Level test: " << error << '\n';
+        return 1;
+    }
+    if (level.width() != 48 || level.height() != 22) {
+        std::cerr << "Level test: expected a 48x22 castle, got "
+                  << level.width() << 'x' << level.height() << ".\n";
+        return 1;
+    }
+    if (!level.isSolid(0, 20) || level.isSolid(4, 2) || level.coinSpawns().size() < 4) {
+        std::cerr << "Level test: collision or marker semantics are invalid.\n";
+        return 1;
+    }
+    const sf::Vector2f firstSpawn = level.playerSpawn(0);
+    const sf::Vector2f secondSpawn = level.playerSpawn(1);
+    if (firstSpawn.x >= secondSpawn.x) {
+        std::cerr << "Level test: player spawn markers are invalid.\n";
+        return 1;
+    }
+    std::cout << "Level test passed: 48x22 castle, collision tiles, two player spawns, and "
+              << level.coinSpawns().size() << " coin spawns.\n";
+    return 0;
+}
+
 unsigned short parsePort(const char* text) {
     try {
         const unsigned long parsed = std::stoul(text);
@@ -123,6 +151,9 @@ int main(int argc, char** argv) {
     if (argc >= 2 && std::string(argv[1]) == "--smoke-test") {
         return runSmokeTest();
     }
+    if (argc >= 2 && std::string(argv[1]) == "--level-test") {
+        return runLevelTest();
+    }
     if (argc >= 2 && std::string(argv[1]) == "--server") {
         const unsigned short port = argc >= 3 ? parsePort(argv[2]) : coinrush::DefaultPort;
         if (port == 0) {
@@ -135,11 +166,11 @@ int main(int argc, char** argv) {
         std::cout << "Coin Rush\n"
                   << "  CoinRush                 Start the graphical client\n"
                   << "  CoinRush --server PORT   Start a headless dedicated server\n"
-                  << "  CoinRush --smoke-test    Test the loopback lobby flow\n";
+                  << "  CoinRush --smoke-test    Test the loopback lobby flow\n"
+                  << "  CoinRush --level-test    Validate the bundled tile level\n";
         return 0;
     }
 
     coinrush::ClientApp app;
     return app.run();
 }
-

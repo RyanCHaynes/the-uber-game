@@ -20,6 +20,12 @@ bool GameServer::start(unsigned short requestedPort, std::string& error) {
         return false;
     }
 
+    std::string levelError;
+    if (!level_.loadBundledCastle(levelError)) {
+        error = "Level load failed: " + levelError;
+        return false;
+    }
+
     selector_.clear();
     if (listener_.listen(requestedPort) != sf::Socket::Done) {
         error = "Could not listen on TCP port " + std::to_string(requestedPort) +
@@ -83,7 +89,8 @@ void GameServer::run() {
             }
         }
 
-        const float elapsed = std::min(updateClock.restart().asSeconds(), 0.05f);
+        // Keep a physics step below one tile so a stalled frame cannot tunnel through a platform.
+        const float elapsed = std::min(updateClock.restart().asSeconds(), 0.02f);
         if (gameRunning_) {
             updateGame(elapsed);
             snapshotTimer += elapsed;
@@ -217,8 +224,10 @@ void GameServer::beginGame() {
         if (!peer->joined) {
             continue;
         }
-        const float x = slot == 0 ? 210.f : WindowWidth - 210.f;
-        players_.push_back({peer->id, {x, (ArenaTop + WindowHeight) / 2.f}, 0});
+        sf::Vector2f spawn = level_.playerSpawn(slot);
+        spawn.y += TileMap::TileSize / 2.f - PlayerHalfHeight;
+        players_.push_back({peer->id, spawn, {}, 0, true});
+        peer->jumpWasDown = false;
         ++slot;
     }
 
@@ -257,21 +266,11 @@ void GameServer::updateGame(float seconds) {
             continue;
         }
 
-        sf::Vector2f direction(
-            static_cast<float>(peer->input.right) - static_cast<float>(peer->input.left),
-            static_cast<float>(peer->input.down) - static_cast<float>(peer->input.up));
-        const float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-        if (length > 0.f) {
-            direction /= length;
-            state->position += direction * PlayerSpeed * seconds;
-        }
-
-        state->position.x = std::clamp(state->position.x, PlayerRadius, WindowWidth - PlayerRadius);
-        state->position.y = std::clamp(state->position.y, ArenaTop + PlayerRadius, WindowHeight - PlayerRadius);
+        updatePlayer(*peer, *state, seconds);
 
         const sf::Vector2f delta = state->position - coin_;
-        const float collectDistance = PlayerRadius + CoinRadius;
-        if (delta.x * delta.x + delta.y * delta.y <= collectDistance * collectDistance) {
+        if (std::abs(delta.x) <= PlayerHalfWidth + CoinRadius &&
+            std::abs(delta.y) <= PlayerHalfHeight + CoinRadius) {
             ++state->score;
             if (state->score >= WinningScore) {
                 winner_ = static_cast<sf::Int32>(state->id);
@@ -291,6 +290,70 @@ void GameServer::updateGame(float seconds) {
     }
 }
 
+void GameServer::updatePlayer(Peer& peer, PlayerState& state, float seconds) {
+    const float horizontal = static_cast<float>(peer.input.right) - static_cast<float>(peer.input.left);
+    state.velocity.x = horizontal * PlayerSpeed;
+
+    if (peer.input.up && !peer.jumpWasDown && state.grounded) {
+        state.velocity.y = -JumpSpeed;
+        state.grounded = false;
+    }
+    peer.jumpWasDown = peer.input.up;
+    state.velocity.y = std::min(state.velocity.y + Gravity * seconds, MaximumFallSpeed);
+
+    const auto tileFor = [](float pixel) {
+        return static_cast<int>(std::floor(pixel / static_cast<float>(TileMap::TileSize)));
+    };
+
+    state.position.x += state.velocity.x * seconds;
+    const int top = tileFor(state.position.y - PlayerHalfHeight + 1.f);
+    const int bottom = tileFor(state.position.y + PlayerHalfHeight - 1.f);
+    if (state.velocity.x > 0.f) {
+        const int right = tileFor(state.position.x + PlayerHalfWidth);
+        for (int y = top; y <= bottom; ++y) {
+            if (level_.isSolid(right, y)) {
+                state.position.x = right * TileMap::TileSize - PlayerHalfWidth - 0.01f;
+                state.velocity.x = 0.f;
+                break;
+            }
+        }
+    } else if (state.velocity.x < 0.f) {
+        const int left = tileFor(state.position.x - PlayerHalfWidth);
+        for (int y = top; y <= bottom; ++y) {
+            if (level_.isSolid(left, y)) {
+                state.position.x = (left + 1) * TileMap::TileSize + PlayerHalfWidth + 0.01f;
+                state.velocity.x = 0.f;
+                break;
+            }
+        }
+    }
+
+    state.position.y += state.velocity.y * seconds;
+    state.grounded = false;
+    const int left = tileFor(state.position.x - PlayerHalfWidth + 1.f);
+    const int right = tileFor(state.position.x + PlayerHalfWidth - 1.f);
+    if (state.velocity.y >= 0.f) {
+        const int bottomTile = tileFor(state.position.y + PlayerHalfHeight);
+        for (int x = left; x <= right; ++x) {
+            if (level_.isSolid(x, bottomTile)) {
+                state.position.y = bottomTile * TileMap::TileSize - PlayerHalfHeight - 0.01f;
+                state.velocity.y = 0.f;
+                state.grounded = true;
+                break;
+            }
+        }
+    } else {
+        const int topTile = tileFor(state.position.y - PlayerHalfHeight);
+        for (int x = left; x <= right; ++x) {
+            if (level_.isSolid(x, topTile)) {
+                state.position.y = (topTile + 1) * TileMap::TileSize + PlayerHalfHeight + 0.01f;
+                state.velocity.y = 0.f;
+                break;
+            }
+        }
+    }
+}
+
 void GameServer::resetToLobby() {
     gameRunning_ = false;
     gameOver_ = false;
@@ -298,14 +361,25 @@ void GameServer::resetToLobby() {
     players_.clear();
     for (auto& peer : peers_) {
         peer->ready = false;
+        peer->jumpWasDown = false;
         peer->input = {};
     }
 }
 
 void GameServer::moveCoin() {
-    std::uniform_real_distribution<float> x(PlayerRadius + 35.f, WindowWidth - PlayerRadius - 35.f);
-    std::uniform_real_distribution<float> y(ArenaTop + PlayerRadius + 35.f, WindowHeight - PlayerRadius - 35.f);
-    coin_ = {x(random_), y(random_)};
+    const auto& spawns = level_.coinSpawns();
+    if (spawns.empty()) {
+        coin_ = {level_.worldSize().x / 2.f, level_.worldSize().y / 2.f};
+        return;
+    }
+
+    std::uniform_int_distribution<std::size_t> choice(0, spawns.size() - 1);
+    std::size_t next = choice(random_);
+    if (spawns.size() > 1 && next == coinIndex_) {
+        next = (next + 1) % spawns.size();
+    }
+    coinIndex_ = next;
+    coin_ = spawns[coinIndex_];
 }
 
 void GameServer::sendTo(Peer& peer, sf::Packet packet) {

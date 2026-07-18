@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Protocol.hpp"
+#include "TileMap.hpp"
 
 #include <SFML/Network.hpp>
 
@@ -33,13 +34,16 @@ private:
         std::string name;
         bool joined = false;
         bool ready = false;
+        bool jumpWasDown = false;
         PlayerInput input;
     };
 
     struct PlayerState {
         std::uint32_t id = 0;
         sf::Vector2f position;
+        sf::Vector2f velocity;
         std::uint32_t score = 0;
+        bool grounded = false;
     };
 
     void run();
@@ -51,6 +55,7 @@ private:
     void beginGame();
     void endGameForDisconnect();
     void updateGame(float seconds);
+    void updatePlayer(Peer& peer, PlayerState& state, float seconds);
     void resetToLobby();
     void moveCoin();
 
@@ -70,14 +75,15 @@ private:
     std::thread worker_;
     std::vector<std::unique_ptr<Peer>> peers_;
     std::vector<PlayerState> players_;
+    TileMap level_;
     std::uint32_t nextId_{1};
     bool gameRunning_{false};
     sf::Vector2f coin_{WindowWidth / 2.f, (ArenaTop + WindowHeight) / 2.f};
     sf::Clock gameOverClock_;
     bool gameOver_{false};
     sf::Int32 winner_{-1};
+    std::size_t coinIndex_{0};
     std::mt19937 random_;
 };
 
 } // namespace coinrush
-

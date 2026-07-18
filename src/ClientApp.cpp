@@ -1,5 +1,6 @@
 #include "ClientApp.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cctype>
 #include <iostream>
@@ -8,6 +9,11 @@
 namespace coinrush {
 
 int ClientApp::run() {
+    std::string levelError;
+    if (!level_.loadBundledCastle(levelError)) {
+        std::cerr << "Could not load the castle level: " << levelError << '\n';
+        return 1;
+    }
     if (!loadFont()) {
         std::cerr << "Could not find a usable system font. Install Arial or DejaVu Sans and try again.\n";
         return 1;
@@ -15,6 +21,7 @@ int ClientApp::run() {
 
     window_.create(sf::VideoMode(WindowWidth, WindowHeight), "Coin Rush - SFML Online Jam Game",
                    sf::Style::Titlebar | sf::Style::Close);
+    level_.loadBundledTileset();
     window_.setFramerateLimit(60);
     socket_.setBlocking(false);
 
@@ -322,6 +329,9 @@ unsigned short ClientApp::enteredPort() const {
 }
 
 void ClientApp::draw() {
+    if (window_.isOpen()) {
+        window_.setView(window_.getDefaultView());
+    }
     window_.clear(sf::Color(13, 18, 32));
     switch (screen_) {
         case Screen::Setup: drawSetup(); break;
@@ -335,7 +345,7 @@ void ClientApp::draw() {
 
 void ClientApp::drawSetup() {
     drawText("COIN RUSH", 54, WindowWidth / 2.f, 74.f, sf::Color(255, 209, 82), true);
-    drawText("A tiny two-player, server-authoritative jam game", 20, WindowWidth / 2.f, 128.f,
+    drawText("A two-player race through a networked gothic castle", 20, WindowWidth / 2.f, 128.f,
              sf::Color(154, 166, 196), true);
 
     const auto field = [this](const sf::FloatRect& box, const std::string& label,
@@ -419,19 +429,39 @@ void ClientApp::drawLobby() {
 }
 
 void ClientApp::drawGame() {
-    drawPanel({0.f, 0.f, static_cast<float>(WindowWidth), ArenaTop}, sf::Color(18, 24, 41));
-    drawPanel({0.f, ArenaTop, static_cast<float>(WindowWidth), WindowHeight - ArenaTop}, sf::Color(22, 30, 48));
+    const sf::Vector2f world = level_.worldSize();
+    float cameraX = WindowWidth / 2.f;
+    const auto localPlayer = remotePlayers_.find(myId_);
+    if (localPlayer != remotePlayers_.end()) {
+        cameraX = localPlayer->second.position.x;
+    }
+    if (world.x > WindowWidth) {
+        cameraX = std::clamp(cameraX, WindowWidth / 2.f, world.x - WindowWidth / 2.f);
+    } else {
+        cameraX = world.x / 2.f;
+    }
 
-    for (float x = 40.f; x < WindowWidth; x += 80.f) {
-        sf::Vertex line[] = {{{x, ArenaTop}, sf::Color(29, 39, 60)},
-                             {{x, static_cast<float>(WindowHeight)}, sf::Color(29, 39, 60)}};
-        window_.draw(line, 2, sf::Lines);
-    }
-    for (float y = ArenaTop + 40.f; y < WindowHeight; y += 80.f) {
-        sf::Vertex line[] = {{{0.f, y}, sf::Color(29, 39, 60)},
-                             {{static_cast<float>(WindowWidth), y}, sf::Color(29, 39, 60)}};
-        window_.draw(line, 2, sf::Lines);
-    }
+    sf::View gameView({cameraX, world.y / 2.f},
+                      {static_cast<float>(WindowWidth), static_cast<float>(WindowHeight)});
+    window_.setView(gameView);
+
+    sf::RectangleShape sky({world.x, world.y + 80.f});
+    sky.setPosition(0.f, -40.f);
+    sky.setFillColor(sf::Color(15, 18, 35));
+    window_.draw(sky);
+
+    sf::CircleShape moon(72.f);
+    moon.setOrigin(72.f, 72.f);
+    moon.setPosition(world.x * 0.52f, 115.f);
+    moon.setFillColor(sf::Color(207, 211, 190));
+    window_.draw(moon);
+
+    sf::RectangleShape distantCastle({world.x, 210.f});
+    distantCastle.setPosition(0.f, world.y - 330.f);
+    distantCastle.setFillColor(sf::Color(23, 27, 49));
+    window_.draw(distantCastle);
+
+    level_.draw(window_);
 
     sf::CircleShape glow(CoinRadius + 9.f);
     glow.setOrigin(CoinRadius + 9.f, CoinRadius + 9.f);
@@ -449,16 +479,28 @@ void ClientApp::drawGame() {
     for (const auto& entry : remotePlayers_) {
         const std::uint32_t id = entry.first;
         const RemotePlayer& player = entry.second;
-        sf::CircleShape body(PlayerRadius);
-        body.setOrigin(PlayerRadius, PlayerRadius);
+
+        sf::ConvexShape cape(3);
+        cape.setPoint(0, {-PlayerHalfWidth, -PlayerHalfHeight + 8.f});
+        cape.setPoint(1, {-PlayerHalfWidth - 12.f, PlayerHalfHeight});
+        cape.setPoint(2, {2.f, PlayerHalfHeight});
+        cape.setPosition(player.position);
+        cape.setFillColor(id == myId_ ? sf::Color(31, 119, 117) : sf::Color(124, 42, 72));
+        window_.draw(cape);
+
+        sf::RectangleShape body({PlayerHalfWidth * 2.f, PlayerHalfHeight * 2.f});
+        body.setOrigin(PlayerHalfWidth, PlayerHalfHeight);
         body.setPosition(player.position);
         body.setFillColor(playerColor(id));
         body.setOutlineThickness(id == myId_ ? 4.f : 2.f);
         body.setOutlineColor(sf::Color::White);
         window_.draw(body);
-        drawText(playerName(id), 14, player.position.x, player.position.y - 46.f,
+        drawText(playerName(id), 14, player.position.x, player.position.y - PlayerHalfHeight - 22.f,
                  sf::Color(220, 226, 241), true);
     }
+
+    window_.setView(window_.getDefaultView());
+    drawPanel({0.f, 0.f, static_cast<float>(WindowWidth), ArenaTop}, sf::Color(12, 15, 29, 235));
 
     float scoreX = 310.f;
     for (const auto& entry : remotePlayers_) {
@@ -468,7 +510,7 @@ void ClientApp::drawGame() {
     }
     drawText("FIRST TO " + std::to_string(WinningScore), 15, WindowWidth / 2.f, 30.f,
              sf::Color(154, 166, 196), true);
-    drawText("WASD / arrow keys to move", 15, WindowWidth / 2.f, 59.f,
+    drawText("A/D or arrows move  |  W/Up jumps", 15, WindowWidth / 2.f, 59.f,
              sf::Color(115, 128, 159), true);
 
     if (winner_ >= 0) {
@@ -535,4 +577,3 @@ sf::Color ClientApp::playerColor(std::uint32_t id) const {
 }
 
 } // namespace coinrush
-

@@ -78,6 +78,7 @@ private:
     std::uint32_t myId_{0};
     std::vector<LobbyPlayer> lobbyPlayers_;
     std::map<std::uint32_t, RemotePlayer> remotePlayers_;
+    TileMap level_;
     sf::Vector2f coin_;
     sf::Int32 winner_{-1};
     sf::Clock inputClock_;
@@ -90,4 +91,3 @@ private:
 };
 
 } // namespace coinrush
-

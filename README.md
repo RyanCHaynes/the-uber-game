@@ -1,8 +1,8 @@
 # Coin Rush
 
-Coin Rush is a deliberately small two-player network game for a game jam. One player hosts a lobby, the other joins by IP address, both ready up, and the first player to collect five gold coins wins.
+Coin Rush is a deliberately small two-player network platform game for a game jam. One player hosts a lobby, the other joins by IP address, both ready up, and the first player to collect five gold coins in the gothic castle wins.
 
-The server owns player movement, coin positions, scoring, and match state. The host button starts that server inside the host's game process. A headless server mode is included for a VPS or spare machine.
+The server owns platforming physics, tile collision, coin positions, scoring, and match state. The host button starts that server inside the host's game process. A headless server mode is included for a VPS or spare machine.
 
 ## Build
 
@@ -19,6 +19,8 @@ Run it:
 ./build/CoinRush
 ```
 
+On macOS, `run-game.command` is also available as a Terminal/Finder launcher.
+
 On multi-config generators such as Visual Studio, the executable is usually under `build/Release/`.
 
 To require a system-installed SFML instead of downloading it:
@@ -32,7 +34,7 @@ cmake -S . -B build -DCOINRUSH_FETCH_SFML=OFF
 1. Start two copies of `CoinRush`.
 2. In the first copy, enter a name and click **Host Lobby**.
 3. In the second, use `127.0.0.1`, the same port, and click **Join Lobby**.
-4. Both players click **Ready Up**. Move with WASD or the arrow keys.
+4. Both players click **Ready Up**. Move with A/D or Left/Right and jump with W or Up.
 
 The default port is **53000/TCP**. The lobby supports exactly two players.
 
@@ -41,7 +43,16 @@ Run the automated host/join/lobby test with:
 ```sh
 ctest --test-dir build --output-on-failure
 # or: ./build/CoinRush --smoke-test
+# level validation only: ./build/CoinRush --level-test
 ```
+
+## Build tile-based levels
+
+The authoritative server and every client load `assets/levels/castle.csv`. It is a 32×32 Tiled-compatible CSV layer with solid tiles, decorations, two player markers, and coin-spawn markers.
+
+To use custom tile art, place a regular 32×32-grid PNG atlas at `assets/tileset.png`. The game reads tiles left-to-right and falls back to its procedural gothic palette when the PNG is absent.
+
+See `assets/README.md` for tile IDs, collision semantics, Tiled export instructions, and level validation.
 
 ## Let your partner join over the internet
 
@@ -55,7 +66,7 @@ For a direct connection:
 If the host is behind carrier-grade NAT, ordinary port forwarding will not work. The simplest alternatives are an overlay VPN shared by both players, or running the included dedicated server on a public machine:
 
 ```sh
-./CoinRush --server 53000
+./build/CoinRush --server 53000
 ```
 
 Allow TCP 53000 in that machine's firewall/security group, then both players join its public IP. A dedicated server does not open a graphical window.
@@ -75,11 +86,16 @@ This is game-jam networking, intended for play with someone you trust. It has no
 ## Project layout
 
 ```text
+CMakeLists.txt           Build configuration and SFML dependency setup
+commands.md              Shell command and operations reference
+assets/README.md         Tiled CSV and PNG atlas authoring guide
+assets/levels/castle.csv Bundled 48x22 castle level
 include/Protocol.hpp     Packet types and shared game constants
+include/TileMap.hpp      Shared level loading, collision, and rendering
 include/GameServer.hpp   Authoritative lobby/game server
 include/ClientApp.hpp    SFML client UI and renderer
+src/TileMap.cpp
 src/GameServer.cpp
 src/ClientApp.cpp
 src/main.cpp             GUI, dedicated server, and smoke-test entry points
 ```
-

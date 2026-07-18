@@ -13,8 +13,13 @@ constexpr unsigned int WindowWidth = 1280;
 constexpr unsigned int WindowHeight = 720;
 constexpr float ArenaTop = 92.f;
 constexpr float PlayerRadius = 23.f;
+constexpr float PlayerHalfWidth = 18.f;
+constexpr float PlayerHalfHeight = 24.f;
 constexpr float CoinRadius = 14.f;
-constexpr float PlayerSpeed = 280.f;
+constexpr float PlayerSpeed = 235.f;
+constexpr float Gravity = 1450.f;
+constexpr float JumpSpeed = 570.f;
+constexpr float MaximumFallSpeed = 760.f;
 constexpr std::uint32_t WinningScore = 5;
 
 enum class Message : sf::Uint8 {
@@ -59,4 +64,3 @@ inline sf::Packet inputPacket(const PlayerInput& input) {
 }
 
 } // namespace coinrush
-

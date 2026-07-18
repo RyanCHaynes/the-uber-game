@@ -27,16 +27,30 @@ if(NOT SFML_FOUND)
         GIT_SHALLOW TRUE
     )
     FetchContent_MakeAvailable(SFML)
+
+    if(APPLE)
+        set(SFML_CG_CONVERSION_FILE
+            "${sfml_SOURCE_DIR}/src/SFML/Window/OSX/cg_sf_conversion.mm")
+        include(cmake/PatchSFMLMacOS.cmake)
+    endif()
 endif()
 
 add_executable(CoinRush
     src/main.cpp
     src/GameServer.cpp
     src/ClientApp.cpp
+    src/TileMap.cpp
 )
 
 target_include_directories(CoinRush PRIVATE include)
 target_link_libraries(CoinRush PRIVATE sfml-graphics sfml-window sfml-network sfml-system)
+target_compile_definitions(CoinRush PRIVATE COINRUSH_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
+add_custom_command(TARGET CoinRush POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/assets
+        $<TARGET_FILE_DIR:CoinRush>/assets
+)
 
 if(MSVC)
     target_compile_options(CoinRush PRIVATE /W4 /permissive-)
@@ -60,5 +74,5 @@ include(CTest)
 if(BUILD_TESTING)
     add_test(NAME network_smoke COMMAND CoinRush --smoke-test)
     set_tests_properties(network_smoke PROPERTIES TIMEOUT 15)
+    add_test(NAME level_smoke COMMAND CoinRush --level-test)
 endif()
-
