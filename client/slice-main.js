@@ -3,7 +3,7 @@ import { actionForSliceCode } from './slice-input.js';
 
 const elements = Object.fromEntries([
   'game-canvas', 'setup', 'player-name', 'play-button', 'hud', 'health',
-  'enemy-health', 'feedback', 'complete', 'complete-text', 'again-button', 'error',
+  'enemy-health', 'feedback', 'complete', 'result-title', 'complete-text', 'again-button', 'error',
   'error-text', 'retry-button', 'legend',
 ].map((id) => [id, document.getElementById(id)]));
 
@@ -69,7 +69,11 @@ function handleMessage(message) {
     if (!message.level || message.level.schema !== 'token-rush-level/v1' ||
         typeof message.level.revision !== 'string') throw new Error('level contract mismatch');
     level = message.level;
+    snapshot = null;
     renderSamples = [];
+    clearInput();
+    elements.complete.classList.add('hidden');
+    elements['again-button'].disabled = false;
     show('game');
     return;
   }
@@ -79,9 +83,20 @@ function handleMessage(message) {
     recordRenderSample(message);
     renderHud();
     consumeFeedback(message.feedback || []);
-    if (message.complete) {
-      elements['complete-text'].textContent = 'You reached the crypt gate. Token Rush is complete.';
+    if (message.dead) {
+      clearInput();
+      elements['result-title'].textContent = 'YOU DIED';
+      elements['complete-text'].textContent = 'The crypt got you. Restart this level and try again.';
+      elements['again-button'].textContent = 'RESTART LEVEL';
       elements.complete.classList.remove('hidden');
+    } else if (message.complete) {
+      clearInput();
+      elements['result-title'].textContent = 'CRYPT CLEARED';
+      elements['complete-text'].textContent = 'You reached the crypt gate. Token Rush is complete.';
+      elements['again-button'].textContent = 'PLAY AGAIN';
+      elements.complete.classList.remove('hidden');
+    } else {
+      elements.complete.classList.add('hidden');
     }
     return;
   }
@@ -153,6 +168,13 @@ function renderHud() {
   elements['enemy-health'].textContent = `${alive} MOBS · ${collected}/${snapshot.tokens?.length || 0} TOKENS`;
 }
 
+function restartLevel() {
+  if (socket?.readyState !== WebSocket.OPEN || (!snapshot?.dead && !snapshot?.complete)) return;
+  clearInput();
+  elements['again-button'].disabled = true;
+  send({ type: 'sliceRestart' });
+}
+
 function fail(message) {
   intentionalClose = true;
   if (socket && socket.readyState < WebSocket.CLOSING) socket.close();
@@ -185,7 +207,9 @@ document.addEventListener('focusin', (event) => {
   if (event.target?.closest?.('input, textarea, select, [contenteditable="true"]')) clearInput();
 });
 setInterval(() => {
-  if (level && !snapshot?.complete) send({ type: 'sliceInput', sequence: sequence++, input });
+  if (level && !snapshot?.complete && !snapshot?.dead) {
+    send({ type: 'sliceInput', sequence: sequence++, input });
+  }
 }, 33);
 
 function resize() {
@@ -292,7 +316,7 @@ const savedName = localStorage.getItem('coinrush-slice-name');
 if (savedName) elements['player-name'].value = savedName.slice(0, 18);
 elements['play-button'].addEventListener('click', connect);
 elements['player-name'].addEventListener('keydown', (event) => { if (event.key === 'Enter') connect(); });
-elements['again-button'].addEventListener('click', () => window.location.reload());
+elements['again-button'].addEventListener('click', restartLevel);
 elements['retry-button'].addEventListener('click', () => window.location.reload());
 window.addEventListener('resize', resize);
 resize();
