@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "coin-rush-image-request/v1",
+  "enemyId": "crypt-sentinel",
+  "pose": "idle",
+  "creature": "armored crypt sentinel with a lantern-shaped helm",
+  "silhouette": "tall narrow helm, broad asymmetrical shoulder guard, compact torso, planted boots, and one hooked gauntlet",
+  "materials": [
+    "blackened iron",
+    "worn burgundy cloth",
+    "pale bone charms"
+  ],
+  "equipment": "short crescent glaive held at rest"
+}

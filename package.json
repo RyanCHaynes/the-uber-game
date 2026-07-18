@@ -7,6 +7,7 @@
     "node": ">=22.12.0"
   },
   "scripts": {
+    "asset:pose:dry-run": "node scripts/asset-generation/generate-pose-source.mjs",
     "build": "vite build",
     "start": "node server/index.js",
     "test": "node --test",
