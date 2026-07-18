@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CoinRush Design Agent</title>
+<style>
+  :root {
+    --bg: #14161c; --panel: #1d2029; --panel2: #232734; --line: #313749;
+    --text: #d8dce8; --dim: #8b91a5; --accent: #ffb454; --green: #7bd88f;
+    --red: #f07178; --blue: #6fc3ff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.5 system-ui, sans-serif; }
+  header { display: flex; align-items: center; gap: 12px; padding: 10px 18px;
+           background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  h1 { font-size: 17px; margin: 0; color: var(--accent); }
+  .badge { padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+  .badge.mock { background: #3a3320; color: var(--accent); }
+  .badge.llm  { background: #1e3a2a; color: var(--green); }
+  .badge.busy { background: #3a2020; color: var(--red); animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: .4; } }
+  button { background: var(--panel2); color: var(--text); border: 1px solid var(--line);
+           border-radius: 6px; padding: 6px 14px; cursor: pointer; font-size: 13px; }
+  button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  button:disabled { opacity: .4; cursor: default; }
+  button.primary { background: var(--accent); color: #14161c; border: none; font-weight: 700; }
+  .spacer { flex: 1; }
+  main { display: grid; grid-template-columns: minmax(420px, 1.4fr) minmax(320px, 1fr);
+         gap: 14px; padding: 14px 18px; }
+  @media (max-width: 980px) { main { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+           padding: 12px 14px; margin-bottom: 14px; }
+  .panel h2 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase;
+              letter-spacing: .08em; color: var(--dim); }
+  canvas { width: 100%; background: #0e1015; border-radius: 6px; display: block; }
+  .lvlbar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  select { background: var(--panel2); color: var(--text); border: 1px solid var(--line);
+           border-radius: 6px; padding: 5px 8px; }
+  label.follow { font-size: 12px; color: var(--dim); display: flex; gap: 4px; align-items: center; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; font-size: 12px; color: var(--dim); }
+  .legend span::before { content: "■ "; }
+  .stat { color: var(--dim); font-size: 12px; margin-top: 6px; }
+  .player { border-left: 3px solid var(--blue); padding: 4px 10px; margin: 8px 0;
+            background: var(--panel2); border-radius: 0 6px 6px 0; }
+  .player .meta { color: var(--dim); font-size: 12px; }
+  .stars { color: var(--accent); letter-spacing: 2px; }
+  .quote { font-style: italic; }
+  ul { margin: 4px 0; padding-left: 18px; }
+  li { margin: 3px 0; }
+  .dim { color: var(--dim); }
+  #log { font: 12px/1.5 ui-monospace, monospace; white-space: pre-wrap; max-height: 240px;
+         overflow-y: auto; background: #0e1015; border-radius: 6px; padding: 10px; }
+  #history { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { background: var(--panel2); border: 1px solid var(--line); border-radius: 6px;
+          padding: 3px 10px; font-size: 12px; cursor: pointer; }
+  .chip.sel { border-color: var(--accent); color: var(--accent); }
+  .error { color: var(--red); font-weight: 600; margin-left: 8px; }
+  /* feedback form */
+  #fbForm { display: none; margin-top: 10px; padding: 12px; background: var(--panel2);
+            border: 1px solid var(--line); border-radius: 8px; }
+  #fbForm .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .starBtn { font-size: 22px; background: none; border: none; padding: 2px; cursor: pointer;
+             color: #4a5060; }
+  .starBtn.lit { color: var(--accent); }
+  #fbComment { flex: 1; min-width: 220px; background: var(--bg); color: var(--text);
+               border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; }
+  #fbWaiting { display: none; margin-top: 10px; padding: 12px; border-radius: 8px;
+               background: #1e3a2a; color: var(--green); }
+  /* tabs */
+  nav.tabs { display: flex; gap: 4px; padding: 8px 18px 0; background: var(--panel);
+             border-bottom: 1px solid var(--line); }
+  nav.tabs button { border-radius: 8px 8px 0 0; border-bottom: none; padding: 7px 18px; }
+  nav.tabs button.on { background: var(--bg); color: var(--accent); border-color: var(--line); }
+  /* llm traffic */
+  #tab-llm { display: none; padding: 14px 18px; }
+  .llmEntry { background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+              padding: 10px 14px; margin-bottom: 12px; }
+  .llmHead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .modelChip { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px;
+               padding: 1px 10px; font-size: 12px; color: var(--blue); }
+  .llmEntry details { margin: 4px 0; }
+  .llmEntry summary { cursor: pointer; color: var(--dim); font-size: 13px; }
+  .llmEntry summary:hover { color: var(--accent); }
+  .llmEntry pre { white-space: pre-wrap; word-break: break-word; background: #0e1015;
+                  border-radius: 6px; padding: 10px; margin: 6px 0 2px;
+                  max-height: 340px; overflow: auto;
+                  font: 12px/1.5 ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎮 CoinRush Design Agent</h1>
+  <span id="mode" class="badge mock">…</span>
+  <span id="busy" class="badge busy" style="display:none">agent designing…</span>
+  <span id="err" class="error"></span>
+  <span class="spacer"></span>
+  <button id="resetBtn">Reset to level 0</button>
+</header>
+
+<nav class="tabs">
+  <button class="on" id="tabBtnDash">Dashboard</button>
+  <button id="tabBtnLlm">LLM traffic <span id="llmBadge" class="dim"></span></button>
+</nav>
+
+<main id="tab-dash">
+  <section>
+    <div class="panel">
+      <div class="lvlbar">
+        <h2 style="margin:0">Playtest</h2>
+        <span id="ptName" class="dim"></span>
+        <span class="spacer"></span>
+        <button id="endRun">🏳 End run &amp; rate</button>
+        <button id="ptReload">↻ Reload</button>
+      </div>
+      <canvas id="cv2" width="960" height="480" tabindex="0"
+              style="outline:none; cursor:pointer"></canvas>
+      <div class="stat" id="ptStatus">click the game, then ← → / A D to move, ↑ / space to jump, R to restart</div>
+      <div id="fbForm">
+        <div class="row">
+          <b id="fbTitle">How was that level?</b>
+          <span id="fbStars"></span>
+        </div>
+        <div class="row">
+          <input id="fbComment" placeholder="what was fun? what wasn't?" maxlength="300">
+          <button id="fbSubmit" class="primary">Send to the agent →</button>
+        </div>
+      </div>
+      <div id="fbWaiting">🤖 The agent is analyzing your playtest and designing the next level…</div>
+    </div>
+
+    <div class="panel">
+      <div class="lvlbar">
+        <h2 style="margin:0">Level map</h2>
+        <select id="lvlSel"></select>
+        <label class="follow"><input type="checkbox" id="follow" checked> follow latest</label>
+      </div>
+      <canvas id="cv" width="960" height="420"></canvas>
+      <div class="legend">
+        <span style="color:#4a5568">solid tile</span>
+        <span style="color:#7bd88f">spawn</span>
+        <span style="color:#ffb454">exit</span>
+        <span style="color:#ff3333">✕ fall</span>
+      </div>
+      <div id="stats" class="stat"></div>
+    </div>
+
+    <div class="panel"><h2>Round history</h2><div id="history" class="dim">no rounds yet</div></div>
+    <div class="panel"><h2>Run log</h2><div id="log" class="dim">idle</div></div>
+  </section>
+
+  <section>
+    <div class="panel"><h2>Playtest feedback <span id="fbRound" class="dim"></span></h2>
+      <div id="feedback" class="dim">this level hasn't been played yet</div></div>
+    <div class="panel"><h2>Analyst diagnosis</h2><div id="diagnosis" class="dim">—</div></div>
+    <div class="panel"><h2>Lessons learned</h2><div id="lessons" class="dim">none yet</div></div>
+    <div class="panel"><h2>Level library</h2><div id="library" class="dim">empty</div></div>
+  </section>
+</main>
+
+<div id="tab-llm">
+  <div class="panel" style="margin-bottom:14px">
+    <h2>LLM traffic <span id="llmCount" class="dim"></span></h2>
+    <div class="dim" style="font-size:12px">Every API exchange, newest first — system prompt,
+      full message history sent (including validation-retry corrections), and the model's raw
+      response. Cleared by Reset.</div>
+  </div>
+  <div id="llmLog"><div class="panel dim">no LLM calls yet — play a round in LLM mode</div></div>
+</div>
+
+<script>
+let state = null, selected = null, waitingForNext = false;
+const $ = id => document.getElementById(id);
+const TILE = 32;
+
+function parseCSV(text) {
+  return text.trim().split(/\r?\n/).map(line => line.split(",").map(c => c.trim()));
+}
+
+async function poll() {
+  try {
+    const r = await fetch("/api/state");
+    state = await r.json();
+    render();
+    if (waitingForNext && !state.running) {
+      waitingForNext = false;
+      $("fbWaiting").style.display = "none";
+      if (state.error) {
+        $("ptStatus").textContent = "agent failed — see error above; press R to replay this level";
+      } else {
+        await loadPlayLevel();   // the agent's new level, hot off the press
+      }
+    }
+  } catch (e) { /* server restarting; try again next tick */ }
+}
+
+function levelNames() { return Object.keys(state.levels).sort(); }
+function levelNum(name) { return parseInt(name.split("_")[1], 10); }
+
+function render() {
+  $("mode").textContent = state.mode === "llm" ? "LLM (Claude)" : "MOCK (offline)";
+  $("mode").className = "badge " + state.mode;
+  $("busy").style.display = state.running ? "" : "none";
+  $("resetBtn").disabled = state.running;
+  $("err").textContent = state.error ? state.error : "";
+
+  const names = levelNames();
+  if (!names.length) return;
+  if (!selected || !names.includes(selected) || $("follow").checked)
+    selected = names[names.length - 1];
+
+  const sel = $("lvlSel");
+  if (sel.options.length !== names.length) {
+    sel.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join("");
+  }
+  sel.value = selected;
+
+  drawMap(state.levels[selected]);
+  renderFeedback();
+  renderHistory();
+  renderLessons();
+  $("library").innerHTML = state.library === "(library is empty)"
+    ? '<span class="dim">empty</span>'
+    : "<ul>" + state.library.split("\n").map(l => `<li>${esc(l.replace(/^- /,""))}</li>`).join("") + "</ul>";
+
+  const log = $("log");
+  const atBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 8;
+  log.textContent = state.log.length ? state.log.join("\n") : "idle";
+  if (atBottom) log.scrollTop = log.scrollHeight;
+}
+
+function renderFeedback() {
+  // round N plays level_{N-1}, so feedback about the selected level is round num+1
+  const round = state.rounds[levelNum(selected) + 1];
+  $("fbRound").textContent = round ? `(round ${levelNum(selected) + 1})` : "";
+  if (!round || !round.feedback) {
+    $("feedback").innerHTML = '<span class="dim">this level hasn\'t been played yet</span>';
+    $("diagnosis").innerHTML = '<span class="dim">—</span>';
+    return;
+  }
+  $("feedback").innerHTML = round.feedback.players.map(p => `
+    <div class="player">
+      <b>${esc(p.player)}</b>
+      <span class="stars">${"★".repeat(p.rating)}${"☆".repeat(5 - p.rating)}</span>
+      <div class="meta">${p.deaths} falls · ${p.completed ? "finished" : "gave up"} ·
+        ${p.time_seconds}s</div>
+      ${p.comment ? `<div class="quote">“${esc(p.comment)}”</div>` : ""}
+    </div>`).join("");
+  $("diagnosis").textContent = round.analysis ? round.analysis.diagnosis : "—";
+}
+
+function renderHistory() {
+  const nums = Object.keys(state.rounds).map(Number).sort((a, b) => a - b);
+  if (!nums.length) { $("history").innerHTML = '<span class="dim">no rounds yet</span>'; return; }
+  $("history").innerHTML = nums.map(n => {
+    const fb = state.rounds[n].feedback;
+    const rating = fb ? fb.players[0].rating : "?";
+    const name = `level_${String(n - 1).padStart(3, "0")}`;
+    return `<span class="chip ${name === selected ? "sel" : ""}" onclick="pick('${name}')">R${n}: ${rating}★</span>`;
+  }).join("");
+}
+
+function pick(name) { selected = name; $("follow").checked = false; render(); }
+
+function renderLessons() {
+  if (!state.lessons.length) { $("lessons").innerHTML = '<span class="dim">none yet</span>'; return; }
+  $("lessons").innerHTML = "<ul>" + state.lessons.map(l =>
+    `<li>${esc(l.lesson)} <span class="dim">(seen ${l.seen_count}x, round ${l.source_round})</span></li>`).join("") + "</ul>";
+}
+
+function drawMap(csvText) {
+  const cv = $("cv"), ctx = cv.getContext("2d");
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const grid = parseCSV(csvText);
+  const rows = grid.length, cols = Math.max(...grid.map(r => r.length));
+  const s = Math.min(cv.width / (cols * TILE), cv.height / (rows * TILE));
+  ctx.setTransform(s, 0, 0, s, 0, 0);
+
+  let solids = 0;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const cell = grid[r]?.[c];
+    if (cell === "X") {
+      solids++;
+      ctx.fillStyle = "#4a5568"; ctx.fillRect(c * TILE, r * TILE, TILE, TILE);
+      ctx.fillStyle = "#5d6b80"; ctx.fillRect(c * TILE, r * TILE, TILE, 4);
+    } else if (cell === "S") {
+      ctx.fillStyle = "#7bd88f";
+      ctx.beginPath(); ctx.arc(c * TILE + 16, r * TILE + 16, 11, 0, 7); ctx.fill();
+      ctx.fillStyle = "#0e1015"; ctx.font = "bold 13px monospace";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("S", c * TILE + 16, r * TILE + 17);
+    } else if (cell === "E") {
+      ctx.fillStyle = "#ffb454";
+      ctx.fillRect(c * TILE + 13, r * TILE + 4, 4, TILE - 4);
+      ctx.beginPath(); ctx.moveTo(c * TILE + 17, r * TILE + 4);
+      ctx.lineTo(c * TILE + 30, r * TILE + 10); ctx.lineTo(c * TILE + 17, r * TILE + 16);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  // fall markers from the round that played this level
+  const round = state.rounds[levelNum(selected) + 1];
+  if (round && round.feedback) {
+    ctx.strokeStyle = "#ff3333"; ctx.lineWidth = 2.5;
+    for (const p of round.feedback.players) {
+      for (const d of (p.fall_locations || [])) {
+        ctx.beginPath();
+        ctx.moveTo(d.x - 7, d.y - 7); ctx.lineTo(d.x + 7, d.y + 7);
+        ctx.moveTo(d.x + 7, d.y - 7); ctx.lineTo(d.x - 7, d.y + 7);
+        ctx.stroke();
+      }
+    }
+    ctx.lineWidth = 1;
+  }
+
+  $("stats").textContent = `${selected} — ${cols}×${rows} tiles · ${solids} solid blocks`;
+}
+
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+
+$("resetBtn").onclick = async () => {
+  if (confirm("Delete all generated levels, feedback, lessons, and library?")) {
+    await fetch("/api/reset", { method: "POST" });
+    selected = null;
+    await poll();
+    await loadPlayLevel();
+  }
+};
+$("lvlSel").onchange = e => { selected = e.target.value; $("follow").checked = false; render(); };
+$("follow").onchange = render;
+setInterval(poll, 1200);
+poll();
+
+/* ================= LLM traffic tab ================= */
+let activeTab = "dash", llmEntries = [], llmSig = "";
+
+function setTab(name) {
+  activeTab = name;
+  $("tab-dash").style.display = name === "dash" ? "grid" : "none";
+  $("tab-llm").style.display = name === "llm" ? "block" : "none";
+  $("tabBtnDash").className = name === "dash" ? "on" : "";
+  $("tabBtnLlm").className = name === "llm" ? "on" : "";
+  if (name === "llm") fetchLlmLog();
+}
+$("tabBtnDash").onclick = () => setTab("dash");
+$("tabBtnLlm").onclick = () => setTab("llm");
+
+async function fetchLlmLog() {
+  try {
+    const r = await fetch("/api/llmlog");
+    llmEntries = (await r.json()).entries;
+    const sig = llmEntries.length + ":" + (llmEntries.at(-1)?.ts || "");
+    $("llmBadge").textContent = llmEntries.length ? `(${llmEntries.length})` : "";
+    if (sig !== llmSig) { llmSig = sig; renderLlmLog(); }  // don't collapse open panels on every poll
+  } catch (e) { /* server busy */ }
+}
+setInterval(() => { if (activeTab === "llm") fetchLlmLog(); else fetchLlmBadge(); }, 3000);
+async function fetchLlmBadge() {
+  try {
+    const r = await fetch("/api/llmlog");
+    const n = (await r.json()).entries.length;
+    $("llmBadge").textContent = n ? `(${n})` : "";
+  } catch (e) {}
+}
+fetchLlmBadge();
+
+function renderLlmLog() {
+  $("llmCount").textContent = `(${llmEntries.length} calls)`;
+  if (!llmEntries.length) {
+    $("llmLog").innerHTML = '<div class="panel dim">no LLM calls yet — play a round in LLM mode</div>';
+    return;
+  }
+  $("llmLog").innerHTML = llmEntries.slice().reverse().map(e => `
+    <div class="llmEntry">
+      <div class="llmHead">
+        <b>${esc(e.label || "call")}</b>
+        <span class="modelChip">${esc(e.model)}</span>
+        <span class="dim">${esc(e.ts.replace("T", " "))} · ${e.duration_s}s ·
+          ${e.input_tokens} in → ${e.output_tokens} out tokens${e.attempt > 1 ? ` · attempt ${e.attempt}` : ""}</span>
+      </div>
+      <details><summary>system prompt (${e.system.length.toLocaleString()} chars)</summary><pre>${esc(e.system)}</pre></details>
+      ${e.messages.map(m => `<details><summary>➜ ${esc(m.role)} message (${m.content.length.toLocaleString()} chars)</summary><pre>${esc(m.content)}</pre></details>`).join("")}
+      <details open><summary>⬅ response (${e.response.length.toLocaleString()} chars)</summary><pre>${esc(e.response)}</pre></details>
+    </div>`).join("");
+}
+
+/* ================= playtest: a tiny CSV-tilemap platformer ================= */
+const cv2 = $("cv2"), ctx2 = cv2.getContext("2d");
+const world = { grid: [], rows: 0, cols: 0, spawn: null, exit: null, name: null };
+let player = null, keys = {}, falls = 0, fallLocations = [], startedAt = 0;
+let phase = "playing";   // playing | rating | waiting
+let ptLoopStarted = false, chosenRating = 0, runCompleted = false;
+let fps = 0, fpsFrames = 0, fpsWindowStart = performance.now();
+
+async function loadPlayLevel() {
+  const r = await fetch("/api/playlevel");
+  if (!r.ok) { $("ptStatus").textContent = "no CSV level found in agent/data/levels/"; return; }
+  const d = await r.json();
+  world.name = d.name;
+  world.grid = parseCSV(d.csv);
+  world.rows = world.grid.length;
+  world.cols = Math.max(...world.grid.map(row => row.length));
+  world.spawn = world.exit = null;
+  world.grid.forEach((row, r) => row.forEach((cell, c) => {
+    if (cell === "S") world.spawn = { c, r };
+    if (cell === "E") world.exit = { c, r };
+  }));
+  if (!world.spawn) world.spawn = { c: 1, r: 1 };
+  $("ptName").textContent = d.name + ".csv";
+  restartRun();
+  if (!ptLoopStarted) { ptLoopStarted = true; ptFrame(); }
+}
+
+function restartRun() {
+  player = { x: world.spawn.c * TILE + 6, y: world.spawn.r * TILE + 2,
+             w: 20, h: 28, vx: 0, vy: 0, grounded: false };
+  falls = 0; fallLocations = []; startedAt = performance.now();
+  phase = "playing"; runCompleted = false; chosenRating = 0;
+  $("fbForm").style.display = "none";
+  $("fbWaiting").style.display = "none";
+  $("fbComment").value = "";
+}
+
+function isSolid(c, r) {
+  if (c < 0 || c >= world.cols) return true;         // walls at level edges
+  if (r < 0 || r >= world.rows) return false;        // open sky / open pit
+  return world.grid[r]?.[c] === "X";
+}
+
+cv2.addEventListener("keydown", e => {
+  keys[e.code] = true;
+  if (["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Space","KeyR"].includes(e.code)) e.preventDefault();
+  if (e.code === "KeyR" && phase === "playing") restartRun();
+});
+cv2.addEventListener("keyup", e => { keys[e.code] = false; });
+cv2.addEventListener("click", () => cv2.focus());
+
+function ptStep() {
+  if (!player || phase !== "playing") return;
+  const SPEED = 3.2, JUMP = 9.6, GRAVITY = 0.5, MAX_FALL = 12;
+  player.vx = (keys.ArrowLeft || keys.KeyA ? -SPEED : 0) + (keys.ArrowRight || keys.KeyD ? SPEED : 0);
+  if ((keys.ArrowUp || keys.Space || keys.KeyW) && player.grounded) {
+    player.vy = -JUMP; player.grounded = false;
+  }
+  player.vy = Math.min(player.vy + GRAVITY, MAX_FALL);
+
+  // horizontal move + collide
+  player.x += player.vx;
+  let top = Math.floor(player.y / TILE), bot = Math.floor((player.y + player.h - 1) / TILE);
+  if (player.vx > 0) {
+    const c = Math.floor((player.x + player.w) / TILE);
+    for (let r = top; r <= bot; r++) if (isSolid(c, r)) player.x = c * TILE - player.w - 0.01;
+  } else if (player.vx < 0) {
+    const c = Math.floor(player.x / TILE);
+    for (let r = top; r <= bot; r++) if (isSolid(c, r)) player.x = (c + 1) * TILE + 0.01;
+  }
+
+  // vertical move + collide
+  player.y += player.vy;
+  player.grounded = false;
+  const left = Math.floor(player.x / TILE), right = Math.floor((player.x + player.w - 1) / TILE);
+  if (player.vy > 0) {
+    const r = Math.floor((player.y + player.h) / TILE);
+    for (let c = left; c <= right; c++) if (isSolid(c, r)) {
+      player.y = r * TILE - player.h - 0.01; player.vy = 0; player.grounded = true;
+    }
+  } else if (player.vy < 0) {
+    const r = Math.floor(player.y / TILE);
+    for (let c = left; c <= right; c++) if (isSolid(c, r)) {
+      player.y = (r + 1) * TILE + 0.01; player.vy = 0;
+    }
+  }
+
+  // fell out of the world -> record it, respawn
+  if (player.y > world.rows * TILE + 100) {
+    falls++;
+    fallLocations.push({ x: Math.round(player.x), y: Math.round(world.rows * TILE - 16) });
+    player.x = world.spawn.c * TILE + 6; player.y = world.spawn.r * TILE + 2;
+    player.vx = player.vy = 0;
+  }
+
+  // reached the exit?
+  if (world.exit) {
+    const ex = world.exit.c * TILE, ey = world.exit.r * TILE;
+    if (player.x < ex + TILE && player.x + player.w > ex &&
+        player.y < ey + TILE && player.y + player.h > ey) {
+      runCompleted = true;
+      showRatingForm();
+    }
+  }
+}
+
+function showRatingForm() {
+  phase = "rating";
+  $("fbTitle").textContent = runCompleted
+    ? `🏁 Finished in ${((performance.now() - startedAt) / 1000).toFixed(1)}s with ${falls} falls — rate it:`
+    : `Run ended (${falls} falls) — rate it:`;
+  renderStars();
+  $("fbForm").style.display = "block";
+  $("fbComment").focus();
+}
+
+function renderStars() {
+  $("fbStars").innerHTML = [1,2,3,4,5].map(n =>
+    `<button class="starBtn ${n <= chosenRating ? "lit" : ""}" onclick="setRating(${n})">★</button>`).join("");
+}
+function setRating(n) { chosenRating = n; renderStars(); }
+
+$("fbSubmit").onclick = async () => {
+  if (!chosenRating) { $("fbTitle").textContent = "Pick a star rating first ↓"; return; }
+  const body = {
+    rating: chosenRating,
+    comment: $("fbComment").value.trim(),
+    completed: runCompleted,
+    falls: falls,
+    fall_locations: fallLocations,
+    time_seconds: (performance.now() - startedAt) / 1000,
+  };
+  const r = await fetch("/api/feedback", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) {
+    const err = await r.json();
+    $("fbTitle").textContent = "⚠ " + (err.error || "submit failed");
+    return;
+  }
+  phase = "waiting";
+  waitingForNext = true;
+  $("fbForm").style.display = "none";
+  $("fbWaiting").style.display = "block";
+  $("ptStatus").textContent = "feedback sent — waiting for the agent's next level";
+};
+
+$("endRun").onclick = () => { if (phase !== "waiting") showRatingForm(); };
+$("ptReload").onclick = loadPlayLevel;
+
+function ptDraw() {
+  ctx2.setTransform(1, 0, 0, 1, 0, 0);
+  ctx2.clearRect(0, 0, cv2.width, cv2.height);
+  if (!world.grid.length) return;
+  const s = Math.min(cv2.width / (world.cols * TILE), cv2.height / (world.rows * TILE));
+  ctx2.setTransform(s, 0, 0, s, 0, 0);
+
+  for (let r = 0; r < world.rows; r++) for (let c = 0; c < world.cols; c++) {
+    if (world.grid[r]?.[c] === "X") {
+      ctx2.fillStyle = "#4a5568";
+      ctx2.fillRect(c * TILE, r * TILE, TILE, TILE);
+      ctx2.fillStyle = "#5d6b80";
+      ctx2.fillRect(c * TILE, r * TILE, TILE, 4);
+    }
+  }
+  if (world.exit) {
+    const x = world.exit.c * TILE, y = world.exit.r * TILE;
+    ctx2.fillStyle = "#ffb454";
+    ctx2.fillRect(x + 13, y + 4, 4, TILE - 4);
+    ctx2.beginPath(); ctx2.moveTo(x + 17, y + 4);
+    ctx2.lineTo(x + 30, y + 10); ctx2.lineTo(x + 17, y + 16);
+    ctx2.closePath(); ctx2.fill();
+  }
+  if (player) {
+    ctx2.fillStyle = "#7bd88f";
+    ctx2.beginPath();
+    ctx2.roundRect(player.x, player.y, player.w, player.h, 5);
+    ctx2.fill();
+    ctx2.fillStyle = "#0e1015";
+    const eye = player.vx < 0 ? 5 : player.w - 9;
+    ctx2.fillRect(player.x + eye, player.y + 7, 4, 4);
+  }
+
+  // FPS readout, top-right corner
+  ctx2.setTransform(1, 0, 0, 1, 0, 0);
+  ctx2.font = "bold 13px ui-monospace, monospace";
+  ctx2.textAlign = "right";
+  ctx2.textBaseline = "top";
+  ctx2.fillStyle = fps >= 55 ? "#7bd88f" : fps >= 30 ? "#ffb454" : "#f07178";
+  ctx2.fillText(`${fps.toFixed(0)} FPS`, cv2.width - 10, 8);
+
+  if (phase !== "playing") {
+    ctx2.fillStyle = "rgba(14,16,21,.6)";
+    ctx2.fillRect(0, 0, cv2.width, cv2.height);
+    ctx2.fillStyle = phase === "waiting" ? "#7bd88f" : "#ffb454";
+    ctx2.font = "bold 30px system-ui";
+    ctx2.textAlign = "center";
+    ctx2.textBaseline = "middle";
+    ctx2.fillText(phase === "waiting" ? "🤖 designing next level…" : (runCompleted ? "🏁 Finish!" : "run ended"),
+                  cv2.width / 2, cv2.height / 2);
+  }
+}
+
+function ptFrame() {
+  fpsFrames++;
+  const now = performance.now();
+  if (now - fpsWindowStart >= 500) {
+    fps = fpsFrames * 1000 / (now - fpsWindowStart);
+    fpsFrames = 0;
+    fpsWindowStart = now;
+  }
+
+  ptStep();
+  ptDraw();
+  if (player && phase === "playing") {
+    $("ptStatus").textContent =
+      `⏱ ${((now - startedAt) / 1000).toFixed(1)}s · falls: ${falls} · ${fps.toFixed(0)} fps · ` +
+      "← → / A D move · ↑ / space jump · R restart";
+  }
+  requestAnimationFrame(ptFrame);
+}
+
+loadPlayLevel();
+</script>
+</body>
+</html>

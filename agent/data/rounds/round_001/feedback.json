@@ -1,0 +1,15 @@
+{
+  "round": 1,
+  "level": "level_000",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 2,
+      "completed": false,
+      "deaths": 0,
+      "fall_locations": [],
+      "time_seconds": 12.7,
+      "comment": "there are too many jumps"
+    }
+  ]
+}
