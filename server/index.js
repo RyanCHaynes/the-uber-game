@@ -9,6 +9,7 @@ import { WebSocketServer } from 'ws';
 import { GAME } from '../shared/game.js';
 import { activeLevelCandidate } from '../shared/levels/index.js';
 import { GameRoom } from './game-room.js';
+import { SoloSliceRoom } from './solo-slice-room.js';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const defaultDist = path.join(repositoryRoot, 'dist');
@@ -92,6 +93,7 @@ export function createCoinRushServer({
   handshakeTimeoutMs = 5000,
 } = {}) {
   const room = new GameRoom({ level });
+  const sliceRoom = new SoloSliceRoom();
   const server = createServer((request, response) => {
     const pathname = new URL(request.url, 'http://localhost').pathname;
     if (pathname === '/healthz') {
@@ -100,6 +102,21 @@ export function createCoinRushServer({
         revision: room.level.revision,
         connections: room.connectionCount,
         running: room.running,
+        sliceRevision: 'solo-slice-v1',
+        sliceConnections: sliceRoom.connectionCount,
+        sliceRunning: sliceRoom.running,
+        sliceComplete: sliceRoom.complete,
+      });
+      sendText(response, 200, body, 'application/json; charset=utf-8');
+      return;
+    }
+    if (pathname === '/slice-healthz') {
+      const body = JSON.stringify({
+        ok: true,
+        revision: 'solo-slice-v1',
+        connections: sliceRoom.connectionCount,
+        running: sliceRoom.running,
+        complete: sliceRoom.complete,
       });
       sendText(response, 200, body, 'application/json; charset=utf-8');
       return;
@@ -114,6 +131,11 @@ export function createCoinRushServer({
     maxPayload: 4096,
     perMessageDeflate: false,
   });
+  const sliceWebSockets = new WebSocketServer({
+    noServer: true,
+    maxPayload: 4096,
+    perMessageDeflate: false,
+  });
 
   server.on('upgrade', (request, socket, head) => {
     let pathname;
@@ -123,13 +145,14 @@ export function createCoinRushServer({
       socket.destroy();
       return;
     }
-    if (pathname !== '/ws' || (allowedOrigin && request.headers.origin !== allowedOrigin)) {
+    const target = pathname === '/ws' ? webSockets : pathname === '/slice-ws' ? sliceWebSockets : null;
+    if (!target || (allowedOrigin && request.headers.origin !== allowedOrigin)) {
       socket.write('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');
       socket.destroy();
       return;
     }
-    webSockets.handleUpgrade(request, socket, head, (webSocket) => {
-      webSockets.emit('connection', webSocket, request);
+    target.handleUpgrade(request, socket, head, (webSocket) => {
+      target.emit('connection', webSocket, request);
     });
   });
 
@@ -165,16 +188,50 @@ export function createCoinRushServer({
     socket.on('error', () => {});
   });
 
+  sliceWebSockets.on('connection', (socket) => {
+    socket.isAlive = true;
+    const peer = sliceRoom.connect(socket);
+    if (!peer) return;
+    const handshakeTimer = setTimeout(() => {
+      if (!peer.joined) socket.close(1008, 'Hello timeout');
+    }, handshakeTimeoutMs);
+    handshakeTimer.unref?.();
+
+    socket.on('pong', () => { socket.isAlive = true; });
+    socket.on('message', (data, isBinary) => {
+      if (isBinary) {
+        socket.close(1003, 'Text messages required');
+        return;
+      }
+      let message;
+      try {
+        message = JSON.parse(data.toString('utf8'));
+      } catch {
+        socket.close(1007, 'Invalid JSON');
+        return;
+      }
+      sliceRoom.receive(socket, message);
+      if (peer.joined) clearTimeout(handshakeTimer);
+    });
+    socket.on('close', () => {
+      clearTimeout(handshakeTimer);
+      sliceRoom.disconnect(socket);
+    });
+    socket.on('error', () => {});
+  });
+
   let previousTick = performance.now();
   const gameTimer = setInterval(() => {
     const now = performance.now();
-    room.tick((now - previousTick) / 1000);
+    const elapsed = (now - previousTick) / 1000;
+    room.tick(elapsed);
+    sliceRoom.tick(elapsed);
     previousTick = now;
   }, 1000 / GAME.tickRate);
   gameTimer.unref?.();
 
   const heartbeatTimer = setInterval(() => {
-    for (const socket of webSockets.clients) {
+    for (const socket of [...webSockets.clients, ...sliceWebSockets.clients]) {
       if (!socket.isAlive) {
         socket.terminate();
         continue;
@@ -187,8 +244,10 @@ export function createCoinRushServer({
 
   return {
     room,
+    sliceRoom,
     server,
     webSockets,
+    sliceWebSockets,
     async listen() {
       await new Promise((resolve, reject) => {
         server.once('error', reject);
@@ -202,8 +261,13 @@ export function createCoinRushServer({
     async close() {
       clearInterval(gameTimer);
       clearInterval(heartbeatTimer);
-      for (const socket of webSockets.clients) socket.close(1001, 'Server shutting down');
-      await new Promise((resolve) => webSockets.close(resolve));
+      for (const socket of [...webSockets.clients, ...sliceWebSockets.clients]) {
+        socket.close(1001, 'Server shutting down');
+      }
+      await Promise.all([
+        new Promise((resolve) => webSockets.close(resolve)),
+        new Promise((resolve) => sliceWebSockets.close(resolve)),
+      ]);
       if (server.listening) await new Promise((resolve) => server.close(resolve));
     },
   };
