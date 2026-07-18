@@ -1,0 +1,20 @@
+{
+  "round": 2,
+  "level": "level_001",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 1,
+      "completed": true,
+      "deaths": 1,
+      "fall_locations": [
+        {
+          "x": 486,
+          "y": 464
+        }
+      ],
+      "time_seconds": 382.1,
+      "comment": "I don't like jumping. Jumping AT ALL is not fun. I want to play a flat level with no jumps."
+    }
+  ]
+}

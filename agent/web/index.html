@@ -169,6 +169,12 @@
 </div>
 
 <script>
+// Surface any client-side failure in the header instead of dying silently.
+window.addEventListener("error", e => { $("err").textContent = "page error: " + e.message; });
+window.addEventListener("unhandledrejection", e => {
+  $("err").textContent = "page error: " + ((e.reason && e.reason.message) || e.reason);
+});
+
 let state = null, selected = null, waitingForNext = false;
 const $ = id => document.getElementById(id);
 const TILE = 32;
@@ -198,7 +204,8 @@ function levelNames() { return Object.keys(state.levels).sort(); }
 function levelNum(name) { return parseInt(name.split("_")[1], 10); }
 
 function render() {
-  $("mode").textContent = state.mode === "llm" ? "LLM (Claude)" : "MOCK (offline)";
+  $("mode").textContent = state.mode !== "llm" ? "MOCK (offline)"
+    : state.backend === "claude_code" ? "LLM (Claude Code · subscription)" : "LLM (Claude API)";
   $("mode").className = "badge " + state.mode;
   $("busy").style.display = state.running ? "" : "none";
   $("resetBtn").disabled = state.running;
@@ -242,8 +249,8 @@ function renderFeedback() {
     <div class="player">
       <b>${esc(p.player)}</b>
       <span class="stars">${"★".repeat(p.rating)}${"☆".repeat(5 - p.rating)}</span>
-      <div class="meta">${p.deaths} falls · ${p.completed ? "finished" : "gave up"} ·
-        ${p.time_seconds}s</div>
+      <div class="meta">${p.deaths} deaths · ${p.completed ? "finished" : "gave up"} ·
+        ${p.time_seconds}s${p.enemies_killed != null ? ` · ⚔ ${p.enemies_killed} kills · ${p.hits_taken} hits taken` : ""}</div>
       ${p.comment ? `<div class="quote">“${esc(p.comment)}”</div>` : ""}
     </div>`).join("");
   $("diagnosis").textContent = round.analysis ? round.analysis.diagnosis : "—";
@@ -296,18 +303,22 @@ function drawMap(csvText) {
       ctx.beginPath(); ctx.moveTo(c * TILE + 17, r * TILE + 4);
       ctx.lineTo(c * TILE + 30, r * TILE + 10); ctx.lineTo(c * TILE + 17, r * TILE + 16);
       ctx.closePath(); ctx.fill();
+    } else if (cell >= "1" && cell <= "9") {
+      ctx.fillStyle = "#f07178";   // enemy placement marker
+      ctx.beginPath(); ctx.arc(c * TILE + 16, r * TILE + 16, 10, 0, 7); ctx.fill();
     }
   }
 
   // fall markers from the round that played this level
   const round = state.rounds[levelNum(selected) + 1];
   if (round && round.feedback) {
-    ctx.strokeStyle = "#ff3333"; ctx.lineWidth = 2.5;
+    const m = 7 / s;                       // constant on-screen size at any map scale
+    ctx.strokeStyle = "#ff3333"; ctx.lineWidth = 2.5 / s;
     for (const p of round.feedback.players) {
       for (const d of (p.fall_locations || [])) {
         ctx.beginPath();
-        ctx.moveTo(d.x - 7, d.y - 7); ctx.lineTo(d.x + 7, d.y + 7);
-        ctx.moveTo(d.x + 7, d.y - 7); ctx.lineTo(d.x - 7, d.y + 7);
+        ctx.moveTo(d.x - m, d.y - m); ctx.lineTo(d.x + m, d.y + m);
+        ctx.moveTo(d.x + m, d.y - m); ctx.lineTo(d.x - m, d.y + m);
         ctx.stroke();
       }
     }
@@ -377,7 +388,8 @@ function renderLlmLog() {
         <b>${esc(e.label || "call")}</b>
         <span class="modelChip">${esc(e.model)}</span>
         <span class="dim">${esc(e.ts.replace("T", " "))} · ${e.duration_s}s ·
-          ${e.input_tokens} in → ${e.output_tokens} out tokens${e.attempt > 1 ? ` · attempt ${e.attempt}` : ""}</span>
+          ${e.input_tokens} in → ${e.output_tokens} out tokens${e.attempt > 1 ? ` · attempt ${e.attempt}` : ""}
+          · via ${e.backend === "claude_code" ? "Claude Code" : "API"}</span>
       </div>
       <details><summary>system prompt (${e.system.length.toLocaleString()} chars)</summary><pre>${esc(e.system)}</pre></details>
       ${e.messages.map(m => `<details><summary>➜ ${esc(m.role)} message (${m.content.length.toLocaleString()} chars)</summary><pre>${esc(m.content)}</pre></details>`).join("")}
@@ -393,6 +405,138 @@ let phase = "playing";   // playing | rating | waiting
 let ptLoopStarted = false, chosenRating = 0, runCompleted = false;
 let fps = 0, fpsFrames = 0, fpsWindowStart = performance.now();
 
+// combat state
+const MAX_HP = 3, SHOT_COOLDOWN = 320, SHOT_SPEED = 10, SHOT_G = 0.35, SHOT_LOFT = 1.5;
+let roster = [], enemySpawns = [], enemies = [], playerShots = [], enemyShots = [];
+let mouse = { x: 0, y: 0 };
+let hp = MAX_HP, kills = 0, hitsTaken = 0, invulnUntil = 0, lastShotAt = 0;
+let cam = { x: 0, y: 0 };
+
+function spawnEnemies() {
+  enemies = enemySpawns.map(sp => {
+    const def = roster[sp.type];
+    if (!def) return null;
+    return {
+      def,
+      x: sp.c * TILE + 16, y: sp.r * TILE + 16,
+      x0: sp.c * TILE + 16, y0: sp.r * TILE + 16,
+      dir: 1, t: Math.random() * 6.28, lastAttack: 0, dead: false,
+      parts: def.parts.map(p => ({ ...p, hp: p.hp || 0, dead: false })),
+    };
+  }).filter(Boolean);
+}
+
+function partAbs(en, part) {
+  let x = part.offset.x, y = part.offset.y, cur = part;
+  while (cur.parent) {
+    const par = en.parts.find(q => q.id === cur.parent);
+    if (!par) break;
+    x += par.offset.x; y += par.offset.y;
+    cur = par;
+  }
+  return { x: en.x + x, y: en.y + y };
+}
+
+function partHit(en, part, px, py, pr) {
+  const a = partAbs(en, part);
+  if (part.shape === "circle") {
+    const dx = px - a.x, dy = py - a.y, rr = (part.r || 8) + pr;
+    return dx * dx + dy * dy <= rr * rr;
+  }
+  const hw = (part.w || 16) / 2 + pr, hh = (part.h || 16) / 2 + pr;  // tri uses its bounding box
+  return Math.abs(px - a.x) <= hw && Math.abs(py - a.y) <= hh;
+}
+
+function damagePlayer(dmg, now) {
+  if (now < invulnUntil || phase !== "playing") return;
+  hp -= dmg; hitsTaken++;
+  invulnUntil = now + 1000;
+  if (hp <= 0) {
+    falls++;
+    fallLocations.push({ x: Math.round(player.x), y: Math.round(player.y) });
+    player.x = world.spawn.c * TILE + 6; player.y = world.spawn.r * TILE + 2;
+    player.vx = player.vy = 0;
+    hp = MAX_HP;
+    enemyShots = [];
+    invulnUntil = now + 1500;
+  }
+}
+
+function updateEnemies(now) {
+  for (const en of enemies) {
+    if (en.dead) continue;
+    const mv = en.def.movement || {};
+    en.t += 1 / 60;
+    if (mv.type === "patrol" || mv.type === "flyer") {
+      en.x += en.dir * (mv.speed || 40) / 60;
+      if (en.x > en.x0 + (mv.range || 96)) en.dir = -1;
+      if (en.x < en.x0 - (mv.range || 96)) en.dir = 1;
+    }
+    if (mv.type === "flyer") {
+      en.y = en.y0 + Math.sin(en.t * (mv.bob_hz || 0.8) * 6.283) * (mv.bob || 20);
+    }
+    const atk = en.def.attack || {};
+    if (atk.type && atk.type !== "none" && player) {
+      const dx = player.x + player.w / 2 - en.x, dy = player.y + player.h / 2 - en.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (dist < (atk.range || 400) && now - en.lastAttack > (atk.cooldown_s || 2) * 1000) {
+        en.lastAttack = now;
+        const sp = atk.speed || 5;
+        enemyShots.push({
+          x: en.x, y: en.y,
+          vx: dx / dist * sp,
+          vy: dy / dist * sp - (atk.type === "lob" ? 3 : 0),
+          g: atk.gravity || 0, dmg: atk.damage || 1, color: atk.color || "#ff8080",
+        });
+      }
+    }
+    // contact damage
+    const pcx = player.x + player.w / 2, pcy = player.y + player.h / 2;
+    for (const part of en.parts) {
+      if (!part.dead && partHit(en, part, pcx, pcy, 12)) {
+        damagePlayer(en.def.contact_damage || 1, now);
+        break;
+      }
+    }
+  }
+}
+
+function updateShots(now) {
+  for (const s of playerShots) {
+    s.vy += SHOT_G; s.x += s.vx; s.y += s.vy;
+    if (isSolid(Math.floor(s.x / TILE), Math.floor(s.y / TILE)) ||
+        s.y > world.rows * TILE + 200) s.dead = true;
+    if (s.dead) continue;
+    outer:
+    for (const en of enemies) {
+      if (en.dead) continue;
+      for (const part of en.parts) {
+        if (part.dead || !partHit(en, part, s.x, s.y, 5)) continue;
+        s.dead = true;                      // armored parts block the shot
+        if (part.vulnerable) {
+          part.hp -= 15;
+          if (part.hp <= 0) part.dead = true;
+          if (!en.parts.some(p => p.vulnerable && !p.dead)) { en.dead = true; kills++; }
+        }
+        break outer;
+      }
+    }
+  }
+  for (const s of enemyShots) {
+    s.vy += s.g; s.x += s.vx; s.y += s.vy;
+    if (isSolid(Math.floor(s.x / TILE), Math.floor(s.y / TILE)) ||
+        s.y > world.rows * TILE + 200) s.dead = true;
+    if (!s.dead && player &&
+        s.x > player.x - 4 && s.x < player.x + player.w + 4 &&
+        s.y > player.y - 4 && s.y < player.y + player.h + 4) {
+      s.dead = true;
+      damagePlayer(s.dmg, now);
+    }
+  }
+  playerShots = playerShots.filter(s => !s.dead);
+  enemyShots = enemyShots.filter(s => !s.dead);
+}
+
 async function loadPlayLevel() {
   const r = await fetch("/api/playlevel");
   if (!r.ok) { $("ptStatus").textContent = "no CSV level found in agent/data/levels/"; return; }
@@ -401,10 +545,14 @@ async function loadPlayLevel() {
   world.grid = parseCSV(d.csv);
   world.rows = world.grid.length;
   world.cols = Math.max(...world.grid.map(row => row.length));
+  try { roster = (await (await fetch("/api/enemies")).json()).enemies || []; }
+  catch (e) { roster = []; }
   world.spawn = world.exit = null;
+  enemySpawns = [];
   world.grid.forEach((row, r) => row.forEach((cell, c) => {
     if (cell === "S") world.spawn = { c, r };
     if (cell === "E") world.exit = { c, r };
+    if (cell >= "1" && cell <= "9") enemySpawns.push({ type: +cell - 1, c, r });
   }));
   if (!world.spawn) world.spawn = { c: 1, r: 1 };
   $("ptName").textContent = d.name + ".csv";
@@ -415,7 +563,11 @@ async function loadPlayLevel() {
 function restartRun() {
   player = { x: world.spawn.c * TILE + 6, y: world.spawn.r * TILE + 2,
              w: 20, h: 28, vx: 0, vy: 0, grounded: false };
+  keys = {};
   falls = 0; fallLocations = []; startedAt = performance.now();
+  spawnEnemies();
+  playerShots = []; enemyShots = [];
+  hp = MAX_HP; kills = 0; hitsTaken = 0; invulnUntil = 0; lastShotAt = 0;
   phase = "playing"; runCompleted = false; chosenRating = 0;
   $("fbForm").style.display = "none";
   $("fbWaiting").style.display = "none";
@@ -433,8 +585,30 @@ cv2.addEventListener("keydown", e => {
   if (["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Space","KeyR"].includes(e.code)) e.preventDefault();
   if (e.code === "KeyR" && phase === "playing") restartRun();
 });
-cv2.addEventListener("keyup", e => { keys[e.code] = false; });
+// keyup listens on window, not the canvas: if focus moves mid-hold (e.g. to the
+// feedback form), the release still registers and keys can't get stuck "down".
+window.addEventListener("keyup", e => { keys[e.code] = false; });
+cv2.addEventListener("blur", () => { keys = {}; });
 cv2.addEventListener("click", () => cv2.focus());
+
+// mouse aim + fire
+cv2.addEventListener("mousemove", e => {
+  const rect = cv2.getBoundingClientRect();
+  mouse.x = (e.clientX - rect.left) * (cv2.width / rect.width);
+  mouse.y = (e.clientY - rect.top) * (cv2.height / rect.height);
+});
+cv2.addEventListener("mousedown", e => {
+  cv2.focus();
+  if (e.button !== 0 || phase !== "playing" || !player) return;
+  const now = performance.now();
+  if (now - lastShotAt < SHOT_COOLDOWN) return;
+  lastShotAt = now;
+  const px = player.x + player.w / 2, py = player.y + player.h / 2;
+  const wx = mouse.x + cam.x, wy = mouse.y + cam.y;
+  const dx = wx - px, dy = wy - py, d = Math.hypot(dx, dy) || 1;
+  playerShots.push({ x: px, y: py,
+                     vx: dx / d * SHOT_SPEED, vy: dy / d * SHOT_SPEED - SHOT_LOFT });
+});
 
 function ptStep() {
   if (!player || phase !== "playing") return;
@@ -489,10 +663,15 @@ function ptStep() {
       showRatingForm();
     }
   }
+
+  const now = performance.now();
+  updateEnemies(now);
+  updateShots(now);
 }
 
 function showRatingForm() {
   phase = "rating";
+  $("fbTitle").style.color = "";
   $("fbTitle").textContent = runCompleted
     ? `🏁 Finished in ${((performance.now() - startedAt) / 1000).toFixed(1)}s with ${falls} falls — rate it:`
     : `Run ended (${falls} falls) — rate it:`;
@@ -507,31 +686,47 @@ function renderStars() {
 }
 function setRating(n) { chosenRating = n; renderStars(); }
 
+function fbProblem(msg) {
+  const t = $("fbTitle");
+  t.textContent = "⚠ " + msg;
+  t.style.color = "var(--red)";
+}
+
 $("fbSubmit").onclick = async () => {
-  if (!chosenRating) { $("fbTitle").textContent = "Pick a star rating first ↓"; return; }
-  const body = {
-    rating: chosenRating,
-    comment: $("fbComment").value.trim(),
-    completed: runCompleted,
-    falls: falls,
-    fall_locations: fallLocations,
-    time_seconds: (performance.now() - startedAt) / 1000,
-  };
-  const r = await fetch("/api/feedback", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!r.ok) {
-    const err = await r.json();
-    $("fbTitle").textContent = "⚠ " + (err.error || "submit failed");
-    return;
+  if (!chosenRating) { fbProblem("pick a star rating first ↓"); return; }
+  const btn = $("fbSubmit");
+  btn.disabled = true; btn.textContent = "Sending…";
+  try {
+    const r = await fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        rating: chosenRating,
+        comment: $("fbComment").value.trim(),
+        completed: runCompleted,
+        falls: falls,
+        fall_locations: fallLocations,
+        kills: kills,
+        hits_taken: hitsTaken,
+        time_seconds: (performance.now() - startedAt) / 1000,
+      }),
+    });
+    if (!r.ok) {
+      let msg = `submit failed (HTTP ${r.status})`;
+      try { msg = (await r.json()).error || msg; } catch (e) {}
+      fbProblem(msg + " — try again in a moment");
+      return;
+    }
+    phase = "waiting";
+    waitingForNext = true;
+    $("fbForm").style.display = "none";
+    $("fbWaiting").style.display = "block";
+    $("ptStatus").textContent = "feedback sent — waiting for the agent's next level";
+  } catch (err) {
+    fbProblem("couldn't reach the server (" + err.message + ") — is `python3 -m agent.webui` still running?");
+  } finally {
+    btn.disabled = false; btn.textContent = "Send to the agent →";
   }
-  phase = "waiting";
-  waitingForNext = true;
-  $("fbForm").style.display = "none";
-  $("fbWaiting").style.display = "block";
-  $("ptStatus").textContent = "feedback sent — waiting for the agent's next level";
 };
 
 $("endRun").onclick = () => { if (phase !== "waiting") showRatingForm(); };
@@ -541,10 +736,28 @@ function ptDraw() {
   ctx2.setTransform(1, 0, 0, 1, 0, 0);
   ctx2.clearRect(0, 0, cv2.width, cv2.height);
   if (!world.grid.length) return;
-  const s = Math.min(cv2.width / (world.cols * TILE), cv2.height / (world.rows * TILE));
-  ctx2.setTransform(s, 0, 0, s, 0, 0);
 
-  for (let r = 0; r < world.rows; r++) for (let c = 0; c < world.cols; c++) {
+  // camera: follow the player 1:1, clamped to the level; center levels
+  // smaller than the viewport
+  const worldW = world.cols * TILE, worldH = world.rows * TILE;
+  let camX = 0, camY = 0;
+  if (player) {
+    camX = player.x + player.w / 2 - cv2.width / 2;
+    camY = player.y + player.h / 2 - cv2.height / 2;
+  }
+  camX = Math.max(0, Math.min(camX, Math.max(0, worldW - cv2.width)));
+  camY = Math.max(0, Math.min(camY, Math.max(0, worldH - cv2.height)));
+  if (worldW < cv2.width)  camX = -(cv2.width - worldW) / 2;
+  if (worldH < cv2.height) camY = -(cv2.height - worldH) / 2;
+  cam.x = camX; cam.y = camY;   // shared with mouse-aim math
+  ctx2.setTransform(1, 0, 0, 1, -camX, -camY);
+
+  // draw only the visible tile window
+  const c0 = Math.max(0, Math.floor(camX / TILE)),
+        c1 = Math.min(world.cols - 1, Math.ceil((camX + cv2.width) / TILE)),
+        r0 = Math.max(0, Math.floor(camY / TILE)),
+        r1 = Math.min(world.rows - 1, Math.ceil((camY + cv2.height) / TILE));
+  for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
     if (world.grid[r]?.[c] === "X") {
       ctx2.fillStyle = "#4a5568";
       ctx2.fillRect(c * TILE, r * TILE, TILE, TILE);
@@ -560,7 +773,50 @@ function ptDraw() {
     ctx2.lineTo(x + 30, y + 10); ctx2.lineTo(x + 17, y + 16);
     ctx2.closePath(); ctx2.fill();
   }
-  if (player) {
+  // enemies: draw each living part; armored parts get a steel outline
+  const nowDraw = performance.now();
+  for (const en of enemies) {
+    if (en.dead) continue;
+    for (const part of en.parts) {
+      if (part.dead) continue;
+      const a = partAbs(en, part);
+      ctx2.fillStyle = part.color || "#f07178";
+      if (part.shape === "circle") {
+        ctx2.beginPath(); ctx2.arc(a.x, a.y, part.r || 8, 0, 7); ctx2.fill();
+      } else if (part.shape === "tri") {
+        const hw = (part.w || 12) / 2, hh = (part.h || 12) / 2;
+        ctx2.beginPath();
+        ctx2.moveTo(a.x + hw * en.dir, a.y);
+        ctx2.lineTo(a.x - hw * en.dir, a.y - hh);
+        ctx2.lineTo(a.x - hw * en.dir, a.y + hh);
+        ctx2.closePath(); ctx2.fill();
+      } else {
+        ctx2.fillRect(a.x - (part.w || 16) / 2, a.y - (part.h || 16) / 2, part.w || 16, part.h || 16);
+      }
+      if (!part.vulnerable) {
+        ctx2.strokeStyle = "#aeb7c9"; ctx2.lineWidth = 2;
+        if (part.shape === "circle") {
+          ctx2.beginPath(); ctx2.arc(a.x, a.y, (part.r || 8) + 1, 0, 7); ctx2.stroke();
+        } else {
+          ctx2.strokeRect(a.x - (part.w || 16) / 2 - 1, a.y - (part.h || 16) / 2 - 1,
+                          (part.w || 16) + 2, (part.h || 16) + 2);
+        }
+        ctx2.lineWidth = 1;
+      }
+    }
+  }
+
+  // projectiles
+  for (const s of playerShots) {
+    ctx2.fillStyle = "#7bd88f";
+    ctx2.beginPath(); ctx2.arc(s.x, s.y, 5, 0, 7); ctx2.fill();
+  }
+  for (const s of enemyShots) {
+    ctx2.fillStyle = s.color;
+    ctx2.beginPath(); ctx2.arc(s.x, s.y, 5, 0, 7); ctx2.fill();
+  }
+
+  if (player && !(nowDraw < invulnUntil && Math.floor(nowDraw / 100) % 2)) {  // flicker while invulnerable
     ctx2.fillStyle = "#7bd88f";
     ctx2.beginPath();
     ctx2.roundRect(player.x, player.y, player.w, player.h, 5);
@@ -570,6 +826,27 @@ function ptDraw() {
     ctx2.fillRect(player.x + eye, player.y + 7, 4, 4);
   }
 
+  // aim: trajectory preview + crosshair (world space)
+  if (phase === "playing" && player) {
+    const px = player.x + player.w / 2, py = player.y + player.h / 2;
+    const wx = mouse.x + camX, wy = mouse.y + camY;
+    const dx = wx - px, dy = wy - py, d = Math.hypot(dx, dy) || 1;
+    let sx = px, sy = py, svx = dx / d * SHOT_SPEED, svy = dy / d * SHOT_SPEED - SHOT_LOFT;
+    ctx2.fillStyle = "rgba(123,216,143,.35)";
+    for (let i = 0; i < 16; i++) {
+      svy += SHOT_G; sx += svx; sy += svy;
+      if (isSolid(Math.floor(sx / TILE), Math.floor(sy / TILE))) break;
+      if (i % 2) { ctx2.beginPath(); ctx2.arc(sx, sy, 2.5, 0, 7); ctx2.fill(); }
+    }
+    ctx2.strokeStyle = "#7bd88f"; ctx2.lineWidth = 1.5;
+    ctx2.beginPath(); ctx2.arc(wx, wy, 7, 0, 7); ctx2.stroke();
+    ctx2.beginPath();
+    ctx2.moveTo(wx - 11, wy); ctx2.lineTo(wx - 3, wy); ctx2.moveTo(wx + 3, wy); ctx2.lineTo(wx + 11, wy);
+    ctx2.moveTo(wx, wy - 11); ctx2.lineTo(wx, wy - 3); ctx2.moveTo(wx, wy + 3); ctx2.lineTo(wx, wy + 11);
+    ctx2.stroke();
+    ctx2.lineWidth = 1;
+  }
+
   // FPS readout, top-right corner
   ctx2.setTransform(1, 0, 0, 1, 0, 0);
   ctx2.font = "bold 13px ui-monospace, monospace";
@@ -577,6 +854,15 @@ function ptDraw() {
   ctx2.textBaseline = "top";
   ctx2.fillStyle = fps >= 55 ? "#7bd88f" : fps >= 30 ? "#ffb454" : "#f07178";
   ctx2.fillText(`${fps.toFixed(0)} FPS`, cv2.width - 10, 8);
+
+  // hearts + kill count (screen space, top-left)
+  ctx2.textAlign = "left";
+  ctx2.font = "15px system-ui";
+  ctx2.fillText("❤️".repeat(hp) + "🖤".repeat(Math.max(0, MAX_HP - hp)), 10, 8);
+  if (enemies.length) {
+    ctx2.fillStyle = "#d8dce8";
+    ctx2.fillText(`⚔ ${kills}/${enemies.length}`, 10, 30);
+  }
 
   if (phase !== "playing") {
     ctx2.fillStyle = "rgba(14,16,21,.6)";

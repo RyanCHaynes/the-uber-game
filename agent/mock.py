@@ -46,7 +46,8 @@ def _bottom_gap_columns(grid) -> list[int]:
     return [c for c in range(len(grid[0])) if grid[rows - 1][c] != "X" and grid[rows - 2][c] != "X"]
 
 
-def design(level_csv: str, analysis: dict, lessons_text: str, library_text: str) -> str:
+def design(level_csv: str, analysis: dict, lessons_text: str, library_text: str,
+           player_comment: str = "", roster_text: str = "") -> str:
     grid, _ = csv_level.parse(level_csv)
     rng = random.Random(analysis["diagnosis"])
     rows, cols = len(grid), len(grid[0])

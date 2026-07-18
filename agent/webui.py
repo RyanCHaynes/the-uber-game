@@ -86,6 +86,8 @@ def _handle_feedback(body: dict) -> tuple[int, dict]:
             "deaths": int(body.get("falls", 0)),
             "fall_locations": body.get("fall_locations", []),
             "time_seconds": round(float(body.get("time_seconds", 0)), 1),
+            "enemies_killed": int(body.get("kills", 0)),
+            "hits_taken": int(body.get("hits_taken", 0)),
             "comment": str(body.get("comment", ""))[:500],
         }],
     }
@@ -131,6 +133,7 @@ def _snapshot() -> dict:
         running, log, error = _state["running"], list(_state["log"]), _state["error"]
     return {
         "mode": "mock" if pipeline._use_mock() else "llm",
+        "backend": llm.backend(),
         "running": running,
         "error": error,
         "log": log[-200:],
@@ -166,6 +169,10 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, _snapshot())
         elif self.path == "/api/llmlog":
             self._send(200, {"entries": llm.read_log(100)})
+        elif self.path == "/api/enemies":
+            enemies_path = DATA_DIR / "enemies.json"
+            roster = json.loads(enemies_path.read_text()) if enemies_path.exists() else []
+            self._send(200, {"enemies": roster})
         elif self.path == "/api/playlevel":
             csvs = sorted(LEVELS_DIR.glob("level_*.csv"))
             if not csvs:
@@ -194,6 +201,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
+    ThreadingHTTPServer.request_queue_size = 32  # default backlog of 5 can drop bursts of polls
     server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
     mode = "mock" if pipeline._use_mock() else "llm"
     print(f"agent dashboard running at http://localhost:{PORT}  (mode: {mode})")

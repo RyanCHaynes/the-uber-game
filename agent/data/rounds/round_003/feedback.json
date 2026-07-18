@@ -1,0 +1,15 @@
+{
+  "round": 3,
+  "level": "level_002",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 1,
+      "completed": true,
+      "deaths": 0,
+      "fall_locations": [],
+      "time_seconds": 39.7,
+      "comment": "I don't like pressing the W key or Up arrow. I just want to walk straight across a flat level to the finish line. Please design a perfectly flat level. Flatness is beautiful."
+    }
+  ]
+}

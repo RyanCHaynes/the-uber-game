@@ -20,8 +20,9 @@ ROUNDS_DIR = DATA_DIR / "rounds"
 def _use_mock() -> bool:
     if os.environ.get("AGENT_MOCK") == "1":
         return True
-    # No explicit choice: fall back to mock when no credentials are available.
-    return not os.environ.get("ANTHROPIC_API_KEY") and not os.environ.get("ANTHROPIC_AUTH_TOKEN")
+    # Mock only when no backend is viable (no API key AND no claude CLI).
+    from . import llm
+    return llm.backend() is None
 
 
 def _get_brains():
@@ -34,6 +35,15 @@ def _get_brains():
 
 def latest_level() -> Path:
     return sorted(LEVELS_DIR.glob("level_*.csv"))[-1]
+
+
+def roster_summary() -> str:
+    """One line per enemy type, for the designer's prompt: '1: Grub — ...'"""
+    path = DATA_DIR / "enemies.json"
+    if not path.exists():
+        return ""
+    roster = json.loads(path.read_text())
+    return "\n".join(f"{i + 1}: {e['name']} — {e.get('desc', '')}" for i, e in enumerate(roster))
 
 
 def run_cycle(round_number: int, level_path: Path) -> Path:
@@ -63,7 +73,9 @@ def run_cycle(round_number: int, level_path: Path) -> Path:
         print(f"  saved to library: levels/{level_path.stem}")
 
     print(f"  designing next level ({brain})...")
-    new_csv = design(level_csv, analysis, store.lessons_as_text(), store.library_summary())
+    player_comment = feedback["players"][0].get("comment", "")
+    new_csv = design(level_csv, analysis, store.lessons_as_text(), store.library_summary(),
+                     player_comment=player_comment, roster_text=roster_summary())
 
     errors = csv_level.validate_text(new_csv)
     if errors:  # llm designer validates internally; this guards the mock path too

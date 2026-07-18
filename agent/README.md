@@ -29,8 +29,22 @@ and designs → the next level loads into the game automatically.
 ## Level format
 
 Levels are CSV tile grids in `data/levels/level_NNN.csv` — one row per line,
-comma-separated. `X` solid block · `.` empty · `S` spawn (one) · `E` exit (one).
-Tiles are 32px; row 0 is the top.
+comma-separated. `X` solid block · `.` empty · `S` spawn (one) · `E` exit (one)
+· digits `1`-`9` place an enemy of that type (max 24). Tiles are 32px; row 0 is
+the top.
+
+## Combat
+
+The player aims with the mouse (trajectory preview + crosshair) and left-clicks
+to lob a gravity-arcing projectile. 3 hearts, brief invulnerability after a hit;
+dying respawns at S and counts as a death.
+
+Enemy types live in `data/enemies.json` — agent-editable JSON. Each type has:
+`parts` (colored shapes — rect/circle/tri — positioned by `offset`, optionally
+attached to a `parent` part; each part is `vulnerable` with `hp`, or armored and
+blocks shots), `movement` (`stationary` | `patrol` | `flyer` with speed/range/bob),
+`attack` (`none` | `lob` | `shoot` — projectile speed, cooldown, range, gravity),
+and `contact_damage`. An enemy dies when all its vulnerable parts are destroyed.
 
 ## Architecture
 

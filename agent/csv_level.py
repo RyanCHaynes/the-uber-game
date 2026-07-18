@@ -9,7 +9,9 @@ strings meant to be fed back to the LLM designer on retry.
 """
 
 TILE = 32
-ALLOWED = {".", "X", "S", "E"}
+ENEMY_DIGITS = set("123456789")  # cell N spawns enemy type N from data/enemies.json
+ALLOWED = {".", "X", "S", "E"} | ENEMY_DIGITS
+MAX_ENEMIES = 24
 
 # Player jump reach in tiles — must stay in sync with the physics constants in
 # web/index.html (SPEED/JUMP/GRAVITY). Current tuning clears ~3.8 tiles
@@ -18,21 +20,26 @@ MAX_JUMP_DX = 3
 MAX_JUMP_UP = 2
 
 MIN_ROWS, MAX_ROWS = 8, 40
-MIN_COLS, MAX_COLS = 15, 80
+MIN_COLS, MAX_COLS = 15, 400
 
 
 def parse(text: str) -> tuple[list[list[str]], list[str]]:
-    """Parse CSV text into a grid. Returns (grid, errors)."""
+    """Parse CSV text into a grid. Returns (grid, errors).
+
+    Rows of unequal length are padded with '.' to the widest row rather than
+    rejected — at 400 columns, LLM designers reliably miscount by a cell or two,
+    and padding is harmless (reachability still validates the result).
+    """
     errors = []
     grid = [[c.strip() for c in line.split(",")] for line in text.strip().splitlines() if line.strip()]
     if not grid:
         return [], ["level is empty"]
-    widths = {len(row) for row in grid}
-    if len(widths) > 1:
-        errors.append(f"rows have inconsistent lengths ({sorted(widths)}) — every row needs the same number of cells")
+    width = max(len(row) for row in grid)
+    for row in grid:
+        row.extend(["."] * (width - len(row)))
     bad = sorted({c for row in grid for c in row if c not in ALLOWED})
     if bad:
-        errors.append(f"invalid cell values {bad} — only '.', 'X', 'S', 'E' are allowed")
+        errors.append(f"invalid cell values {bad} — only '.', 'X', 'S', 'E', and enemy digits 1-9 are allowed")
     return grid, errors
 
 
@@ -51,7 +58,7 @@ def _standable(grid, c, r) -> bool:
     rows, cols = len(grid), len(grid[0])
     if not (0 <= c < cols and 0 <= r < rows - 1):
         return False
-    return grid[r][c] in (".", "S", "E") and grid[r + 1][c] == "X"
+    return grid[r][c] != "X" and grid[r + 1][c] == "X"  # enemy digits count as open space
 
 
 def validate(grid: list[list[str]]) -> list[str]:
@@ -67,6 +74,10 @@ def validate(grid: list[list[str]]) -> list[str]:
         count = sum(row.count(symbol) for row in grid)
         if count != 1:
             errors.append(f"level must contain exactly one '{symbol}' ({label}); found {count}")
+
+    enemy_count = sum(1 for row in grid for c in row if c in ENEMY_DIGITS)
+    if enemy_count > MAX_ENEMIES:
+        errors.append(f"level places {enemy_count} enemies; maximum is {MAX_ENEMIES}")
     if errors:
         return errors
 
@@ -88,15 +99,21 @@ def validate(grid: list[list[str]]) -> list[str]:
     # Reachability: BFS over standable cells with coarse jump rules.
     # From a standable cell you can reach standable cells at most MAX_JUMP_DX
     # columns away, rising at most MAX_JUMP_UP rows (drops are unlimited).
-    standables = {(c, r) for r in range(rows) for c in range(cols) if _standable(grid, c, r)}
+    # Standables are indexed by column so long levels stay fast to check.
+    by_col: dict[int, list[int]] = {}
+    for r in range(rows):
+        for c in range(cols):
+            if _standable(grid, c, r):
+                by_col.setdefault(c, []).append(r)
     seen = {landing}
     frontier = [landing]
     while frontier:
         c, r = frontier.pop()
-        for c2, r2 in standables:
-            if (c2, r2) not in seen and abs(c2 - c) <= MAX_JUMP_DX and (r - r2) <= MAX_JUMP_UP:
-                seen.add((c2, r2))
-                frontier.append((c2, r2))
+        for c2 in range(c - MAX_JUMP_DX, c + MAX_JUMP_DX + 1):
+            for r2 in by_col.get(c2, ()):
+                if (c2, r2) not in seen and (r - r2) <= MAX_JUMP_UP:
+                    seen.add((c2, r2))
+                    frontier.append((c2, r2))
     if (ec, er) not in seen:
         errors.append(
             "exit is not reachable from spawn — the player can jump at most "
