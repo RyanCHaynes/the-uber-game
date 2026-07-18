@@ -1,4 +1,4 @@
-# ADR 0004: Immutable content lifecycle and between-level activation
+# ADR 0005: Immutable content lifecycle and between-level activation
 
 - **Status:** Accepted design contract; implementation remains gated on baseline freeze
 - **Date:** 2026-07-18
