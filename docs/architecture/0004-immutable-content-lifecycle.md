@@ -56,7 +56,7 @@ Any digest collision, inventory mismatch, duplicate path, mutable reread, or pos
 | `validated` | Every required check passed against the recorded engine version and expected base; candidate is not yet selectable | `staged`, `rejected` |
 | `staged` | Complete validated revision and activation receipt are durably prepared for one matching future boundary | `active`, `rejected` |
 | `active` | Registry points to this complete revision as last-known-good for eligible future level pins | `active` as idempotent replay, `superseded` after a successful newer activation, or `rolled-back` if this revision itself fails after activation |
-| `superseded` | Previously active complete revision retained as history or immediate rollback target after a newer revision became active | `active` through an explicit rollback transaction |
+| `superseded` | Previously active complete revision retained as history or possible rollback target after a newer revision became active | `active` through an explicit rollback transaction, or `rolled-back` if a still-pinned session proves the revision defective |
 | `rejected` | Terminal state for one candidate digest/attempt with machine-readable reasons; it was never active | none |
 | `rolled-back` | Terminal state for a revision that became active and was then removed from active selection because activation/startup or later pinned use failed | none; a correction is a new revision |
 
@@ -104,7 +104,7 @@ Staging durably assembles one complete revision and an activation intent without
 
 Staging fails closed if any referenced file is missing, mutable, replaced, symlinked outside its allowed root, incompatible, or different from validation. Failure leaves the previous active pointer and rollback revision unchanged.
 
-At most one candidate can occupy an activation slot for a target boundary. Correction attempts replace no bytes: the engine selects one complete eligible attempt by the deterministic policy recorded in the boundary contract, and every non-selected attempt receives a terminal receipt. Exact queue, attempt, and filesystem mechanics are defined by `td-ac4b.2.6`.
+At most one candidate can occupy an activation slot for a target boundary. Correction attempts replace no bytes. When the engine atomically observes a complete candidate, it assigns and records a monotonic receipt sequence. At cutoff, eligible candidates are ordered by bounded attempt number descending, receipt sequence ascending, then revision digest ascending; the first entry wins. The activation receipt records the complete selection key and eligible digest set so replay makes the same choice. Every non-selected attempt becomes `rejected` with `activation_slot_filled`. Exact queue and filesystem mechanics are defined by `td-ac4b.2.6`.
 
 ### Staged to active
 
@@ -124,13 +124,13 @@ An active session retains its existing pinned revision even if another session r
 
 Activation of the same revision for the same boundary is idempotent and returns the original receipt. A conflicting second activation decision rejects.
 
-### Active to rolled-back
+### Active or superseded to rolled-back
 
-A failure detected after the activation decision but before the next level’s first authoritative tick executes a new atomic rollback transaction: the failed newly active revision becomes `rolled-back`, the retained prior `superseded` revision becomes `active`, and the registry records reason, engine version, and boundary.
+A failure detected after the activation decision but before the next level’s first authoritative tick executes a new atomic rollback transaction: the failed newly active revision becomes `rolled-back`, the retained prior safe `superseded` revision becomes `active`, and the registry records reason, engine version, and boundary.
 
-After the first authoritative tick, content is pinned. The engine must not hot-swap or roll back files underneath the active level. A fatal content defect ends or suspends that level through deterministic session rules, seals the failure evidence, and performs the same state transition only at the next legal boundary.
+After the first authoritative tick, content is pinned. The engine must not hot-swap or roll back files underneath the active level. A fatal content defect ends or suspends that level through deterministic session rules and seals the failure evidence. If the defective revision is still the registry’s `active` revision, the engine marks it `rolled-back` and restores a safe superseded revision only at the next legal boundary. If another session already made a newer revision active, the defective older `superseded` revision becomes `rolled-back` at that session’s next legal boundary while the newer active pointer remains unchanged.
 
-Rollback always restores a complete previously active `superseded` revision whose bytes and digest are reverified. It never combines old and new files. If the immediate rollback revision fails verification, the engine fails closed and selects another separately retained known-good revision only through an explicit recovery receipt; it does not guess or repair.
+Rollback may restore only a complete previously active `superseded` revision whose bytes and digest reverify and which has no defect or rolled-back receipt. It never combines old and new files. If the immediate rollback revision is defective or fails verification, the engine fails closed and selects another separately retained known-good revision only through an explicit recovery receipt; it does not guess or repair.
 
 ## Between-level activation sequence
 
@@ -161,8 +161,8 @@ Revision A remains byte-identical in both paths.
 - A candidate whose expected base digest does not equal the boundary’s active base is `rejected` as `stale_base`.
 - A candidate targeting an unknown, completed, or mismatched boundary is `rejected` as `invalid_target_boundary`.
 - A candidate generated from telemetry or feedback for a different session/scope is `rejected` as `scope_mismatch`.
-- A candidate still validating when the boundary deadline expires is `rejected` or recorded too late for that slot; last-known-good continues.
-- If several candidates are offered, deterministic bounded attempt and selection rules choose no more than one. Arrival races and wall-clock scheduling cannot produce two active revisions for one boundary.
+- A candidate still validating when the boundary cutoff is recorded becomes terminal `rejected` with `late_candidate`; it has no activation path for that or any later boundary. A producer must submit a newly manifested candidate targeting a later boundary. Last-known-good continues.
+- If several candidates are offered, the recorded attempt/receipt-sequence/digest ordering selects no more than one. Arrival races and wall-clock scheduling cannot produce two active revisions for one boundary or a different winner on replay.
 - A newer candidate never invalidates an already pinned active level.
 
 The actual Designer, annotator, image generator, and network availability are irrelevant to these outcomes.
@@ -233,12 +233,12 @@ Implementation cannot close this contract without automated evidence for at leas
 6. A late candidate does not delay or alter the next level; last-known-good starts.
 7. A stale-base or wrong-boundary candidate rejects even when its files are otherwise valid.
 8. A validator timeout/crash/unavailable dependency rejects or misses the slot without changing active content.
-9. Two concurrent candidate attempts produce one deterministic selection and no mixed revision.
+9. Two concurrent candidate attempts produce one selection from the recorded attempt/receipt-sequence/digest key; replay with the same receipt ledger chooses the same digest and produces no mixed revision.
 10. Crash before activation commit restores the prior active revision.
 11. Crash after activation commit resolves to one complete revision, never a mixed set.
 12. Startup failure before first tick records activation failure and atomically restores the prior revision.
 13. A defect after first tick never hot-swaps the active level; rollback occurs only at the next legal boundary.
-14. Multiple sessions can remain pinned to older complete revisions while another eligible boundary selects a newer active revision.
+14. Multiple sessions can remain pinned to older complete revisions while another eligible boundary selects a newer active revision; a later defect in an older pinned superseded revision marks only that revision `rolled-back`, leaves the newer active pointer unchanged, and prevents the defective revision from becoming a rollback target.
 15. Missing Designer, annotator, feedback, image generation, or network access continues on last-known-good content.
 16. Garbage collection refuses to remove active, pinned, rollback, replay-referenced, or receipt-referenced bytes.
 17. Rejected candidates never become rollback targets; only previously active complete revisions can be rolled back.
