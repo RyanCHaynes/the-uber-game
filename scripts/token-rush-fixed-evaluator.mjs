@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { SoloSliceRoom } from '../server/solo-slice-room.js';
 import { compileTokenRushLevel } from '../shared/token-rush-level.js';
 import {
+  assertGeneratedTokenRushOutput,
   assertMatchedCounterfactual,
   DEFAULT_TOKEN_RUSH_METHOD_FILE,
   generationInput,
@@ -212,6 +213,18 @@ export function verifyTokenRushHistory(historyFile = defaultHistoryFile) {
     };
     for (const [key, value] of Object.entries(expectedGeneration)) {
       if (generation[key] !== value) throw new Error(`run ${entry.run} generation mismatch for ${key}`);
+    }
+    if (entry.role !== 'baseline') {
+      const recordedBytes = readFileSync(path.join(repositoryRoot, entry.level));
+      const generated = assertGeneratedTokenRushOutput({
+        sourceBytes,
+        memoryBytes: expectedMemoryBytes,
+        memoryMode: entry.generationMemory,
+        recordedBytes,
+      });
+      if (sha256(generated.outputBytes) !== result.levelSha || generation.outputSha !== result.levelSha) {
+        throw new Error(`run ${entry.run} deterministic output hash mismatch`);
+      }
     }
     if (entry.role === 'baseline' && generation.sourceLevel !== entry.level) throw new Error('baseline source must be its accepted level');
     if (entry.role === 'revised') {

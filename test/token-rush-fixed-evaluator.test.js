@@ -14,6 +14,7 @@ import {
   verifyTokenRushHistory,
 } from '../scripts/token-rush-fixed-evaluator.mjs';
 import {
+  assertGeneratedTokenRushOutput,
   assertMatchedCounterfactual,
   generateTokenRushCandidate,
   TOKEN_RUSH_DESIGNER,
@@ -124,6 +125,27 @@ test('same frozen Designer improves with run-1 memory while withheld memory does
       memoryMode: 'withheld',
     });
     assert.throws(() => assertMatchedCounterfactual(learned, mismatched), /mismatch for sourceSha/);
+
+    const sourceBytes = readFileSync(baselineFile);
+    const memoryBytes = readFileSync(firstHistory);
+    assertGeneratedTokenRushOutput({
+      sourceBytes,
+      memoryBytes,
+      memoryMode: 'learned',
+      recordedBytes: readFileSync(learnedFile),
+    });
+    assertGeneratedTokenRushOutput({
+      sourceBytes,
+      memoryBytes: Buffer.alloc(0),
+      memoryMode: 'withheld',
+      recordedBytes: readFileSync(withheldFile),
+    });
+    assert.throws(() => assertGeneratedTokenRushOutput({
+      sourceBytes,
+      memoryBytes: Buffer.alloc(0),
+      memoryMode: 'withheld',
+      recordedBytes: sourceBytes,
+    }), /not produced by deterministic Designer replay/);
 
     const baseline = evaluateTokenRushLevelFile(baselineFile);
     const learnedResult = evaluateTokenRushLevelFile(learnedFile);

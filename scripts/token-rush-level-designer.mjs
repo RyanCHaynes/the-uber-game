@@ -67,6 +67,27 @@ export function generationInput({ sourceBytes, methodBytes }) {
   return Object.freeze({ sourceSha, methodSha, limitsSha, inputSha });
 }
 
+export function renderTokenRushCandidate({ sourceBytes, memoryBytes, memoryMode }) {
+  if (!TOKEN_RUSH_MEMORY_MODES.includes(memoryMode)) throw new Error('memoryMode must be learned or withheld');
+  const history = parseHistory(memoryBytes);
+  const document = JSON.parse(sourceBytes.toString('utf8'));
+  if (memoryMode === 'learned') {
+    if (history.length === 0) throw new Error('learned generation requires prior history');
+    applyEdit(document, history.at(-1).nextEdit);
+  }
+  compileTokenRushLevel(document);
+  return Object.freeze({
+    outputBytes: Buffer.from(`${JSON.stringify(document, null, 2)}\n`),
+    historyRuns: memoryMode === 'learned' ? history.map((entry) => entry.run) : [],
+  });
+}
+
+export function assertGeneratedTokenRushOutput({ sourceBytes, memoryBytes, memoryMode, recordedBytes }) {
+  const generated = renderTokenRushCandidate({ sourceBytes, memoryBytes, memoryMode });
+  if (!generated.outputBytes.equals(recordedBytes)) throw new Error('recorded level bytes were not produced by deterministic Designer replay');
+  return generated;
+}
+
 export function generateTokenRushCandidate({
   sourceFile,
   historyFile,
@@ -74,27 +95,20 @@ export function generateTokenRushCandidate({
   memoryMode,
   methodFile = DEFAULT_TOKEN_RUSH_METHOD_FILE,
 }) {
-  if (!TOKEN_RUSH_MEMORY_MODES.includes(memoryMode)) throw new Error('memoryMode must be learned or withheld');
   const sourceBytes = readFileSync(sourceFile);
   const methodBytes = readFileSync(methodFile);
   const historyBytes = readFileSync(historyFile);
-  const history = parseHistory(historyBytes);
-  const document = JSON.parse(sourceBytes.toString('utf8'));
-  if (memoryMode === 'learned') {
-    if (history.length === 0) throw new Error('learned generation requires prior history');
-    applyEdit(document, history.at(-1).nextEdit);
-  }
-  compileTokenRushLevel(document);
-  const outputBytes = Buffer.from(`${JSON.stringify(document, null, 2)}\n`);
+  const memoryBytes = memoryMode === 'learned' ? historyBytes : Buffer.alloc(0);
+  const rendered = renderTokenRushCandidate({ sourceBytes, memoryBytes, memoryMode });
+  const outputBytes = rendered.outputBytes;
   writeFileSync(outputFile, outputBytes, { mode: 0o600 });
   const conditions = generationInput({ sourceBytes, methodBytes });
-  const memoryBytes = memoryMode === 'learned' ? historyBytes : Buffer.alloc(0);
   return Object.freeze({
     designer: TOKEN_RUSH_DESIGNER,
     seed: TOKEN_RUSH_DESIGNER_SEED,
     memoryMode,
     source: path.resolve(sourceFile),
-    historyRuns: memoryMode === 'learned' ? history.map((entry) => entry.run) : [],
+    historyRuns: rendered.historyRuns,
     output: path.resolve(outputFile),
     generation: Object.freeze({
       ...conditions,
