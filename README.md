@@ -7,6 +7,10 @@ placement, scores, wins, and round reset over same-origin WebSockets.
 The original native C++/SFML implementation is preserved at Git tag
 `sfml-baseline-2026-07-18`.
 
+The accepted design boundary for the next major version is recorded in
+[ADR 0001: Coin Rush vNext engine and Designer
+boundary](docs/architecture/0001-vnext-engine-and-designer-boundary.md).
+
 ## Architecture
 
 - **Browser:** Three.js rendering and keyboard input only; no client-authoritative
