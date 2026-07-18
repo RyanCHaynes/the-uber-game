@@ -14,6 +14,7 @@ import {
   verifyTokenRushHistory,
 } from '../scripts/token-rush-fixed-evaluator.mjs';
 import {
+  assertMatchedCounterfactual,
   generateTokenRushCandidate,
   TOKEN_RUSH_DESIGNER,
   TOKEN_RUSH_DESIGNER_SEED,
@@ -38,7 +39,7 @@ test('fixed seed, controller, evaluator, formula, and ada0885 baseline replay ex
     controller: method.controller,
     evaluatorSeed: method.evaluatorSeed,
     scoreFormula: method.scoreFormula,
-    allowedEdits: method.allowedEdits,
+    allowedEdits: method.generationLimits.allowedEdits,
   }, {
     designer: TOKEN_RUSH_DESIGNER,
     designerSeed: TOKEN_RUSH_DESIGNER_SEED,
@@ -90,6 +91,8 @@ test('same frozen Designer improves with run-1 memory while withheld memory does
     const firstHistory = path.join(directory, 'run-1-history.jsonl');
     const learnedFile = path.join(directory, 'learned.json');
     const withheldFile = path.join(directory, 'withheld.json');
+    const mismatchedFile = path.join(directory, 'mismatched.json');
+    const mismatchedSource = path.join(directory, 'mismatched-source.json');
     writeFileSync(firstHistory, firstHistoryLine);
 
     const learned = generateTokenRushCandidate({
@@ -104,10 +107,23 @@ test('same frozen Designer improves with run-1 memory while withheld memory does
       outputFile: withheldFile,
       memoryMode: 'withheld',
     });
-    assert.equal(learned.seed, withheld.seed);
-    assert.equal(learned.designer, withheld.designer);
+    assert.equal(assertMatchedCounterfactual(learned, withheld), true);
     assert.deepEqual(learned.historyRuns, [1]);
     assert.deepEqual(withheld.historyRuns, []);
+    assert.equal(learned.generation.sourceSha, withheld.generation.sourceSha);
+    assert.equal(learned.generation.inputSha, withheld.generation.inputSha);
+    assert.equal(learned.generation.methodSha, withheld.generation.methodSha);
+    assert.equal(learned.generation.limitsSha, withheld.generation.limitsSha);
+    assert.notEqual(learned.generation.memorySha, withheld.generation.memorySha);
+
+    writeFileSync(mismatchedSource, `${readFileSync(baselineFile, 'utf8')}\n`);
+    const mismatched = generateTokenRushCandidate({
+      sourceFile: mismatchedSource,
+      historyFile: firstHistory,
+      outputFile: mismatchedFile,
+      memoryMode: 'withheld',
+    });
+    assert.throws(() => assertMatchedCounterfactual(learned, mismatched), /mismatch for sourceSha/);
 
     const baseline = evaluateTokenRushLevelFile(baselineFile);
     const learnedResult = evaluateTokenRushLevelFile(learnedFile);

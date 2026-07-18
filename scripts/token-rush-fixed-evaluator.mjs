@@ -6,7 +6,13 @@ import { fileURLToPath } from 'node:url';
 
 import { SoloSliceRoom } from '../server/solo-slice-room.js';
 import { compileTokenRushLevel } from '../shared/token-rush-level.js';
-import { TOKEN_RUSH_DESIGNER, TOKEN_RUSH_DESIGNER_SEED } from './token-rush-level-designer.mjs';
+import {
+  assertMatchedCounterfactual,
+  DEFAULT_TOKEN_RUSH_METHOD_FILE,
+  generationInput,
+  TOKEN_RUSH_DESIGNER,
+  TOKEN_RUSH_DESIGNER_SEED,
+} from './token-rush-level-designer.mjs';
 
 export const TOKEN_RUSH_EVALUATOR = 'token-rush-authority-evaluator/v1';
 export const TOKEN_RUSH_CONTROLLER = 'hold-right-grounded-five-jump/v1';
@@ -142,9 +148,9 @@ export function evaluateTokenRushLevelFile(levelFile) {
 function parseHistory(historyFile) {
   const lines = readFileSync(historyFile, 'utf8').split('\n').filter(Boolean);
   if (lines.length === 0) throw new Error('feedback history must contain the baseline run');
-  return lines.map((line, index) => {
+  return lines.map((raw, index) => {
     try {
-      return JSON.parse(line);
+      return { raw, entry: JSON.parse(raw) };
     } catch {
       throw new Error(`history line ${index + 1} is not JSON`);
     }
@@ -157,11 +163,13 @@ function equalJson(left, right) {
 
 export function verifyTokenRushHistory(historyFile = defaultHistoryFile) {
   const absoluteHistoryFile = path.resolve(historyFile);
-  const history = parseHistory(absoluteHistoryFile);
+  const records = parseHistory(absoluteHistoryFile);
+  const methodBytes = readFileSync(DEFAULT_TOKEN_RUSH_METHOD_FILE);
   const replay = [];
   let previousRun = 0;
 
-  for (const entry of history) {
+  for (let index = 0; index < records.length; index += 1) {
+    const entry = records[index].entry;
     if (!Number.isSafeInteger(entry.run) || entry.run !== previousRun + 1) throw new Error('history run numbers must be append-only and consecutive');
     previousRun = entry.run;
     if (!['baseline', 'revised', 'counterfactual'].includes(entry.role)) throw new Error(`run ${entry.run} has invalid role`);
@@ -170,6 +178,7 @@ export function verifyTokenRushHistory(historyFile = defaultHistoryFile) {
       throw new Error(`run ${entry.run} has invalid memory lineage`);
     }
     if (typeof entry.lesson !== 'string' || entry.lesson.length < 8 || entry.lesson.length > 240) throw new Error(`run ${entry.run} has invalid durable lesson`);
+    if (typeof entry.generationPair !== 'string' || !/^run-[1-9][0-9]*$/.test(entry.generationPair)) throw new Error(`run ${entry.run} has invalid generation pair`);
     const result = evaluateTokenRushLevelFile(path.join(repositoryRoot, entry.level));
     for (const key of REQUIRED_RESULT_KEYS) {
       if (!equalJson(entry[key], result[key])) throw new Error(`run ${entry.run} replay mismatch for ${key}`);
@@ -181,7 +190,35 @@ export function verifyTokenRushHistory(historyFile = defaultHistoryFile) {
         !['seed', 'learned', 'withheld'].includes(entry.generationMemory)) {
       throw new Error(`run ${entry.run} changed the frozen generator conditions`);
     }
-    replay.push({ ...entry, result });
+
+    const generation = entry.generation;
+    if (!generation || typeof generation !== 'object' || Array.isArray(generation) ||
+        typeof generation.sourceLevel !== 'string' || path.isAbsolute(generation.sourceLevel) || generation.sourceLevel.includes('..')) {
+      throw new Error(`run ${entry.run} has invalid generation binding`);
+    }
+    const sourceBytes = readFileSync(path.join(repositoryRoot, generation.sourceLevel));
+    const conditions = generationInput({ sourceBytes, methodBytes });
+    const priorMainlineRecords = records.slice(0, index).filter((record) => record.entry.role !== 'counterfactual');
+    const expectedMemoryBytes = entry.generationMemory === 'learned'
+      ? Buffer.from(priorMainlineRecords.map((record) => `${record.raw}\n`).join(''))
+      : Buffer.alloc(0);
+    const expectedGeneration = {
+      sourceSha: conditions.sourceSha,
+      methodSha: conditions.methodSha,
+      limitsSha: conditions.limitsSha,
+      inputSha: conditions.inputSha,
+      memorySha: sha256(expectedMemoryBytes),
+      outputSha: result.levelSha,
+    };
+    for (const [key, value] of Object.entries(expectedGeneration)) {
+      if (generation[key] !== value) throw new Error(`run ${entry.run} generation mismatch for ${key}`);
+    }
+    if (entry.role === 'baseline' && generation.sourceLevel !== entry.level) throw new Error('baseline source must be its accepted level');
+    if (entry.role === 'revised') {
+      const previousMainline = replay.filter((candidate) => candidate.role !== 'counterfactual').at(-1);
+      if (!previousMainline || generation.sourceLevel !== previousMainline.level) throw new Error(`run ${entry.run} source is not the latest mainline level`);
+    }
+    replay.push({ ...entry, generation, result });
   }
 
   const mainline = replay.filter((entry) => entry.role !== 'counterfactual');
@@ -200,9 +237,20 @@ export function verifyTokenRushHistory(historyFile = defaultHistoryFile) {
   const counterfactuals = replay.filter((entry) => entry.role === 'counterfactual');
   for (const entry of counterfactuals) {
     if (entry.memoryRuns.length !== 0 || entry.generationMemory !== 'withheld') throw new Error('counterfactual must withhold learned memory');
-    if (entry.score > mainline[0].score) throw new Error('memory-withheld counterfactual beat baseline');
   }
   if (mainline.length >= 3 && counterfactuals.length !== 1) throw new Error('final lineage requires exactly one memory-withheld counterfactual');
+  if (counterfactuals.length === 1) {
+    const learned = mainline.at(-1);
+    const withheld = counterfactuals[0];
+    if (learned.generationPair !== withheld.generationPair) throw new Error('counterfactual generation pair mismatch');
+    assertMatchedCounterfactual(
+      { designer: learned.designer, seed: learned.designerSeed, memoryMode: 'learned', generation: learned.generation },
+      { designer: withheld.designer, seed: withheld.designerSeed, memoryMode: 'withheld', generation: withheld.generation },
+    );
+    const sourceResult = evaluateTokenRushLevelFile(path.join(repositoryRoot, withheld.generation.sourceLevel));
+    if (withheld.score > sourceResult.score) throw new Error('memory-withheld counterfactual improved over its matched source');
+    if (learned.score <= withheld.score) throw new Error('learned candidate did not beat its matched counterfactual');
+  }
 
   const activeBytes = readFileSync(activeLevelFile);
   const finalMainlineBytes = readFileSync(path.join(repositoryRoot, mainline.at(-1).level));
@@ -226,8 +274,13 @@ export function verifyTokenRushHistory(historyFile = defaultHistoryFile) {
       tokens: entry.tokens,
       ticks: entry.ticks,
       score: entry.score,
+      generationPair: entry.generationPair,
       generationMemory: entry.generationMemory,
       memoryRuns: entry.memoryRuns,
+      sourceSha: entry.generation.sourceSha,
+      inputSha: entry.generation.inputSha,
+      memorySha: entry.generation.memorySha,
+      outputSha: entry.generation.outputSha,
       lesson: entry.lesson,
     })),
     baselineScore: mainline[0].score,

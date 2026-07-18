@@ -68,11 +68,14 @@ reports the stable rejection code through `/slice-healthz`.
 controller, seed, evaluator, and score formula. Each append-only line records
 the level hash, completion, deaths, damage, tokens, ticks, score, prior-run
 memory, and one durable lesson. The bounded Designer can only move an enemy or
-token in level JSON. Its memory-withheld control uses the same Designer and seed
-but omits prior lessons. The command fails closed on result drift, non-improving
-mainline trials, a counterfactual that beats baseline, or an active level that
-is not byte-identical to the latest mainline trial. It does not add a service,
-protocol, runtime generator, or executable level behavior.
+token in level JSON. Its memory-withheld control uses the byte-identical source,
+Designer, seed, method, and edit limits as the paired learned candidate, differing
+only by omitted prior feedback. Every trial binds source, input, memory, method,
+limits, and output hashes. The command fails closed on result drift, mismatched
+control inputs, non-improving mainline trials, a learned candidate that does not
+beat its matched control, or an active level that is not byte-identical to the
+latest mainline trial. It does not add a service, protocol, runtime generator,
+or executable level behavior.
 
 ## Dedicated deployment
 
