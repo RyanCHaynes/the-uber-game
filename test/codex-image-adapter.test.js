@@ -1,24 +1,29 @@
 import assert from 'node:assert/strict';
-import { access, mkdtemp, readFile, rm, stat, symlink } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { access, mkdtemp, readFile, readdir, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 
 import {
   ADAPTER_ID,
   GENERATION_PROFILE,
   IMAGE_REQUEST_SCHEMA,
   POSES,
+  PYTHON_EXECUTABLE,
   buildImagePrompt,
   normalizeImageRequest,
   prepareDryRun,
   runDryRun,
 } from '../scripts/asset-generation/codex-image-adapter.mjs';
 
+const execFileAsync = promisify(execFile);
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const fixturePath = path.join(repositoryRoot, 'test/fixtures/imagegen/crypt-sentinel-idle.request.json');
 const imageGenScript = path.join(repositoryRoot, 'test/fixtures/imagegen/fake/image_gen.py');
+const wrapperPath = path.join(repositoryRoot, 'scripts/asset-generation/generate-pose-source.mjs');
 
 async function fixture() {
   return JSON.parse(await readFile(fixturePath, 'utf8'));
@@ -78,6 +83,8 @@ test('dry-run plan pins model, source size, budgets, hashes, and forbids reposit
     assert.equal(plan.config.adapter, ADAPTER_ID);
     assert.equal(plan.config.model, 'gpt-image-2');
     assert.equal(plan.config.size, '1024x1024');
+    assert.equal(plan.executable, PYTHON_EXECUTABLE);
+    assert.equal(plan.config.pythonExecutable, PYTHON_EXECUTABLE);
     assert.equal(plan.config.mode, 'dry-run-only');
     assert.equal(plan.config.publication, 'forbidden');
     assert.equal(plan.config.dryRunAttempts, 1);
@@ -124,6 +131,9 @@ test('CLI-compatible dry-run writes a sealed private receipt without generating 
     assert.equal(result.receipt.publication, 'forbidden');
     assert.equal(result.receipt.failureCode, null);
     assert.equal(result.receipt.provenance.model, 'gpt-image-2');
+    assert.equal(result.receipt.provenance.pythonExecutable, PYTHON_EXECUTABLE);
+    assert.equal(result.receipt.provenance.dryRunResponseValidated, true);
+    assert.equal(result.receipt.provenance.dryRunWritesValidated, true);
     assert.equal(result.receipt.limits.dryRunAttempts, 1);
     assert.equal(result.receipt.limits.dryRunDeadlineMs, 10_000);
     assert.equal(result.receipt.nonExecutingLivePolicy.maxAttempts, 2);
@@ -138,7 +148,7 @@ test('CLI-compatible dry-run writes a sealed private receipt without generating 
     assert.equal((await stat(path.join(result.outputDirectory, 'request.json'))).mode & 0o777, 0o600);
     assert.equal((await stat(path.join(result.outputDirectory, 'prompt.txt'))).mode & 0o777, 0o600);
     await assert.rejects(access(plan.outputPath));
-    await assert.rejects(() => runDryRun(plan), /EEXIST/);
+    await assert.rejects(() => runDryRun(plan), /IMAGE_STAGING_EXISTS/);
   } finally {
     await rm(stagingRoot, { recursive: true, force: true });
   }
@@ -160,6 +170,111 @@ test('staged request directories cannot escape through a precreated symlink', as
   } finally {
     await rm(stagingRoot, { recursive: true, force: true });
     await rm(escapedRoot, { recursive: true, force: true });
+  }
+});
+
+test('a resolved staging-root symlink into a repository fails before creating the request directory', async () => {
+  const request = await fixture();
+  const fakeRepository = await mkdtemp(path.join(os.tmpdir(), 'coinrush-image-fake-repo-'));
+  const linkParent = await mkdtemp(path.join(os.tmpdir(), 'coinrush-image-stage-link-'));
+  const stagingRoot = path.join(linkParent, 'staging');
+  try {
+    await symlink(fakeRepository, stagingRoot, 'dir');
+    const plan = await prepareDryRun(request, {
+      repositoryRoot: fakeRepository,
+      stagingRoot,
+      imageGenScript,
+    });
+    await assert.rejects(() => runDryRun(plan), /IMAGE_STAGING_IN_REPOSITORY/);
+    await assert.rejects(access(path.join(fakeRepository, plan.requestSha256)));
+    assert.deepEqual(await readdir(fakeRepository), []);
+  } finally {
+    await rm(linkParent, { recursive: true, force: true });
+    await rm(fakeRepository, { recursive: true, force: true });
+  }
+});
+
+test('production and programmatic interpreter overrides fail before staging writes', async () => {
+  const request = await fixture();
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), 'coinrush-image-interpreter-'));
+  try {
+    await assert.rejects(
+      () => execFileAsync(process.execPath, [
+        wrapperPath,
+        '--request', fixturePath,
+        '--staging-dir', stagingRoot,
+        '--dry-run',
+        '--python', '/bin/true',
+      ]),
+      (error) => {
+        assert.match(error.stderr, /IMAGE_ADAPTER_ARGUMENT: unknown or incomplete argument --python/);
+        return true;
+      },
+    );
+    assert.deepEqual(await readdir(stagingRoot), []);
+
+    const plan = await prepareDryRun(request, {
+      repositoryRoot,
+      stagingRoot,
+      imageGenScript,
+    });
+    await assert.rejects(
+      () => runDryRun({ ...plan, executable: '/bin/true' }),
+      /IMAGE_TOOL_INTERPRETER/,
+    );
+    assert.deepEqual(await readdir(stagingRoot), []);
+  } finally {
+    await rm(stagingRoot, { recursive: true, force: true });
+  }
+});
+
+test('zero-exit output that does not match the image CLI dry-run contract cannot pass', async () => {
+  const request = await fixture();
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), 'coinrush-image-response-'));
+  const toolRoot = await mkdtemp(path.join(os.tmpdir(), 'coinrush-image-tool-'));
+  const invalidTool = path.join(toolRoot, 'image_gen.py');
+  try {
+    await writeFile(invalidTool, '#!/usr/bin/env python3\nprint("{}")\n', { mode: 0o700 });
+    const plan = await prepareDryRun(request, {
+      repositoryRoot,
+      stagingRoot,
+      imageGenScript: invalidTool,
+    });
+    await assert.rejects(() => runDryRun(plan), /IMAGE_DRY_RUN_RESPONSE/);
+    const receipt = JSON.parse(await readFile(path.join(plan.outputDirectory, 'receipt.json'), 'utf8'));
+    assert.equal(receipt.status, 'DRY_RUN_FAILED');
+    assert.equal(receipt.failureCode, 'IMAGE_DRY_RUN_RESPONSE');
+    assert.equal(receipt.provenance.dryRunResponseValidated, false);
+    await assert.rejects(access(plan.outputPath));
+  } finally {
+    await rm(stagingRoot, { recursive: true, force: true });
+    await rm(toolRoot, { recursive: true, force: true });
+  }
+});
+
+test('a zero-exit CLI response cannot pass if the tool creates a source file', async () => {
+  const request = await fixture();
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), 'coinrush-image-write-'));
+  const toolRoot = await mkdtemp(path.join(os.tmpdir(), 'coinrush-image-writing-tool-'));
+  const writingTool = path.join(toolRoot, 'image_gen.py');
+  try {
+    const fixtureTool = await readFile(imageGenScript, 'utf8');
+    await writeFile(writingTool, `${fixtureTool}\nopen(args[args.index("--out") + 1], "wb").write(b"not-an-image")\n`, { mode: 0o700 });
+    const plan = await prepareDryRun(request, {
+      repositoryRoot,
+      stagingRoot,
+      imageGenScript: writingTool,
+    });
+    await assert.rejects(() => runDryRun(plan), /IMAGE_DRY_RUN_WRITE/);
+    const receipt = JSON.parse(await readFile(path.join(plan.outputDirectory, 'receipt.json'), 'utf8'));
+    assert.equal(receipt.status, 'DRY_RUN_FAILED');
+    assert.equal(receipt.failureCode, 'IMAGE_DRY_RUN_WRITE');
+    assert.equal(receipt.provenance.dryRunResponseValidated, true);
+    assert.equal(receipt.provenance.dryRunWritesValidated, false);
+    assert.equal((await readFile(plan.outputPath, 'utf8')), 'not-an-image');
+  } finally {
+    await rm(stagingRoot, { recursive: true, force: true });
+    await rm(toolRoot, { recursive: true, force: true });
   }
 });
 

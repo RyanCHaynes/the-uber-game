@@ -1,11 +1,12 @@
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, realpath, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 export const IMAGE_REQUEST_SCHEMA = 'coin-rush-image-request/v1';
 export const RECEIPT_SCHEMA = 'coin-rush-image-request-receipt/v1';
 export const ADAPTER_ID = 'coin-rush-codex-image-adapter/v1';
+export const PYTHON_EXECUTABLE = '/usr/bin/python3';
 export const POSES = Object.freeze(['idle', 'move', 'attack', 'hit', 'death']);
 export const GENERATION_PROFILE = Object.freeze({
   model: 'gpt-image-2',
@@ -153,6 +154,7 @@ export async function prepareDryRun(requestValue, options) {
     size: GENERATION_PROFILE.size,
     quality: GENERATION_PROFILE.quality,
     outputFormat: GENERATION_PROFILE.outputFormat,
+    pythonExecutable: PYTHON_EXECUTABLE,
     dryRunAttempts: GENERATION_PROFILE.dryRunAttempts,
     dryRunDeadlineMs: GENERATION_PROFILE.dryRunDeadlineMs,
     nonExecutingLivePolicy: {
@@ -178,7 +180,7 @@ export async function prepareDryRun(requestValue, options) {
   ];
   return Object.freeze({
     dryRun: true,
-    executable: options.pythonCommand || 'python3',
+    executable: PYTHON_EXECUTABLE,
     argv: Object.freeze(argv),
     repositoryRoot,
     stagingRoot,
@@ -200,7 +202,8 @@ function runProcess(plan, options = {}) {
   return new Promise((resolve, reject) => {
     const outputHashes = { stdout: createHash('sha256'), stderr: createHash('sha256') };
     const outputBytes = { stdout: 0, stderr: 0 };
-    const child = (options.spawnImpl || spawn)(plan.executable, plan.argv, {
+    const stdoutChunks = [];
+    const child = spawn(plan.executable, plan.argv, {
       cwd: plan.outputDirectory,
       env: options.env || process.env,
       shell: false,
@@ -238,29 +241,92 @@ function runProcess(plan, options = {}) {
           return;
         }
         outputHashes[streamName].update(chunk);
+        if (streamName === 'stdout') stdoutChunks.push(Buffer.from(chunk));
       });
     }
     child.once('error', (error) => finish(reject, error));
-    child.once('close', (code, signal) => finish(resolve, {
-      code,
-      signal,
-      stdoutBytes: outputBytes.stdout,
-      stderrBytes: outputBytes.stderr,
-      stdoutSha256: outputHashes.stdout.digest('hex'),
-      stderrSha256: outputHashes.stderr.digest('hex'),
-    }));
+    child.once('close', (code, signal) => {
+      if (finished) return;
+      finish(resolve, {
+        code,
+        signal,
+        stdoutBytes: outputBytes.stdout,
+        stderrBytes: outputBytes.stderr,
+        stdoutSha256: outputHashes.stdout.digest('hex'),
+        stderrSha256: outputHashes.stderr.digest('hex'),
+        stdout: Buffer.concat(stdoutChunks).toString('utf8'),
+      });
+    });
   });
+}
+
+function validateDryRunResponse(plan, stdout) {
+  let response;
+  try {
+    response = JSON.parse(stdout);
+  } catch {
+    fail('IMAGE_DRY_RUN_RESPONSE', 'CLI stdout must be one JSON object');
+  }
+  if (!response || typeof response !== 'object' || Array.isArray(response)) {
+    fail('IMAGE_DRY_RUN_RESPONSE', 'CLI stdout must be one JSON object');
+  }
+  const expected = {
+    endpoint: '/v1/images/generations',
+    model: plan.config.model,
+    prompt: plan.prompt,
+    size: plan.config.size,
+    quality: plan.config.quality,
+    output_format: plan.config.outputFormat,
+    n: 1,
+  };
+  for (const [key, value] of Object.entries(expected)) {
+    if (response[key] !== value) fail('IMAGE_DRY_RUN_RESPONSE', `CLI response ${key} did not match the request`);
+  }
+  if (!Array.isArray(response.outputs) || response.outputs.length !== 1 || response.outputs[0] !== plan.outputPath) {
+    fail('IMAGE_DRY_RUN_RESPONSE', 'CLI response output path did not match the request');
+  }
+}
+
+async function validateDryRunWrites(plan) {
+  const entries = (await readdir(plan.outputDirectory)).sort();
+  if (entries.length !== 2 || entries[0] !== 'prompt.txt' || entries[1] !== 'request.json') {
+    fail('IMAGE_DRY_RUN_WRITE', 'CLI dry run created an unexpected staging entry');
+  }
+}
+
+async function realpathIfPresent(candidate) {
+  try {
+    return await realpath(candidate);
+  } catch (error) {
+    if (error?.code === 'ENOENT') return null;
+    throw error;
+  }
 }
 
 export async function runDryRun(plan, options = {}) {
   if (!plan || plan.dryRun !== true || !plan.argv?.includes('--dry-run')) {
     fail('IMAGE_DRY_RUN_REQUIRED', 'prototype adapter may invoke only the CLI dry-run path');
   }
-  await mkdir(plan.outputDirectory, { recursive: true, mode: 0o700 });
-  const resolvedStaging = await realpath(plan.stagingRoot);
+  if (plan.executable !== PYTHON_EXECUTABLE || plan.config?.pythonExecutable !== PYTHON_EXECUTABLE) {
+    fail('IMAGE_TOOL_INTERPRETER', `dry run requires ${PYTHON_EXECUTABLE}`);
+  }
+  const currentScriptSha256 = hashBytes(await readFile(plan.imageGenScript));
+  if (currentScriptSha256 !== plan.imageGenScriptSha256) fail('IMAGE_TOOL_CHANGED', 'image_gen.py changed after planning');
+
   const resolvedRepository = await realpath(plan.repositoryRoot);
-  const resolvedOutput = await realpath(plan.outputDirectory);
+  const resolvedStaging = await realpathIfPresent(plan.stagingRoot);
+  if (!resolvedStaging) fail('IMAGE_STAGING_PATH', 'stagingRoot must already exist');
   if (isWithin(resolvedStaging, resolvedRepository)) fail('IMAGE_STAGING_IN_REPOSITORY', 'resolved stagingRoot entered the repository');
+
+  const existingOutput = await realpathIfPresent(plan.outputDirectory);
+  if (existingOutput) {
+    if (!isWithin(existingOutput, resolvedStaging)) fail('IMAGE_STAGING_ESCAPE', 'request directory escaped stagingRoot');
+    fail('IMAGE_STAGING_EXISTS', 'request directory already exists');
+  }
+  await mkdir(plan.outputDirectory, { mode: 0o700 });
+  const resolvedOutput = await realpath(plan.outputDirectory);
+  const confirmedStaging = await realpath(plan.stagingRoot);
+  if (confirmedStaging !== resolvedStaging) fail('IMAGE_STAGING_CHANGED', 'stagingRoot changed during setup');
   if (!isWithin(resolvedOutput, resolvedStaging)) fail('IMAGE_STAGING_ESCAPE', 'request directory escaped stagingRoot');
 
   await writeFile(path.join(plan.outputDirectory, 'request.json'), plan.requestBytes, { mode: 0o600, flag: 'wx' });
@@ -268,10 +334,23 @@ export async function runDryRun(plan, options = {}) {
 
   let terminal;
   let failure;
+  let dryRunResponseValidated = false;
+  let dryRunWritesValidated = false;
   try {
-    terminal = await runProcess(plan, options);
+    const processResult = await runProcess(plan, options);
+    const { stdout, ...terminalFields } = processResult;
+    terminal = terminalFields;
     if (terminal.code !== 0) {
       failure = Object.assign(new Error(`IMAGE_DRY_RUN_FAILED: CLI exited ${terminal.code ?? terminal.signal}`), { code: 'IMAGE_DRY_RUN_FAILED' });
+    } else {
+      try {
+        validateDryRunResponse(plan, stdout);
+        dryRunResponseValidated = true;
+        await validateDryRunWrites(plan);
+        dryRunWritesValidated = true;
+      } catch (error) {
+        failure = error;
+      }
     }
   } catch (error) {
     failure = error;
@@ -294,8 +373,11 @@ export async function runDryRun(plan, options = {}) {
     configSha256: plan.configSha256,
     provenance: {
       model: plan.config.model,
+      pythonExecutable: PYTHON_EXECUTABLE,
       imageGenScriptSha256: plan.imageGenScriptSha256,
       imageGenScriptBasename: path.basename(plan.imageGenScript),
+      dryRunResponseValidated,
+      dryRunWritesValidated,
       mode: 'dry-run-only',
     },
     limits: {

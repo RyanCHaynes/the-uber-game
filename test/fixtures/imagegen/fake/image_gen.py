@@ -11,8 +11,13 @@ for option in ["--model", "--prompt", "--size", "--quality", "--output-format", 
         print(f"missing {option}", file=sys.stderr)
         raise SystemExit(2)
 print(json.dumps({
-    "status": "dry-run",
+    "endpoint": "/v1/images/generations",
     "model": args[args.index("--model") + 1],
+    "prompt": args[args.index("--prompt") + 1],
+    "n": 1,
     "size": args[args.index("--size") + 1],
-    "output": args[args.index("--out") + 1],
-}, sort_keys=True))
+    "quality": args[args.index("--quality") + 1],
+    "output_format": args[args.index("--output-format") + 1],
+    "outputs": [args[args.index("--out") + 1]],
+    "outputs_downscaled": None,
+}, indent=2, sort_keys=True))

@@ -27,7 +27,6 @@ function parseArgs(argv) {
       ['--request', 'requestPath'],
       ['--staging-dir', 'stagingRoot'],
       ['--image-gen-script', 'imageGenScript'],
-      ['--python', 'pythonCommand'],
     ]);
     const key = names.get(token);
     if (!key || index + 1 >= argv.length || argv[index + 1].startsWith('--')) {
@@ -59,7 +58,6 @@ async function main() {
     repositoryRoot,
     stagingRoot: args.stagingRoot,
     imageGenScript,
-    pythonCommand: args.pythonCommand || 'python3',
   });
   const result = await runDryRun(plan);
   process.stdout.write(`${JSON.stringify({

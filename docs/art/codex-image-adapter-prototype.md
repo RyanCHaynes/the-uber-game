@@ -25,7 +25,7 @@ See [`crypt-sentinel-idle.request.json`](../../test/fixtures/imagegen/crypt-sent
 
 ## Dry run
 
-The staging directory must be absolute and outside the repository:
+The staging directory must already exist, be absolute, and resolve outside the repository. Resolved containment is checked before the adapter creates a request directory or writes any files:
 
 ```sh
 npm run asset:pose:dry-run -- \
@@ -34,8 +34,8 @@ npm run asset:pose:dry-run -- \
   --dry-run
 ```
 
-The adapter pins `gpt-image-2`, `1024x1024`, medium quality, PNG output, and the installed `image_gen.py` bytes. The prompt asks for one original right-facing gothic-medieval key pose on a flat chroma-key background, with the accepted silhouette, lighting, small-scale pixel treatment, and no copied franchise art, text, watermark, scenery, sheet, or baked VFX.
+The adapter pins `gpt-image-2`, `1024x1024`, medium quality, PNG output, `/usr/bin/python3`, and the installed `image_gen.py` bytes. There is no interpreter override. Before execution it re-hashes the script, and a zero exit becomes `DRY_RUN_PASS` only when stdout is the expected image CLI dry-run JSON bound to the exact model, prompt, size, quality, format, and output path and the tool created no staging entries. The prompt asks for one original right-facing gothic-medieval key pose on a flat chroma-key background, with the accepted silhouette, lighting, small-scale pixel treatment, and no copied franchise art, text, watermark, scenery, sheet, or baked VFX.
 
-Each request gets a private mode-`0600` directory containing canonical `request.json`, exact `prompt.txt`, and `receipt.json`. The receipt records request/prompt/config/tool hashes, the enforced one-attempt/ten-second dry-run limit, a separately labelled non-executing live retry/cancel policy, and only digests and byte counts for CLI output. It never records environment values or credentials.
+Each request gets a private mode-`0700` directory containing mode-`0600` canonical `request.json`, exact `prompt.txt`, and `receipt.json`. The receipt records request/prompt/config/tool hashes, the fixed interpreter, semantic response validation, the enforced one-attempt/ten-second dry-run limit, a separately labelled non-executing live retry/cancel policy, and only digests and byte counts for CLI output. It never records raw CLI output, environment values, or credentials.
 
 The prototype refuses any invocation without `--dry-run`; a successful receipt explicitly records `sourceGenerated: false` and `publication: forbidden`.
