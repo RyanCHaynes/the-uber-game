@@ -3,26 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Coin Rush solo combat slice — cross the crypt and defeat the warden.">
-  <title>Coin Rush — Solo Combat Slice</title>
+  <meta name="description" content="Token Rush solo combat slice — cross the crypt and defeat the warden.">
+  <title>Token Rush — Solo Combat Slice</title>
 </head>
 <body>
   <main id="app">
-    <canvas id="game-canvas" aria-label="Coin Rush solo combat preview"></canvas>
+    <canvas id="game-canvas" aria-label="Token Rush solo combat preview"></canvas>
 
     <section id="setup" class="panel screen">
       <p class="eyebrow">TINYFAT GAME LAB · PLACEHOLDER PREVIEW</p>
-      <h1>CRYPT RUN</h1>
+      <h1>TOKEN RUSH</h1>
       <p class="subtitle">Cross five barriers. Defeat the Crypt Warden.</p>
       <label for="player-name">PLAYER NAME</label>
       <input id="player-name" maxlength="18" value="Player" autocomplete="nickname">
       <button id="play-button" type="button">PLAY SOLO NOW</button>
-      <p class="hint">Move: A/D or ←/→ · Jump: Space/W/↑ · Attack: J</p>
+      <p class="hint">Move: A/D or ←/→ · Jump: W or ↑ · Attack: Space</p>
     </section>
 
     <section id="hud" class="hidden" aria-live="polite">
       <div class="hud-block"><span>VITALITY</span><strong id="health">5 / 5</strong></div>
-      <div class="hud-block center"><span>INTENDED PATH</span><strong id="jumps">0 / 5 JUMPS</strong></div>
       <div class="hud-block right"><span>CRYPT WARDEN</span><strong id="enemy-health">3 / 3</strong></div>
     </section>
 
@@ -42,7 +41,7 @@
       <button id="retry-button" type="button">BACK</button>
     </section>
 
-    <div id="legend" class="legend hidden">A/D MOVE · SPACE JUMP · J ATTACK</div>
+    <div id="legend" class="legend hidden">A/D MOVE · W/↑ JUMP · SPACE ATTACK</div>
   </main>
   <script type="module" src="/client/slice-main.js"></script>
 </body>

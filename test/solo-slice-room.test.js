@@ -96,11 +96,27 @@ test('one player starts immediately, clears exactly five jumps, receives combat 
   for (const type of ['jump', 'playerAttack', 'enemyHit', 'playerHurt', 'enemyDeath', 'complete']) {
     assert.equal(feedbackTypes.has(type), true, `missing ${type}`);
   }
+  assert.equal(room.feedback.find((event) => event.type === 'jump')?.text, 'Leap!');
+  assert.equal(room.feedback.find((event) => event.type === 'complete')?.text, 'Token Rush complete.');
+  assert.equal(room.feedback.some((event) => /\d+\s*(?:\/\s*5)?\s*jumps?/i.test(event.text)), false);
   room.broadcastSnapshot();
   const snapshot = socket.messages.at(-1);
   assert.equal(snapshot.type, 'sliceSnapshot');
   assert.equal(snapshot.complete, true);
   assert.equal(snapshot.player.jumpCount, 5);
+});
+
+test('authoritative snapshots preserve a 20 Hz average without dropping accumulator remainder', () => {
+  let now = 0;
+  const room = new SoloSliceRoom({ now: () => now });
+  const socket = join(room);
+  const initialSnapshots = socket.messages.filter((message) => message.type === 'sliceSnapshot').length;
+  for (let tick = 0; tick < SLICE.tickRate; tick += 1) {
+    room.tick(1 / SLICE.tickRate);
+    now += 1000 / SLICE.tickRate;
+  }
+  const snapshots = socket.messages.filter((message) => message.type === 'sliceSnapshot').length - initialSnapshots;
+  assert.equal(snapshots, SLICE.snapshotRate);
 });
 
 test('solo slice rejects a second client and malformed or stale input fail-closed', () => {

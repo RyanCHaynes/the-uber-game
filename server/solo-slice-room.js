@@ -1,5 +1,5 @@
 const SLICE = Object.freeze({
-  revision: 'solo-slice-v1',
+  revision: 'solo-slice-v2',
   width: 1600,
   height: 720,
   floorY: 640,
@@ -169,8 +169,9 @@ export class SoloSliceRoom {
       this.tickNumber += 1;
     }
     this.snapshotElapsed += elapsed;
-    if (this.snapshotElapsed >= 1 / SLICE.snapshotRate) {
-      this.snapshotElapsed = 0;
+    const snapshotInterval = 1 / SLICE.snapshotRate;
+    if (this.snapshotElapsed + 1e-9 >= snapshotInterval) {
+      this.snapshotElapsed = Math.max(0, this.snapshotElapsed - snapshotInterval);
       this.broadcastSnapshot();
     }
     this.previousInput = { ...this.input };
@@ -187,7 +188,7 @@ export class SoloSliceRoom {
       player.velocity.y = -SLICE.jumpSpeed;
       player.grounded = false;
       player.jumpCount += 1;
-      this.emitFeedback('jump', `Jump ${player.jumpCount}`);
+      this.emitFeedback('jump', 'Leap!');
     }
 
     const attackEdge = this.input.attack && !this.previousInput.attack;
@@ -265,7 +266,7 @@ export class SoloSliceRoom {
       enemy.alive = false;
       this.emitFeedback('enemyDeath', `${enemy.name} defeated`);
       this.complete = true;
-      this.emitFeedback('complete', `Slice complete in ${player.jumpCount} jumps.`);
+      this.emitFeedback('complete', 'Token Rush complete.');
     }
   }
 
@@ -302,6 +303,8 @@ export class SoloSliceRoom {
       floorY: SLICE.floorY,
       obstacles: SLICE.obstacles.map((obstacle) => ({ ...obstacle })),
       intendedJumpCount: SLICE.obstacles.length,
+      tickRate: SLICE.tickRate,
+      snapshotRate: SLICE.snapshotRate,
       enemy: { id: this.enemy.id, name: this.enemy.name },
     };
   }
