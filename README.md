@@ -1,19 +1,25 @@
 # Coin Rush
 
-Coin Rush is a browser-based castle race for two to ten players, rendered with
-Three.js. A central Node server owns lobby state, movement, collision, coin
-placement, scores, wins, and round reset over same-origin WebSockets.
+Coin Rush is a browser game with a mode selector. **Singleplayer** opens the
+Token Rush crypt slice; **Multiplayer** opens the preserved two-to-ten-player
+Three.js castle race. One central Node server owns both simulations over
+separate same-origin WebSocket routes.
 
 The original native C++/SFML implementation is preserved at Git tag
 `sfml-baseline-2026-07-18`.
 
 ## Architecture
 
-- **Browser:** Three.js rendering and keyboard input only; no client-authoritative
-  physics or scoring.
-- **Backend:** one authoritative 2–10-player `GameRoom`, 50 Hz physics, 20 Hz
-  snapshots, bounded JSON messages, heartbeat, handshake timeout, origin check,
-  deterministic slots/spawns, and per-peer input-rate budgets.
+- **Start screen:** `/` links to `/singleplayer.html` and `/multiplayer.html`;
+  neither authority socket opens before the player chooses a mode.
+- **Singleplayer browser:** bounded 2D Token Rush rendering and intent input on
+  `/slice-ws`; no client-authoritative movement, combat, collection, or finish.
+- **Multiplayer browser:** Three.js rendering and keyboard input on `/ws`; no
+  client-authoritative physics or scoring.
+- **Backend:** one authoritative 2–10-player `GameRoom` plus one isolated
+  authoritative `SoloSliceRoom`, 50 Hz physics, bounded JSON messages, heartbeat,
+  handshake timeout, origin check, deterministic multiplayer slots/spawns, and
+  per-peer input-rate budgets.
 - **Levels:** immutable versioned data sent by the server before `gameStart`.
   Candidate revisions are bounded and validated before publication.
 - **Ingress:** Caddy terminates HTTPS/WSS and proxies to Node on
@@ -30,8 +36,9 @@ npm run build
 npm start
 ```
 
-Open `http://127.0.0.1:3000` in 2–10 separate browser contexts, join them, and
-ready every connected player.
+Open `http://127.0.0.1:3000`, choose Singleplayer for Token Rush, or open the
+Multiplayer entry in 2–10 separate browser contexts, join them, and ready every
+connected player.
 
 ## Protocol
 

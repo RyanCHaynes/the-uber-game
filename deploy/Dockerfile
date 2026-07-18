@@ -4,7 +4,7 @@ FROM node:22.22.0-bookworm-slim@sha256:dd9d21971ec4395903fa6143c2b9267d048ae01ca
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
-COPY index.html vite.config.js ./
+COPY index.html singleplayer.html multiplayer.html vite.config.js ./
 COPY client ./client
 COPY server ./server
 COPY shared ./shared

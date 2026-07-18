@@ -82,6 +82,11 @@ button:hover, button:focus-visible { background: #c34250; outline: 2px solid #ff
 
 .complete { border-color: #e1bd72; }
 .complete h2 { color: #ffe5a4; text-shadow: 0 0 24px #cc8e43aa; }
+.mode-back {
+  display: block; width: max-content; margin: 0 auto 18px; color: #d5aa62;
+  font-size: 11px; letter-spacing: .12em; text-decoration: none;
+}
+.mode-back:hover, .mode-back:focus-visible { color: #ffe1a0; outline: 2px solid #ffe1a0; outline-offset: 4px; }
 
 .level-evolution {
   position: fixed; z-index: 6; right: 14px; bottom: 14px;

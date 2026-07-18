@@ -62,6 +62,11 @@ button:hover { transform: translateY(-2px); filter: brightness(1.08); }
 button:disabled { cursor: wait; opacity: .55; transform: none; }
 button.secondary { margin-top: 10px; color: #b6c1d8; background: #29334b; }
 button.small { width: auto; padding: 8px 14px; color: #b6c1d8; background: #29334bdd; font-size: 12px; }
+.mode-back {
+  display: block; width: max-content; margin: 0 auto 18px; color: #4fd1c5;
+  font-size: 11px; letter-spacing: .12em; text-decoration: none;
+}
+.mode-back:hover, .mode-back:focus-visible { color: #fff; outline: 2px solid #4fd1c5; outline-offset: 4px; }
 .hint { margin: 20px 0 0; color: #71809e; font-size: 12px; text-align: center; }
 .hidden { display: none !important; }
 

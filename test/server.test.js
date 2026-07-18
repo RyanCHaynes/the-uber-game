@@ -53,7 +53,11 @@ function open(url, origin = 'https://game.test') {
 
 test('public shape serves health and a real ten-client WebSocket round with rejoin limits', async (context) => {
   const dist = await mkdtemp(path.join(tmpdir(), 'coinrush-dist-'));
-  await writeFile(path.join(dist, 'index.html'), '<h1>Coin Rush Three.js</h1>');
+  await Promise.all([
+    writeFile(path.join(dist, 'index.html'), '<a href="/singleplayer.html">SINGLEPLAYER</a><a href="/multiplayer.html">MULTIPLAYER</a>'),
+    writeFile(path.join(dist, 'singleplayer.html'), '<h1>Token Rush</h1>'),
+    writeFile(path.join(dist, 'multiplayer.html'), '<h1>Coin Rush Three.js</h1>'),
+  ]);
   const instance = createCoinRushServer({
     host: '127.0.0.1',
     port: 0,
@@ -85,7 +89,11 @@ test('public shape serves health and a real ten-client WebSocket round with rejo
     running: false,
     complete: false,
   });
-  assert.match(await fetch(httpUrl).then((response) => response.text()), /Three\.js/);
+  const startPage = await fetch(httpUrl).then((response) => response.text());
+  assert.match(startPage, /SINGLEPLAYER/);
+  assert.match(startPage, /MULTIPLAYER/);
+  assert.match(await fetch(`${httpUrl}/singleplayer.html`).then((response) => response.text()), /Token Rush/);
+  assert.match(await fetch(`${httpUrl}/multiplayer.html`).then((response) => response.text()), /Three\.js/);
 
   const clients = [];
   for (let index = 0; index < 10; index += 1) {
