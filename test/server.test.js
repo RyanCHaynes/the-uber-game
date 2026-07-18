@@ -6,6 +6,9 @@ import test from 'node:test';
 import WebSocket from 'ws';
 
 import { createCoinRushServer } from '../server/index.js';
+import { loadTokenRushEnemyCatalogFile } from '../shared/token-rush-enemies.js';
+
+const enemyRevision = loadTokenRushEnemyCatalogFile().catalog.revision;
 
 class Messages {
   constructor(socket) {
@@ -76,13 +79,19 @@ test('public shape serves health and a real ten-client WebSocket round with rejo
   assert.equal(health.ok, true);
   assert.equal(health.revision, 'castle-v1');
   assert.equal(health.sliceRevision, 'crypt-001@token-rush-level-v1');
+  assert.equal(health.sliceEnemyRevision, enemyRevision);
+  assert.equal(health.sliceEnemySource, 'file');
+  assert.equal(health.sliceEnemyRejection, null);
   assert.equal(health.sliceLevelSource, 'file');
   assert.equal(health.sliceLevelRejection, null);
   const sliceHealth = await fetch(`${httpUrl}/slice-healthz`).then((response) => response.json());
   assert.deepEqual(sliceHealth, {
     ok: true,
     revision: 'crypt-001@token-rush-level-v1',
+    enemyRevision,
     levelId: 'crypt-001',
+    enemySource: 'file',
+    enemyRejection: null,
     levelSource: 'file',
     levelRejection: null,
     connections: 0,
@@ -187,4 +196,28 @@ test('invalid level file never replaces the compiled known-good solo level', asy
   assert.equal(start.level.schema, 'token-rush-level/v1');
   assert.equal(start.level.solids.length, 5);
   client.socket.close();
+});
+
+test('invalid enemy catalog cannot activate its level and reports both fail-closed boundaries', async (context) => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'coinrush-invalid-enemies-'));
+  const enemyFile = path.join(directory, 'bad.json');
+  await writeFile(enemyFile, '{"schema":"token-rush-enemies/v2","script":"no"}');
+  const instance = createCoinRushServer({
+    host: '127.0.0.1',
+    port: 0,
+    allowedOrigin: 'https://game.test',
+    tokenRushEnemyFile: enemyFile,
+    tokenRushLevelFile: path.resolve('content/token-rush-enemy-demo-level.json'),
+  });
+  context.after(async () => {
+    await instance.close();
+    await rm(directory, { recursive: true, force: true });
+  });
+  const address = await instance.listen();
+  const health = await fetch(`http://127.0.0.1:${address.port}/slice-healthz`).then((response) => response.json());
+  assert.equal(health.enemySource, 'fallback');
+  assert.equal(health.enemyRejection, 'ENEMY_CATALOG_KEYS');
+  assert.equal(health.levelSource, 'fallback');
+  assert.equal(health.levelRejection, 'ENEMY_TYPE');
+  assert.equal(health.levelId, 'crypt-fallback');
 });

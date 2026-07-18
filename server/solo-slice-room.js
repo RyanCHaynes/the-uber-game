@@ -3,6 +3,7 @@ import {
   FALLBACK_TOKEN_RUSH_LEVEL,
   TOKEN_RUSH_ACTOR_BODIES,
 } from '../shared/token-rush-level.js';
+import { TokenRushEnemyRuntime } from './token-rush-enemy-runtime.js';
 
 const SLICE = Object.freeze({
   revision: 'token-rush-level-runtime-v1',
@@ -13,11 +14,7 @@ const SLICE = Object.freeze({
   jumpSpeed: 570,
   playerHalfWidth: TOKEN_RUSH_ACTOR_BODIES.player.halfWidth,
   playerHalfHeight: TOKEN_RUSH_ACTOR_BODIES.player.halfHeight,
-  enemyHalfWidth: TOKEN_RUSH_ACTOR_BODIES.enemy.halfWidth,
-  enemyHalfHeight: TOKEN_RUSH_ACTOR_BODIES.enemy.halfHeight,
-  attackRange: 72,
   attackCooldownTicks: 16,
-  enemyAttackCooldownTicks: 42,
 });
 
 function cleanName(value) {
@@ -69,19 +66,12 @@ export class SoloSliceRoom {
       attackTicks: 0,
       invulnerabilityTicks: 0,
     };
-    this.enemies = this.level.enemies.map((enemy) => ({
-      id: enemy.id,
-      type: enemy.type,
-      name: enemy.name,
-      position: { ...enemy.position },
-      health: enemy.health,
-      maxHealth: enemy.health,
-      speed: enemy.speed,
-      alive: true,
-      facing: -1,
-      attackCooldown: 0,
-      hitTicks: 0,
-    }));
+    this.enemyRuntime = new TokenRushEnemyRuntime({
+      level: this.level,
+      emitFeedback: (type, text) => this.emitFeedback(type, text),
+      killPlayer: (enemy) => this.killPlayer(enemy),
+    });
+    this.enemies = this.enemyRuntime.entities;
     this.enemy = this.enemies.at(-1) ?? null;
     this.tokens = this.level.tokens.map((token) => ({ ...token, collected: false }));
     this.dead = false;
@@ -304,50 +294,13 @@ export class SoloSliceRoom {
 
   resolvePlayerAttack() {
     if (this.dead) return;
-    const player = this.player;
-    const targets = this.enemies
-      .filter((enemy) => enemy.alive)
-      .map((enemy) => ({ enemy, dx: enemy.position.x - player.position.x }))
-      .filter(({ enemy, dx }) => Math.sign(dx || player.facing) === player.facing &&
-        Math.abs(dx) <= SLICE.attackRange && Math.abs(enemy.position.y - player.position.y) <= 58)
-      .sort((left, right) => Math.abs(left.dx) - Math.abs(right.dx));
-    const enemy = targets[0]?.enemy;
-    if (!enemy) return;
-    enemy.health -= 1;
-    enemy.hitTicks = 8;
-    this.emitFeedback('enemyHit', `${enemy.name} -1`);
-    if (enemy.health <= 0) {
-      enemy.health = 0;
-      enemy.alive = false;
-      this.emitFeedback('enemyDeath', `${enemy.name} defeated`);
-    }
+    this.enemyRuntime.resolvePlayerAttack(this.player);
   }
 
   updateEnemies(seconds) {
     if (this.dead) return;
-    const player = this.player;
-    for (const enemy of this.enemies) {
-      if (!enemy.alive) continue;
-      if (enemy.hitTicks > 0) enemy.hitTicks -= 1;
-      if (enemy.attackCooldown > 0) enemy.attackCooldown -= 1;
-      const dx = player.position.x - enemy.position.x;
-      enemy.facing = dx < 0 ? -1 : 1;
-      if (Math.abs(dx) < 300 && Math.abs(dx) > 42) {
-        enemy.position.x += Math.sign(dx) * enemy.speed * seconds;
-        enemy.position.x = Math.max(SLICE.enemyHalfWidth, Math.min(this.level.width - SLICE.enemyHalfWidth, enemy.position.x));
-      }
-      if (Math.abs(dx) <= 46 && Math.abs(enemy.position.y - player.position.y) <= 58 &&
-          enemy.attackCooldown === 0 && player.invulnerabilityTicks === 0) {
-        enemy.attackCooldown = SLICE.enemyAttackCooldownTicks;
-        player.invulnerabilityTicks = 24;
-        player.health = Math.max(0, player.health - 1);
-        if (player.health === 0) {
-          this.killPlayer(enemy);
-          break;
-        }
-        this.emitFeedback('playerHurt', `${enemy.name} hits you`);
-      }
-    }
+    this.enemyRuntime.update(seconds, this.player);
+    this.enemy = this.enemies.at(-1) ?? null;
   }
 
   killPlayer(enemy) {
@@ -388,6 +341,7 @@ export class SoloSliceRoom {
       schema: this.level.schema,
       id: this.level.id,
       revision: this.level.revision,
+      enemyCatalogRevision: this.level.enemyCatalogRevision,
       tileSize: this.level.tileSize,
       width: this.level.width,
       height: this.level.height,
@@ -403,17 +357,7 @@ export class SoloSliceRoom {
   }
 
   broadcastSnapshot() {
-    const enemies = this.enemies.map((enemy) => ({
-      id: enemy.id,
-      type: enemy.type,
-      name: enemy.name,
-      position: { ...enemy.position },
-      facing: enemy.facing,
-      health: enemy.health,
-      maxHealth: enemy.maxHealth,
-      alive: enemy.alive,
-      hit: enemy.hitTicks > 0,
-    }));
+    const enemies = this.enemyRuntime.snapshot();
     this.send(this.peer?.socket, {
       type: 'sliceSnapshot',
       revision: this.level.revision,

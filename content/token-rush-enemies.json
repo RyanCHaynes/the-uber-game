@@ -1,0 +1,1728 @@
+{
+  "schema": "token-rush-enemies/v2",
+  "revision": "crypt-enemies-002",
+  "enemies": [
+    {
+      "id": "crawler",
+      "name": "Crypt Crawler",
+      "assetPack": "crawler",
+      "body": {
+        "id": "body",
+        "name": "Crypt Crawler",
+        "hp": 1,
+        "anchor": {
+          "x": 0,
+          "y": 0
+        },
+        "size": {
+          "w": 44,
+          "h": 56
+        },
+        "color": "#7b496e",
+        "detachVelocity": null,
+        "onDestroyed": {
+          "children": "destroy"
+        },
+        "children": []
+      },
+      "controllers": [
+        {
+          "id": "locomotion",
+          "ownerPart": "body",
+          "mode": "root",
+          "initial": "pursue",
+          "states": [
+            {
+              "id": "idle",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": 0
+                }
+              ],
+              "transitions": [
+                {
+                  "when": {
+                    "op": "lte",
+                    "args": [
+                      {
+                        "read": "target.distanceX"
+                      },
+                      300
+                    ]
+                  },
+                  "to": "pursue",
+                  "actions": []
+                }
+              ]
+            },
+            {
+              "id": "pursue",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "op": "sign",
+                        "arg": {
+                          "read": "target.dx"
+                        }
+                      },
+                      78
+                    ]
+                  }
+                },
+                {
+                  "op": "motor.face",
+                  "value": {
+                    "op": "sign",
+                    "arg": {
+                      "read": "target.dx"
+                    }
+                  }
+                }
+              ],
+              "transitions": [
+                {
+                  "when": {
+                    "op": "lte",
+                    "args": [
+                      {
+                        "read": "target.distanceX"
+                      },
+                      42
+                    ]
+                  },
+                  "to": "hold",
+                  "actions": []
+                },
+                {
+                  "when": {
+                    "op": "gt",
+                    "args": [
+                      {
+                        "read": "target.distanceX"
+                      },
+                      300
+                    ]
+                  },
+                  "to": "idle",
+                  "actions": []
+                }
+              ]
+            },
+            {
+              "id": "hold",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": 0
+                }
+              ],
+              "transitions": [
+                {
+                  "when": {
+                    "op": "gt",
+                    "args": [
+                      {
+                        "read": "target.distanceX"
+                      },
+                      46
+                    ]
+                  },
+                  "to": "pursue",
+                  "actions": []
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "attacks": [
+        {
+          "id": "strike",
+          "ownerPart": "body",
+          "mode": "root",
+          "trigger": {
+            "op": "all",
+            "args": [
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceX"
+                  },
+                  46
+                ]
+              },
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceY"
+                  },
+                  58
+                ]
+              }
+            ]
+          },
+          "cooldownTicks": 0,
+          "phases": [
+            {
+              "id": "windup",
+              "ticks": 3,
+              "enter": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": 0
+                }
+              ],
+              "hitVolumes": []
+            },
+            {
+              "id": "active",
+              "ticks": 1,
+              "enter": [],
+              "hitVolumes": [
+                {
+                  "offset": {
+                    "x": 24,
+                    "y": 0
+                  },
+                  "size": {
+                    "w": 48,
+                    "h": 58
+                  },
+                  "damage": 1,
+                  "knockback": {
+                    "x": 70,
+                    "y": -40
+                  }
+                }
+              ]
+            },
+            {
+              "id": "recovery",
+              "ticks": 38,
+              "enter": [],
+              "hitVolumes": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guard",
+      "name": "Crypt Guard",
+      "assetPack": "guard",
+      "body": {
+        "id": "body",
+        "name": "Crypt Guard",
+        "hp": 2,
+        "anchor": {
+          "x": 0,
+          "y": 0
+        },
+        "size": {
+          "w": 44,
+          "h": 56
+        },
+        "color": "#7a4663",
+        "detachVelocity": null,
+        "onDestroyed": {
+          "children": "destroy"
+        },
+        "children": []
+      },
+      "controllers": [
+        {
+          "id": "locomotion",
+          "ownerPart": "body",
+          "mode": "root",
+          "initial": "pursue",
+          "states": [
+            {
+              "id": "idle",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": 0
+                }
+              ],
+              "transitions": [
+                {
+                  "when": {
+                    "op": "lte",
+                    "args": [
+                      {
+                        "read": "target.distanceX"
+                      },
+                      300
+                    ]
+                  },
+                  "to": "pursue",
+                  "actions": []
+                }
+              ]
+            },
+            {
+              "id": "pursue",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "op": "sign",
+                        "arg": {
+                          "read": "target.dx"
+                        }
+                      },
+                      52
+                    ]
+                  }
+                },
+                {
+                  "op": "motor.face",
+                  "value": {
+                    "op": "sign",
+                    "arg": {
+                      "read": "target.dx"
+                    }
+                  }
+                }
+              ],
+              "transitions": [
+                {
+                  "when": {
+                    "op": "lte",
+                    "args": [
+                      {
+                        "read": "target.distanceX"
+                      },
+                      42
+                    ]
+                  },
+                  "to": "hold",
+                  "actions": []
+                },
+                {
+                  "when": {
+                    "op": "gt",
+                    "args": [
+                      {
+                        "read": "target.distanceX"
+                      },
+                      300
+                    ]
+                  },
+                  "to": "idle",
+                  "actions": []
+                }
+              ]
+            },
+            {
+              "id": "hold",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": 0
+                }
+              ],
+              "transitions": [
+                {
+                  "when": {
+                    "op": "gt",
+                    "args": [
+                      {
+                        "read": "target.distanceX"
+                      },
+                      46
+                    ]
+                  },
+                  "to": "pursue",
+                  "actions": []
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "attacks": [
+        {
+          "id": "strike",
+          "ownerPart": "body",
+          "mode": "root",
+          "trigger": {
+            "op": "all",
+            "args": [
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceX"
+                  },
+                  46
+                ]
+              },
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceY"
+                  },
+                  58
+                ]
+              }
+            ]
+          },
+          "cooldownTicks": 0,
+          "phases": [
+            {
+              "id": "windup",
+              "ticks": 3,
+              "enter": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": 0
+                }
+              ],
+              "hitVolumes": []
+            },
+            {
+              "id": "active",
+              "ticks": 1,
+              "enter": [],
+              "hitVolumes": [
+                {
+                  "offset": {
+                    "x": 24,
+                    "y": 0
+                  },
+                  "size": {
+                    "w": 48,
+                    "h": 58
+                  },
+                  "damage": 1,
+                  "knockback": {
+                    "x": 70,
+                    "y": -40
+                  }
+                }
+              ]
+            },
+            {
+              "id": "recovery",
+              "ticks": 38,
+              "enter": [],
+              "hitVolumes": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "warden",
+      "name": "Crypt Warden",
+      "assetPack": "warden",
+      "body": {
+        "id": "body",
+        "name": "Crypt Warden",
+        "hp": 3,
+        "anchor": {
+          "x": 0,
+          "y": 0
+        },
+        "size": {
+          "w": 44,
+          "h": 56
+        },
+        "color": "#9d3448",
+        "detachVelocity": null,
+        "onDestroyed": {
+          "children": "destroy"
+        },
+        "children": []
+      },
+      "controllers": [
+        {
+          "id": "locomotion",
+          "ownerPart": "body",
+          "mode": "root",
+          "initial": "pursue",
+          "states": [
+            {
+              "id": "idle",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": 0
+                }
+              ],
+              "transitions": [
+                {
+                  "when": {
+                    "op": "lte",
+                    "args": [
+                      {
+                        "read": "target.distanceX"
+                      },
+                      300
+                    ]
+                  },
+                  "to": "pursue",
+                  "actions": []
+                }
+              ]
+            },
+            {
+              "id": "pursue",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "op": "sign",
+                        "arg": {
+                          "read": "target.dx"
+                        }
+                      },
+                      58
+                    ]
+                  }
+                },
+                {
+                  "op": "motor.face",
+                  "value": {
+                    "op": "sign",
+                    "arg": {
+                      "read": "target.dx"
+                    }
+                  }
+                }
+              ],
+              "transitions": [
+                {
+                  "when": {
+                    "op": "lte",
+                    "args": [
+                      {
+                        "read": "target.distanceX"
+                      },
+                      42
+                    ]
+                  },
+                  "to": "hold",
+                  "actions": []
+                },
+                {
+                  "when": {
+                    "op": "gt",
+                    "args": [
+                      {
+                        "read": "target.distanceX"
+                      },
+                      300
+                    ]
+                  },
+                  "to": "idle",
+                  "actions": []
+                }
+              ]
+            },
+            {
+              "id": "hold",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": 0
+                }
+              ],
+              "transitions": [
+                {
+                  "when": {
+                    "op": "gt",
+                    "args": [
+                      {
+                        "read": "target.distanceX"
+                      },
+                      46
+                    ]
+                  },
+                  "to": "pursue",
+                  "actions": []
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "attacks": [
+        {
+          "id": "strike",
+          "ownerPart": "body",
+          "mode": "root",
+          "trigger": {
+            "op": "all",
+            "args": [
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceX"
+                  },
+                  46
+                ]
+              },
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceY"
+                  },
+                  58
+                ]
+              }
+            ]
+          },
+          "cooldownTicks": 0,
+          "phases": [
+            {
+              "id": "windup",
+              "ticks": 3,
+              "enter": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": 0
+                }
+              ],
+              "hitVolumes": []
+            },
+            {
+              "id": "active",
+              "ticks": 1,
+              "enter": [],
+              "hitVolumes": [
+                {
+                  "offset": {
+                    "x": 24,
+                    "y": 0
+                  },
+                  "size": {
+                    "w": 48,
+                    "h": 58
+                  },
+                  "damage": 1,
+                  "knockback": {
+                    "x": 70,
+                    "y": -40
+                  }
+                }
+              ]
+            },
+            {
+              "id": "recovery",
+              "ticks": 38,
+              "enter": [],
+              "hitVolumes": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ossuary-colossus",
+      "name": "Ossuary Colossus",
+      "assetPack": "ossuary-colossus",
+      "body": {
+        "id": "ossuary-core",
+        "name": "Ossuary Core",
+        "hp": 8,
+        "anchor": {
+          "x": 0,
+          "y": 0
+        },
+        "size": {
+          "w": 54,
+          "h": 72
+        },
+        "color": "#693b56",
+        "detachVelocity": null,
+        "onDestroyed": {
+          "children": "destroy"
+        },
+        "children": [
+          {
+            "id": "bell-skull",
+            "name": "Bell Skull",
+            "hp": 3,
+            "anchor": {
+              "x": 0,
+              "y": -46
+            },
+            "size": {
+              "w": 38,
+              "h": 30
+            },
+            "color": "#c2aa78",
+            "detachVelocity": {
+              "x": 0,
+              "y": -220
+            },
+            "onDestroyed": {
+              "children": "detach"
+            },
+            "children": [
+              {
+                "id": "crown",
+                "name": "Bone Crown",
+                "hp": 1,
+                "anchor": {
+                  "x": 0,
+                  "y": -22
+                },
+                "size": {
+                  "w": 34,
+                  "h": 12
+                },
+                "color": "#d6bd78",
+                "detachVelocity": {
+                  "x": 45,
+                  "y": -180
+                },
+                "onDestroyed": {
+                  "children": "destroy"
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "left-arm",
+            "name": "Left Reliquary Arm",
+            "hp": 3,
+            "anchor": {
+              "x": -42,
+              "y": -5
+            },
+            "size": {
+              "w": 42,
+              "h": 18
+            },
+            "color": "#82506a",
+            "detachVelocity": {
+              "x": -130,
+              "y": -170
+            },
+            "onDestroyed": {
+              "children": "detach"
+            },
+            "children": [
+              {
+                "id": "left-claw",
+                "name": "Left Bone Claw",
+                "hp": 2,
+                "anchor": {
+                  "x": -27,
+                  "y": 0
+                },
+                "size": {
+                  "w": 24,
+                  "h": 28
+                },
+                "color": "#d0b782",
+                "detachVelocity": {
+                  "x": -100,
+                  "y": -130
+                },
+                "onDestroyed": {
+                  "children": "destroy"
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "right-arm",
+            "name": "Right Reliquary Arm",
+            "hp": 3,
+            "anchor": {
+              "x": 42,
+              "y": -5
+            },
+            "size": {
+              "w": 42,
+              "h": 18
+            },
+            "color": "#82506a",
+            "detachVelocity": {
+              "x": 130,
+              "y": -170
+            },
+            "onDestroyed": {
+              "children": "detach"
+            },
+            "children": [
+              {
+                "id": "right-claw",
+                "name": "Right Bone Claw",
+                "hp": 2,
+                "anchor": {
+                  "x": 27,
+                  "y": 0
+                },
+                "size": {
+                  "w": 24,
+                  "h": 28
+                },
+                "color": "#d0b782",
+                "detachVelocity": {
+                  "x": 100,
+                  "y": -130
+                },
+                "onDestroyed": {
+                  "children": "destroy"
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      "controllers": [
+        {
+          "id": "colossus-locomotion",
+          "ownerPart": "ossuary-core",
+          "mode": "root",
+          "initial": "approach",
+          "states": [
+            {
+              "id": "approach",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "op": "sign",
+                        "arg": {
+                          "read": "target.dx"
+                        }
+                      },
+                      38
+                    ]
+                  }
+                },
+                {
+                  "op": "motor.face",
+                  "value": {
+                    "op": "sign",
+                    "arg": {
+                      "read": "target.dx"
+                    }
+                  }
+                }
+              ],
+              "transitions": [
+                {
+                  "when": {
+                    "op": "lte",
+                    "args": [
+                      {
+                        "read": "target.distanceX"
+                      },
+                      220
+                    ]
+                  },
+                  "to": "split",
+                  "actions": [
+                    {
+                      "op": "part.detach",
+                      "part": "left-arm",
+                      "velocity": {
+                        "x": -130,
+                        "y": -170
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "split",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": 0
+                }
+              ],
+              "transitions": [
+                {
+                  "when": {
+                    "op": "gte",
+                    "args": [
+                      {
+                        "read": "state.ticks"
+                      },
+                      24
+                    ]
+                  },
+                  "to": "enraged",
+                  "actions": []
+                }
+              ]
+            },
+            {
+              "id": "enraged",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "op": "sign",
+                        "arg": {
+                          "read": "target.dx"
+                        }
+                      },
+                      62
+                    ]
+                  }
+                },
+                {
+                  "op": "motor.face",
+                  "value": {
+                    "op": "sign",
+                    "arg": {
+                      "read": "target.dx"
+                    }
+                  }
+                }
+              ],
+              "transitions": []
+            }
+          ]
+        },
+        {
+          "id": "skull-bob",
+          "ownerPart": "bell-skull",
+          "mode": "attached",
+          "initial": "low",
+          "states": [
+            {
+              "id": "low",
+              "enter": [
+                {
+                  "op": "owner.setAnchorY",
+                  "value": -48
+                }
+              ],
+              "tick": [],
+              "transitions": [
+                {
+                  "when": {
+                    "op": "gte",
+                    "args": [
+                      {
+                        "read": "state.ticks"
+                      },
+                      18
+                    ]
+                  },
+                  "to": "high",
+                  "actions": []
+                }
+              ]
+            },
+            {
+              "id": "high",
+              "enter": [
+                {
+                  "op": "owner.setAnchorY",
+                  "value": -43
+                }
+              ],
+              "tick": [],
+              "transitions": [
+                {
+                  "when": {
+                    "op": "gte",
+                    "args": [
+                      {
+                        "read": "state.ticks"
+                      },
+                      18
+                    ]
+                  },
+                  "to": "low",
+                  "actions": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "left-arm-swing",
+          "ownerPart": "left-arm",
+          "mode": "attached",
+          "initial": "low",
+          "states": [
+            {
+              "id": "low",
+              "enter": [
+                {
+                  "op": "owner.setAnchorY",
+                  "value": -9
+                }
+              ],
+              "tick": [],
+              "transitions": [
+                {
+                  "when": {
+                    "op": "gte",
+                    "args": [
+                      {
+                        "read": "state.ticks"
+                      },
+                      14
+                    ]
+                  },
+                  "to": "high",
+                  "actions": []
+                }
+              ]
+            },
+            {
+              "id": "high",
+              "enter": [
+                {
+                  "op": "owner.setAnchorY",
+                  "value": 3
+                }
+              ],
+              "tick": [],
+              "transitions": [
+                {
+                  "when": {
+                    "op": "gte",
+                    "args": [
+                      {
+                        "read": "state.ticks"
+                      },
+                      14
+                    ]
+                  },
+                  "to": "low",
+                  "actions": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "right-arm-swing",
+          "ownerPart": "right-arm",
+          "mode": "attached",
+          "initial": "low",
+          "states": [
+            {
+              "id": "low",
+              "enter": [
+                {
+                  "op": "owner.setAnchorY",
+                  "value": 3
+                }
+              ],
+              "tick": [],
+              "transitions": [
+                {
+                  "when": {
+                    "op": "gte",
+                    "args": [
+                      {
+                        "read": "state.ticks"
+                      },
+                      14
+                    ]
+                  },
+                  "to": "high",
+                  "actions": []
+                }
+              ]
+            },
+            {
+              "id": "high",
+              "enter": [
+                {
+                  "op": "owner.setAnchorY",
+                  "value": -9
+                }
+              ],
+              "tick": [],
+              "transitions": [
+                {
+                  "when": {
+                    "op": "gte",
+                    "args": [
+                      {
+                        "read": "state.ticks"
+                      },
+                      14
+                    ]
+                  },
+                  "to": "low",
+                  "actions": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "detached-skull-hunt",
+          "ownerPart": "bell-skull",
+          "mode": "root",
+          "initial": "hunt",
+          "states": [
+            {
+              "id": "hunt",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "op": "sign",
+                        "arg": {
+                          "read": "target.dx"
+                        }
+                      },
+                      72
+                    ]
+                  }
+                },
+                {
+                  "op": "motor.face",
+                  "value": {
+                    "op": "sign",
+                    "arg": {
+                      "read": "target.dx"
+                    }
+                  }
+                }
+              ],
+              "transitions": []
+            }
+          ]
+        },
+        {
+          "id": "detached-crown-hunt",
+          "ownerPart": "crown",
+          "mode": "root",
+          "initial": "hunt",
+          "states": [
+            {
+              "id": "hunt",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "op": "sign",
+                        "arg": {
+                          "read": "target.dx"
+                        }
+                      },
+                      105
+                    ]
+                  }
+                },
+                {
+                  "op": "motor.face",
+                  "value": {
+                    "op": "sign",
+                    "arg": {
+                      "read": "target.dx"
+                    }
+                  }
+                }
+              ],
+              "transitions": []
+            }
+          ]
+        },
+        {
+          "id": "detached-left-arm-hunt",
+          "ownerPart": "left-arm",
+          "mode": "root",
+          "initial": "hunt",
+          "states": [
+            {
+              "id": "hunt",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "op": "sign",
+                        "arg": {
+                          "read": "target.dx"
+                        }
+                      },
+                      86
+                    ]
+                  }
+                },
+                {
+                  "op": "motor.face",
+                  "value": {
+                    "op": "sign",
+                    "arg": {
+                      "read": "target.dx"
+                    }
+                  }
+                }
+              ],
+              "transitions": []
+            }
+          ]
+        },
+        {
+          "id": "detached-left-claw-hunt",
+          "ownerPart": "left-claw",
+          "mode": "root",
+          "initial": "hunt",
+          "states": [
+            {
+              "id": "hunt",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "op": "sign",
+                        "arg": {
+                          "read": "target.dx"
+                        }
+                      },
+                      112
+                    ]
+                  }
+                },
+                {
+                  "op": "motor.face",
+                  "value": {
+                    "op": "sign",
+                    "arg": {
+                      "read": "target.dx"
+                    }
+                  }
+                }
+              ],
+              "transitions": []
+            }
+          ]
+        },
+        {
+          "id": "detached-right-arm-hunt",
+          "ownerPart": "right-arm",
+          "mode": "root",
+          "initial": "hunt",
+          "states": [
+            {
+              "id": "hunt",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "op": "sign",
+                        "arg": {
+                          "read": "target.dx"
+                        }
+                      },
+                      86
+                    ]
+                  }
+                },
+                {
+                  "op": "motor.face",
+                  "value": {
+                    "op": "sign",
+                    "arg": {
+                      "read": "target.dx"
+                    }
+                  }
+                }
+              ],
+              "transitions": []
+            }
+          ]
+        },
+        {
+          "id": "detached-right-claw-hunt",
+          "ownerPart": "right-claw",
+          "mode": "root",
+          "initial": "hunt",
+          "states": [
+            {
+              "id": "hunt",
+              "enter": [],
+              "tick": [
+                {
+                  "op": "motor.setVelocityX",
+                  "value": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "op": "sign",
+                        "arg": {
+                          "read": "target.dx"
+                        }
+                      },
+                      112
+                    ]
+                  }
+                },
+                {
+                  "op": "motor.face",
+                  "value": {
+                    "op": "sign",
+                    "arg": {
+                      "read": "target.dx"
+                    }
+                  }
+                }
+              ],
+              "transitions": []
+            }
+          ]
+        }
+      ],
+      "attacks": [
+        {
+          "id": "core-lunge",
+          "ownerPart": "ossuary-core",
+          "mode": "root",
+          "trigger": {
+            "op": "all",
+            "args": [
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceX"
+                  },
+                  76
+                ]
+              },
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceY"
+                  },
+                  74
+                ]
+              }
+            ]
+          },
+          "cooldownTicks": 18,
+          "phases": [
+            {
+              "id": "telegraph",
+              "ticks": 12,
+              "enter": [],
+              "hitVolumes": []
+            },
+            {
+              "id": "active",
+              "ticks": 3,
+              "enter": [],
+              "hitVolumes": [
+                {
+                  "offset": {
+                    "x": 34,
+                    "y": 12
+                  },
+                  "size": {
+                    "w": 68,
+                    "h": 52
+                  },
+                  "damage": 2,
+                  "knockback": {
+                    "x": 140,
+                    "y": -90
+                  }
+                }
+              ]
+            },
+            {
+              "id": "recovery",
+              "ticks": 24,
+              "enter": [],
+              "hitVolumes": []
+            }
+          ]
+        },
+        {
+          "id": "bell-bite",
+          "ownerPart": "bell-skull",
+          "mode": "always",
+          "trigger": {
+            "op": "all",
+            "args": [
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceX"
+                  },
+                  64
+                ]
+              },
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceY"
+                  },
+                  68
+                ]
+              }
+            ]
+          },
+          "cooldownTicks": 12,
+          "phases": [
+            {
+              "id": "telegraph",
+              "ticks": 8,
+              "enter": [],
+              "hitVolumes": []
+            },
+            {
+              "id": "active",
+              "ticks": 3,
+              "enter": [],
+              "hitVolumes": [
+                {
+                  "offset": {
+                    "x": 24,
+                    "y": 0
+                  },
+                  "size": {
+                    "w": 48,
+                    "h": 34
+                  },
+                  "damage": 1,
+                  "knockback": {
+                    "x": 90,
+                    "y": -55
+                  }
+                }
+              ]
+            },
+            {
+              "id": "recovery",
+              "ticks": 18,
+              "enter": [],
+              "hitVolumes": []
+            }
+          ]
+        },
+        {
+          "id": "left-rake",
+          "ownerPart": "left-claw",
+          "mode": "attached",
+          "trigger": {
+            "op": "all",
+            "args": [
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceX"
+                  },
+                  58
+                ]
+              },
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceY"
+                  },
+                  62
+                ]
+              }
+            ]
+          },
+          "cooldownTicks": 14,
+          "phases": [
+            {
+              "id": "telegraph",
+              "ticks": 7,
+              "enter": [],
+              "hitVolumes": []
+            },
+            {
+              "id": "active",
+              "ticks": 3,
+              "enter": [],
+              "hitVolumes": [
+                {
+                  "offset": {
+                    "x": 22,
+                    "y": 0
+                  },
+                  "size": {
+                    "w": 44,
+                    "h": 38
+                  },
+                  "damage": 1,
+                  "knockback": {
+                    "x": 110,
+                    "y": -45
+                  }
+                }
+              ]
+            },
+            {
+              "id": "recovery",
+              "ticks": 17,
+              "enter": [],
+              "hitVolumes": []
+            }
+          ]
+        },
+        {
+          "id": "left-claw-snap",
+          "ownerPart": "left-claw",
+          "mode": "root",
+          "trigger": {
+            "op": "all",
+            "args": [
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceX"
+                  },
+                  52
+                ]
+              },
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceY"
+                  },
+                  56
+                ]
+              }
+            ]
+          },
+          "cooldownTicks": 10,
+          "phases": [
+            {
+              "id": "telegraph",
+              "ticks": 5,
+              "enter": [],
+              "hitVolumes": []
+            },
+            {
+              "id": "active",
+              "ticks": 2,
+              "enter": [],
+              "hitVolumes": [
+                {
+                  "offset": {
+                    "x": 20,
+                    "y": 0
+                  },
+                  "size": {
+                    "w": 40,
+                    "h": 34
+                  },
+                  "damage": 1,
+                  "knockback": {
+                    "x": 95,
+                    "y": -35
+                  }
+                }
+              ]
+            },
+            {
+              "id": "recovery",
+              "ticks": 14,
+              "enter": [],
+              "hitVolumes": []
+            }
+          ]
+        },
+        {
+          "id": "right-rake",
+          "ownerPart": "right-claw",
+          "mode": "attached",
+          "trigger": {
+            "op": "all",
+            "args": [
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceX"
+                  },
+                  58
+                ]
+              },
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceY"
+                  },
+                  62
+                ]
+              }
+            ]
+          },
+          "cooldownTicks": 14,
+          "phases": [
+            {
+              "id": "telegraph",
+              "ticks": 9,
+              "enter": [],
+              "hitVolumes": []
+            },
+            {
+              "id": "active",
+              "ticks": 3,
+              "enter": [],
+              "hitVolumes": [
+                {
+                  "offset": {
+                    "x": 22,
+                    "y": 0
+                  },
+                  "size": {
+                    "w": 44,
+                    "h": 38
+                  },
+                  "damage": 1,
+                  "knockback": {
+                    "x": 110,
+                    "y": -45
+                  }
+                }
+              ]
+            },
+            {
+              "id": "recovery",
+              "ticks": 15,
+              "enter": [],
+              "hitVolumes": []
+            }
+          ]
+        },
+        {
+          "id": "right-claw-snap",
+          "ownerPart": "right-claw",
+          "mode": "root",
+          "trigger": {
+            "op": "all",
+            "args": [
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceX"
+                  },
+                  52
+                ]
+              },
+              {
+                "op": "lte",
+                "args": [
+                  {
+                    "read": "target.distanceY"
+                  },
+                  56
+                ]
+              }
+            ]
+          },
+          "cooldownTicks": 10,
+          "phases": [
+            {
+              "id": "telegraph",
+              "ticks": 5,
+              "enter": [],
+              "hitVolumes": []
+            },
+            {
+              "id": "active",
+              "ticks": 2,
+              "enter": [],
+              "hitVolumes": [
+                {
+                  "offset": {
+                    "x": 20,
+                    "y": 0
+                  },
+                  "size": {
+                    "w": 40,
+                    "h": 34
+                  },
+                  "damage": 1,
+                  "knockback": {
+                    "x": 95,
+                    "y": -35
+                  }
+                }
+              ]
+            },
+            {
+              "id": "recovery",
+              "ticks": 14,
+              "enter": [],
+              "hitVolumes": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

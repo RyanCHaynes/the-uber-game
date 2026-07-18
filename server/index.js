@@ -8,6 +8,7 @@ import { WebSocketServer } from 'ws';
 
 import { GAME } from '../shared/game.js';
 import { activeLevelCandidate } from '../shared/levels/index.js';
+import { DEFAULT_TOKEN_RUSH_ENEMY_FILE, loadTokenRushEnemyCatalogFile } from '../shared/token-rush-enemies.js';
 import { DEFAULT_TOKEN_RUSH_LEVEL_FILE, loadTokenRushLevelFile } from '../shared/token-rush-level.js';
 import { GameRoom } from './game-room.js';
 import { SoloSliceRoom } from './solo-slice-room.js';
@@ -91,11 +92,13 @@ export function createCoinRushServer({
   allowedOrigin = '',
   distDirectory = defaultDist,
   level = activeLevelCandidate,
+  tokenRushEnemyFile = DEFAULT_TOKEN_RUSH_ENEMY_FILE,
   tokenRushLevelFile = DEFAULT_TOKEN_RUSH_LEVEL_FILE,
   handshakeTimeoutMs = 5000,
 } = {}) {
   const room = new GameRoom({ level });
-  const tokenRushLevel = loadTokenRushLevelFile(tokenRushLevelFile);
+  const tokenRushEnemies = loadTokenRushEnemyCatalogFile(tokenRushEnemyFile);
+  const tokenRushLevel = loadTokenRushLevelFile(tokenRushLevelFile, tokenRushEnemies.catalog);
   const sliceRoom = new SoloSliceRoom({ level: tokenRushLevel.level });
   const server = createServer((request, response) => {
     const pathname = new URL(request.url, 'http://localhost').pathname;
@@ -106,6 +109,9 @@ export function createCoinRushServer({
         connections: room.connectionCount,
         running: room.running,
         sliceRevision: sliceRoom.level.revision,
+        sliceEnemyRevision: sliceRoom.level.enemyCatalogRevision,
+        sliceEnemySource: tokenRushEnemies.source,
+        sliceEnemyRejection: tokenRushEnemies.rejectionCode,
         sliceLevelSource: tokenRushLevel.source,
         sliceLevelRejection: tokenRushLevel.rejectionCode,
         sliceConnections: sliceRoom.connectionCount,
@@ -119,7 +125,10 @@ export function createCoinRushServer({
       const body = JSON.stringify({
         ok: true,
         revision: sliceRoom.level.revision,
+        enemyRevision: sliceRoom.level.enemyCatalogRevision,
         levelId: sliceRoom.level.id,
+        enemySource: tokenRushEnemies.source,
+        enemyRejection: tokenRushEnemies.rejectionCode,
         levelSource: tokenRushLevel.source,
         levelRejection: tokenRushLevel.rejectionCode,
         connections: sliceRoom.connectionCount,
@@ -288,6 +297,7 @@ async function main() {
     host,
     port,
     allowedOrigin: process.env.ALLOWED_ORIGIN || '',
+    tokenRushEnemyFile: process.env.TOKEN_RUSH_ENEMY_FILE || DEFAULT_TOKEN_RUSH_ENEMY_FILE,
     tokenRushLevelFile: process.env.TOKEN_RUSH_LEVEL_FILE || DEFAULT_TOKEN_RUSH_LEVEL_FILE,
   });
   await instance.listen();

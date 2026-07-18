@@ -2,22 +2,19 @@ import { readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { FALLBACK_TOKEN_RUSH_ENEMY_CATALOG } from './token-rush-enemies.js';
+
 export const TOKEN_RUSH_LEVEL_SCHEMA = 'token-rush-level/v1';
 export const TOKEN_RUSH_TILE_SIZE = 32;
 export const TOKEN_RUSH_GRID = Object.freeze({ w: 48, h: 22 });
 export const TOKEN_RUSH_LEVEL_MAX_BYTES = 32 * 1024;
-export const TOKEN_RUSH_ENEMY_TYPES = Object.freeze(['crawler', 'guard', 'warden']);
+export const TOKEN_RUSH_ENEMY_TYPES = Object.freeze(FALLBACK_TOKEN_RUSH_ENEMY_CATALOG.enemies.map((enemy) => enemy.id));
 export const TOKEN_RUSH_ACTOR_BODIES = Object.freeze({
   player: Object.freeze({ halfWidth: 18, halfHeight: 24 }),
   enemy: Object.freeze({ halfWidth: 22, halfHeight: 28 }),
 });
 
 const LEVEL_KEYS = Object.freeze(['schema', 'id', 'size', 'spawn', 'exit', 'solids', 'enemies', 'tokens']);
-const ENEMY_STATS = Object.freeze({
-  crawler: Object.freeze({ name: 'Crypt Crawler', health: 1, speed: 78 }),
-  guard: Object.freeze({ name: 'Crypt Guard', health: 2, speed: 52 }),
-  warden: Object.freeze({ name: 'Crypt Warden', health: 3, speed: 58 }),
-});
 
 export class TokenRushLevelError extends Error {
   constructor(code) {
@@ -87,7 +84,7 @@ function deepFreeze(value) {
   return Object.freeze(value);
 }
 
-export function validateTokenRushLevel(document) {
+export function validateTokenRushLevel(document, enemyCatalog = FALLBACK_TOKEN_RUSH_ENEMY_CATALOG) {
   plainObject(document, 'LEVEL_OBJECT');
   exactKeys(document, LEVEL_KEYS, 'LEVEL_KEYS');
   if (document.schema !== TOKEN_RUSH_LEVEL_SCHEMA) reject('LEVEL_SCHEMA');
@@ -139,9 +136,11 @@ export function validateTokenRushLevel(document) {
   const enemies = document.enemies.map((value) => {
     plainObject(value, 'ENEMY_SHAPE');
     exactKeys(value, ['type', 'x', 'y'], 'ENEMY_SHAPE');
-    if (!TOKEN_RUSH_ENEMY_TYPES.includes(value.type)) reject('ENEMY_TYPE');
+    const definition = typeof value.type === 'string' ? enemyCatalog?.byId?.[value.type] : null;
+    if (!definition) reject('ENEMY_TYPE');
     const position = point({ x: value.x, y: value.y }, 'ENEMY_BOUNDS');
-    assertActorSupported(position, TOKEN_RUSH_ACTOR_BODIES.enemy, 'ENEMY_SUPPORT', 'ENEMY_SOLID_CLEARANCE');
+    const body = { halfWidth: definition.body.size.w / 2, halfHeight: definition.body.size.h / 2 };
+    assertActorSupported(position, body, 'ENEMY_SUPPORT', 'ENEMY_SOLID_CLEARANCE');
     const key = `${position.x},${position.y}`;
     if (enemyCells.has(key)) reject('ENEMY_OVERLAP');
     if (occupiedEntityCells.has(key)) reject('ENTITY_OVERLAP');
@@ -175,8 +174,8 @@ export function validateTokenRushLevel(document) {
   });
 }
 
-export function compileTokenRushLevel(document) {
-  const level = validateTokenRushLevel(document);
+export function compileTokenRushLevel(document, enemyCatalog = FALLBACK_TOKEN_RUSH_ENEMY_CATALOG) {
+  const level = validateTokenRushLevel(document, enemyCatalog);
   const tiles = Array(TOKEN_RUSH_GRID.w * TOKEN_RUSH_GRID.h).fill(0);
   for (const solid of level.solids) {
     for (let y = solid.y; y < solid.y + solid.h; y += 1) {
@@ -197,6 +196,7 @@ export function compileTokenRushLevel(document) {
     schema: TOKEN_RUSH_LEVEL_SCHEMA,
     id: level.id,
     revision: `${level.id}@token-rush-level-v1`,
+    enemyCatalogRevision: enemyCatalog.revision,
     tileSize: TOKEN_RUSH_TILE_SIZE,
     width: TOKEN_RUSH_GRID.w * TOKEN_RUSH_TILE_SIZE,
     height: TOKEN_RUSH_GRID.h * TOKEN_RUSH_TILE_SIZE,
@@ -210,12 +210,16 @@ export function compileTokenRushLevel(document) {
       height: TOKEN_RUSH_TILE_SIZE * 2,
     },
     solids,
-    enemies: level.enemies.map((enemy, index) => ({
-      id: `${enemy.type}-${index + 1}`,
-      type: enemy.type,
-      ...ENEMY_STATS[enemy.type],
-      position: actorPosition(enemy, TOKEN_RUSH_ACTOR_BODIES.enemy.halfHeight),
-    })),
+    enemies: level.enemies.map((enemy, index) => {
+      const definition = enemyCatalog.byId[enemy.type];
+      return {
+        id: `${enemy.type}-${index + 1}`,
+        type: enemy.type,
+        name: definition.name,
+        definition,
+        position: actorPosition(enemy, definition.body.size.h / 2),
+      };
+    }),
     tokens: level.tokens.map((token, index) => ({
       id: `token-${index + 1}`,
       x: (token.x + 0.5) * TOKEN_RUSH_TILE_SIZE,
@@ -253,7 +257,7 @@ export const FALLBACK_TOKEN_RUSH_LEVEL = deepFreeze({
 const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
 export const DEFAULT_TOKEN_RUSH_LEVEL_FILE = path.resolve(moduleDirectory, '../content/token-rush-level.json');
 
-export function loadTokenRushLevelFile(file = DEFAULT_TOKEN_RUSH_LEVEL_FILE) {
+export function loadTokenRushLevelFile(file = DEFAULT_TOKEN_RUSH_LEVEL_FILE, enemyCatalog = FALLBACK_TOKEN_RUSH_ENEMY_CATALOG) {
   try {
     const details = statSync(file);
     if (!details.isFile() || details.size < 2 || details.size > TOKEN_RUSH_LEVEL_MAX_BYTES) reject('LEVEL_FILE_SIZE');
@@ -265,7 +269,7 @@ export function loadTokenRushLevelFile(file = DEFAULT_TOKEN_RUSH_LEVEL_FILE) {
     } catch {
       reject('LEVEL_JSON');
     }
-    return Object.freeze({ level: compileTokenRushLevel(document), source: 'file', rejectionCode: null });
+    return Object.freeze({ level: compileTokenRushLevel(document, enemyCatalog), source: 'file', rejectionCode: null });
   } catch (error) {
     const rejectionCode = error instanceof TokenRushLevelError ? error.code : 'LEVEL_FILE_READ';
     return Object.freeze({

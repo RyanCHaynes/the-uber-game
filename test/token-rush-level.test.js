@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
+import { loadTokenRushEnemyCatalogFile } from '../shared/token-rush-enemies.js';
 import {
   compileTokenRushLevel,
   DEFAULT_TOKEN_RUSH_LEVEL_FILE,
@@ -15,19 +16,20 @@ import {
 } from '../shared/token-rush-level.js';
 
 const clone = (value) => structuredClone(value);
+const enemyCatalog = loadTokenRushEnemyCatalogFile().catalog;
 
 async function authoredLevel() {
   return JSON.parse(await readFile(DEFAULT_TOKEN_RUSH_LEVEL_FILE, 'utf8'));
 }
 
 function rejection(document, code) {
-  assert.throws(() => validateTokenRushLevel(document), (error) =>
+  assert.throws(() => validateTokenRushLevel(document, enemyCatalog), (error) =>
     error instanceof TokenRushLevelError && error.code === code);
 }
 
-test('authored JSON alone compiles spawn, exit, rectangles, allowlisted enemies, and tokens', async () => {
+test('authored level and enemy JSON compile spawn, bodies, definitions, and tokens', async () => {
   const document = await authoredLevel();
-  const compiled = compileTokenRushLevel(document);
+  const compiled = compileTokenRushLevel(document, enemyCatalog);
   assert.equal(compiled.schema, 'token-rush-level/v1');
   assert.equal(compiled.id, 'crypt-001');
   assert.deepEqual(compiled.spawn, { x: 80, y: 616 });
@@ -38,6 +40,7 @@ test('authored JSON alone compiles spawn, exit, rectangles, allowlisted enemies,
   assert.equal(compiled.tiles[17 * 48 + 7], 1);
   assert.equal(compiled.tiles[0], 0);
   assert.deepEqual(compiled.enemies.map(({ type }) => type), ['crawler', 'guard', 'warden']);
+  assert.equal(compiled.enemyCatalogRevision, enemyCatalog.revision);
   assert.deepEqual(compiled.tokens[0], { id: 'token-1', x: 304, y: 496 });
 
   const changed = clone(document);
@@ -46,7 +49,7 @@ test('authored JSON alone compiles spawn, exit, rectangles, allowlisted enemies,
   changed.exit = { x: 45, y: 18 };
   changed.enemies = [{ type: 'guard', x: 12, y: 18 }];
   changed.tokens = [{ x: 10, y: 15 }];
-  const changedCompiled = compileTokenRushLevel(changed);
+  const changedCompiled = compileTokenRushLevel(changed, enemyCatalog);
   assert.equal(changedCompiled.id, 'crypt-changed');
   assert.equal(changedCompiled.spawn.x, 112);
   assert.equal(changedCompiled.exit.x, 1440);
@@ -108,7 +111,7 @@ test('spawn and enemy clearance checks use their exact authoritative runtime AAB
 
   const oneTileGap = clone(original);
   oneTileGap.solids.push({ x: oneTileGap.spawn.x + 2, y: oneTileGap.spawn.y, w: 1, h: 2 });
-  assert.doesNotThrow(() => validateTokenRushLevel(oneTileGap));
+  assert.doesNotThrow(() => validateTokenRushLevel(oneTileGap, enemyCatalog));
 });
 
 test('invalid or oversized files fail safely to the immutable known-good level', async (context) => {

@@ -321,20 +321,25 @@ function draw(now) {
     }
 
     for (const enemy of snapshot.enemies || []) {
-      const ex = enemy.position.x;
-      const ey = enemy.position.y;
-      if (!enemy.alive) {
-        rect(ex - 24, ey + 20, 48, 8, '#6c3742');
-        continue;
+      if (!enemy.alive) continue;
+      for (const part of enemy.parts || []) {
+        const px = part.position.x;
+        const py = part.position.y;
+        rect(px - part.size.w / 2, py - part.size.h / 2, part.size.w, part.size.h, part.hit ? '#fff3c4' : part.color);
+        rect(px - Math.min(8, part.size.w / 4), py - Math.min(5, part.size.h / 4), Math.min(6, part.size.w / 5), Math.min(5, part.size.h / 5), '#ffce66');
+        if (part.maxHealth > 1) {
+          const partBarWidth = Math.max(18, Math.min(42, part.size.w));
+          rect(px - partBarWidth / 2, py - part.size.h / 2 - 7, partBarWidth, 4, '#21151a');
+          rect(px - partBarWidth / 2, py - part.size.h / 2 - 7, partBarWidth * part.health / part.maxHealth, 4, '#d84c58');
+        }
       }
-      const enemyColor = enemy.type === 'crawler' ? '#7b496e' : enemy.type === 'guard' ? '#7a4663' : '#9d3448';
-      rect(ex - 22, ey - 28, 44, 56, enemy.hit ? '#fff3c4' : enemyColor);
-      rect(ex - 14, ey - 20, 28, 14, '#291a26');
-      rect(ex - 11, ey - 16, 6, 5, '#ffce66');
-      rect(ex + 5, ey - 16, 6, 5, '#ffce66');
-      const barWidth = 54;
-      rect(ex - barWidth / 2, ey - 44, barWidth, 6, '#21151a');
-      rect(ex - barWidth / 2, ey - 44, barWidth * enemy.health / enemy.maxHealth, 6, '#d84c58');
+      for (const attack of enemy.attacks || []) {
+        const owner = enemy.parts.find((part) => part.id === attack.ownerPart);
+        if (!owner) continue;
+        context.strokeStyle = attack.phase === 'active' ? '#fff0a8' : '#d9a844';
+        context.lineWidth = attack.phase === 'active' ? 4 : 2;
+        context.strokeRect(owner.position.x - owner.size.w / 2 - 4, owner.position.y - owner.size.h / 2 - 4, owner.size.w + 8, owner.size.h + 8);
+      }
     }
   }
   context.restore();

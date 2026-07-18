@@ -58,15 +58,24 @@ Server messages:
 Unknown, malformed, binary, oversized, wrong-origin, and over-rate traffic is
 rejected. An eleventh concurrent connection is refused.
 
-## Token Rush JSON level
+## Token Rush JSON content
 
-`content/token-rush-level.json` is the only authored solo-level input. The
-`token-rush-level/v1` contract accepts a fixed `48×22` integer grid, up to 64
-non-overlapping solid rectangles, eight allowlisted enemies, and 32 tokens.
-The Engine expands rectangles into its tile grid and owns all movement, combat,
-and completion behavior; level data cannot contain scripts, URLs, or physics
-settings. Invalid or oversized JSON selects the bundled known-good level and
-reports the stable rejection code through `/slice-healthz`.
+`content/token-rush-level.json` owns the fixed `48×22` grid, solid rectangles,
+enemy placements, and tokens. `content/token-rush-enemies.json` owns the enemy
+catalog selected by those placements. The `token-rush-enemies/v2` contract
+supports bounded nested body trees with independent HP, deterministic live
+subtree detachment, finite-state movement controllers, and phased attached
+melee hit volumes. Destroyed parts disappear. Projectiles are not accepted.
+
+The engine retains fixed-tick authority, collision resolution, gravity, speed
+ceilings, world bounds, and interpreter budgets. JSON cannot contain scripts,
+URLs, arbitrary paths, eval, or unbounded loops. Both files are validated and
+revision-pinned before room creation. The separate
+`content/token-rush-enemy-demo-level.json` places the multipart Ossuary
+Colossus without changing the frozen learned-level bytes. Invalid or oversized
+content selects the bundled known-good catalog/level and reports stable
+rejection codes through `/slice-healthz`. See
+[`docs/token-rush-enemies-v2.md`](docs/token-rush-enemies-v2.md).
 
 ## Fixed level feedback loop
 
