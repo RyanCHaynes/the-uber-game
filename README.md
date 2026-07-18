@@ -9,7 +9,9 @@ The original native C++/SFML implementation is preserved at Git tag
 
 The accepted design boundary for the next major version is recorded in
 [ADR 0001: Coin Rush vNext engine and Designer
-boundary](docs/architecture/0001-vnext-engine-and-designer-boundary.md).
+boundary](docs/architecture/0001-vnext-engine-and-designer-boundary.md). The vNext
+asset pipeline follows the [gothic pixel-art specification
+v1](docs/art/gothic-pixel-art-spec-v1.md).
 
 ## Architecture
 
