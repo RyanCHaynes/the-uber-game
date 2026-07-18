@@ -31,7 +31,7 @@ def parse(text: str) -> tuple[list[list[str]], list[str]]:
     and padding is harmless (reachability still validates the result).
     """
     errors = []
-    grid = [[c.strip() for c in line.split(",")] for line in text.strip().splitlines() if line.strip()]
+    grid = [_split_row(line) for line in text.strip().splitlines() if line.strip()]
     if not grid:
         return [], ["level is empty"]
     width = max(len(row) for row in grid)
@@ -43,8 +43,21 @@ def parse(text: str) -> tuple[list[list[str]], list[str]]:
     return grid, errors
 
 
+def _split_row(line: str) -> list[str]:
+    """One level row -> cells. Accepts CSV ('X,.,S') or compact ('X.S') form."""
+    line = line.strip()
+    if "," in line:
+        return [c.strip() for c in line.split(",")]
+    return list(line)
+
+
 def serialize(grid: list[list[str]]) -> str:
     return "\n".join(",".join(row) for row in grid) + "\n"
+
+
+def serialize_compact(grid: list[list[str]]) -> str:
+    """One character per cell, no commas — half the tokens of CSV for LLM traffic."""
+    return "\n".join("".join(row) for row in grid) + "\n"
 
 
 def find_one(grid, symbol) -> tuple[int, int] | None:
@@ -61,14 +74,15 @@ def _standable(grid, c, r) -> bool:
     return grid[r][c] != "X" and grid[r + 1][c] == "X"  # enemy digits count as open space
 
 
-def validate(grid: list[list[str]]) -> list[str]:
+def validate(grid: list[list[str]], min_cols: int | None = None) -> list[str]:
     errors = []
     rows = len(grid)
     cols = len(grid[0]) if grid else 0
+    floor = max(MIN_COLS, min_cols or 0)
     if not (MIN_ROWS <= rows <= MAX_ROWS):
         errors.append(f"level has {rows} rows; must be between {MIN_ROWS} and {MAX_ROWS}")
-    if not (MIN_COLS <= cols <= MAX_COLS):
-        errors.append(f"level has {cols} columns; must be between {MIN_COLS} and {MAX_COLS}")
+    if not (floor <= cols <= MAX_COLS):
+        errors.append(f"level has {cols} columns; must be between {floor} and {MAX_COLS}")
 
     for symbol, label in (("S", "spawn"), ("E", "exit")):
         count = sum(row.count(symbol) for row in grid)
@@ -122,8 +136,8 @@ def validate(grid: list[list[str]]) -> list[str]:
     return errors
 
 
-def validate_text(text: str) -> list[str]:
+def validate_text(text: str, min_cols: int | None = None) -> list[str]:
     grid, errors = parse(text)
     if errors:
         return errors
-    return validate(grid)
+    return validate(grid, min_cols=min_cols)

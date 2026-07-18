@@ -4,17 +4,23 @@
   "players": [
     {
       "player": "playtester",
-      "rating": 1,
+      "rating": 5,
       "completed": true,
-      "deaths": 1,
+      "deaths": 2,
       "fall_locations": [
         {
-          "x": 486,
-          "y": 464
+          "x": 70,
+          "y": 388
+        },
+        {
+          "x": 1267,
+          "y": 318
         }
       ],
-      "time_seconds": 382.1,
-      "comment": "I don't like jumping. Jumping AT ALL is not fun. I want to play a flat level with no jumps."
+      "time_seconds": 484.1,
+      "enemies_killed": 8,
+      "hits_taken": 6,
+      "comment": "That was fun. But the level was pretty flat. I'd like more verticality."
     }
   ]
 }

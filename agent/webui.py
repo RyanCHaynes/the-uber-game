@@ -134,6 +134,7 @@ def _snapshot() -> dict:
     return {
         "mode": "mock" if pipeline._use_mock() else "llm",
         "backend": llm.backend(),
+        "tokens": llm.cycle_usage(),
         "running": running,
         "error": error,
         "log": log[-200:],

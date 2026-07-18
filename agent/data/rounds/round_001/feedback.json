@@ -5,11 +5,13 @@
     {
       "player": "playtester",
       "rating": 2,
-      "completed": false,
+      "completed": true,
       "deaths": 0,
       "fall_locations": [],
-      "time_seconds": 12.7,
-      "comment": "there are too many jumps"
+      "time_seconds": 24.1,
+      "enemies_killed": 0,
+      "hits_taken": 0,
+      "comment": "It was kind of fun but there were no enemies."
     }
   ]
 }

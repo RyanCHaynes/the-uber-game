@@ -208,6 +208,10 @@ function render() {
     : state.backend === "claude_code" ? "LLM (Claude Code · subscription)" : "LLM (Claude API)";
   $("mode").className = "badge " + state.mode;
   $("busy").style.display = state.running ? "" : "none";
+  if (state.running && state.tokens) {
+    $("busy").textContent =
+      `agent designing… ${(state.tokens.used / 1000).toFixed(1)}k / ${(state.tokens.budget / 1000).toFixed(0)}k tokens`;
+  }
   $("resetBtn").disabled = state.running;
   $("err").textContent = state.error ? state.error : "";
 
@@ -388,8 +392,8 @@ function renderLlmLog() {
         <b>${esc(e.label || "call")}</b>
         <span class="modelChip">${esc(e.model)}</span>
         <span class="dim">${esc(e.ts.replace("T", " "))} · ${e.duration_s}s ·
-          ${e.input_tokens} in → ${e.output_tokens} out tokens${e.attempt > 1 ? ` · attempt ${e.attempt}` : ""}
-          · via ${e.backend === "claude_code" ? "Claude Code" : "API"}</span>
+          ${e.input_tokens + (e.cache_creation_input_tokens || 0)} in → ${e.output_tokens} out tokens${e.attempt > 1 ? ` · attempt ${e.attempt}` : ""}
+          · via ${e.backend === "claude_code" ? "Claude Code" : "API"}${e.cycle_used ? ` · cycle total ${(e.cycle_used / 1000).toFixed(1)}k` : ""}</span>
       </div>
       <details><summary>system prompt (${e.system.length.toLocaleString()} chars)</summary><pre>${esc(e.system)}</pre></details>
       ${e.messages.map(m => `<details><summary>➜ ${esc(m.role)} message (${m.content.length.toLocaleString()} chars)</summary><pre>${esc(m.content)}</pre></details>`).join("")}

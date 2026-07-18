@@ -1,42 +1,22 @@
 [
   {
-    "lesson": "A long sequence of similar jumps in a row can feel tedious rather than exciting, even if each jump is easy; vary jump distances, heights, or add alternate paths to maintain engagement.",
+    "lesson": "A level with clean platforming but zero enemies or hazards can still feel flat and low-fun even with a perfect, fast clear \u2014 traversal alone isn't enough stimulation.",
     "source_round": 1,
     "seen_count": 1
   },
   {
-    "lesson": "Fast completion times or quick disengagement with zero deaths/falls signals boredom or frustration with repetition, not difficulty \u2014 check level variety, not just challenge.",
+    "lesson": "Fast completion time with zero deaths/falls signals the level was too easy/under-stimulating rather than well-tuned.",
     "source_round": 1,
     "seen_count": 1
   },
   {
-    "lesson": "A player's stated dislike of a core mechanic (e.g. jumping) is real feedback but may reflect personal preference rather than a fixable design flaw \u2014 weigh it against death/completion data before overhauling the mechanic itself.",
+    "lesson": "Enemies and hazard density can make a level feel fun and engaging even when the layout has no vertical variation \u2014 fun and 'verticality' are judged as separate axes by players.",
     "source_round": 2,
     "seen_count": 1
   },
   {
-    "lesson": "Long flat, obstacle-free stretches followed by an abrupt narrow gap can catch players off guard and cause avoidable deaths, since players stop expecting a jump check.",
+    "lesson": "Horizontal floor gaps/pits are not perceived as verticality by players even if platforms sit at different heights \u2014 true verticality needs traversal that changes the player's elevation (climbing/descending), not just gaps at one baseline.",
     "source_round": 2,
-    "seen_count": 1
-  },
-  {
-    "lesson": "If a player repeats the same core-mechanic complaint across multiple rounds despite layout changes, the issue is the mechanic itself, not the specific level design \u2014 further tuning of jump distances or gaps won't move the rating.",
-    "source_round": 3,
-    "seen_count": 1
-  },
-  {
-    "lesson": "A fast, deathless completion paired with a high rating (not a low one) can mean the level's flow and variety are working well, not that it's boring \u2014 check the comment tone and requested changes before assuming under-stimulation.",
-    "source_round": 4,
-    "seen_count": 1
-  },
-  {
-    "lesson": "Players who ask for 'more' of a mechanic after a clean completion are signaling the core loop is fun and the level is too short, not that the mechanic itself needs reworking.",
-    "source_round": 4,
-    "seen_count": 1
-  },
-  {
-    "lesson": "A whimsical, oddly specific player request (e.g. wanting an exact number of jumps) is often a stand-in for wanting a tightly paced, countable challenge rather than a literal spec \u2014 treat it as a cue to review jump rhythm and total count, not as a number to hit exactly.",
-    "source_round": 5,
     "seen_count": 1
   }
 ]

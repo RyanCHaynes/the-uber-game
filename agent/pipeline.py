@@ -49,6 +49,8 @@ def roster_summary() -> str:
 def run_cycle(round_number: int, level_path: Path) -> Path:
     """Process feedback for `round_number` and write the next level. Returns its path."""
     analyze, design, brain = _get_brains()
+    from . import llm
+    llm.reset_cycle_usage()
     level_csv = level_path.read_text()
     feedback_path = ROUNDS_DIR / f"round_{round_number:03d}" / "feedback.json"
     feedback = json.loads(feedback_path.read_text())
@@ -85,5 +87,7 @@ def run_cycle(round_number: int, level_path: Path) -> Path:
     next_path.write_text(new_csv if new_csv.endswith("\n") else new_csv + "\n")
     # Marker file: the game polls for this to know the next level is ready.
     (LEVELS_DIR / "next_level.ready").write_text(next_path.name)
-    print(f"  wrote {next_path.name}")
+    usage = llm.cycle_usage()
+    print(f"  wrote {next_path.name} — cycle used {usage['used']:,} tokens "
+          f"in {usage['calls']} calls (budget {usage['budget']:,})")
     return next_path
