@@ -9,6 +9,7 @@ COPY client ./client
 COPY server ./server
 COPY shared ./shared
 COPY content ./content
+COPY scripts ./scripts
 COPY test ./test
 RUN npm test && npm run build
 
