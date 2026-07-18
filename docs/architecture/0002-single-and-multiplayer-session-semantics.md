@@ -15,7 +15,7 @@ This contract defines session-level product semantics. It does not define wire e
 
 ## Normative vocabulary
 
-- **Session:** One isolated authoritative game lifecycle with one pinned mode, topology, player set, content revision, seed, and phase.
+- **Session:** One isolated authoritative game lifecycle with a pinned mode and topology, a current phase, and a server-owned membership registry whose mutations are boundary-only. Each active level separately pins its ordered participant set, content revision, seed, and objective.
 - **Mode:** The ruleset: `campaign` or compatibility mode `coin-race-v1`.
 - **Topology:** The entry contract: `solo` or `party`. Topology is explicit; the server does not infer it from the number of open sockets.
 - **Joined player:** A connection that completed the accepted server handshake and owns a server-assigned identity and slot.
@@ -49,7 +49,7 @@ A session never changes mode or topology during an active level. A party that fa
 
 ### 2. Single-player is immediate and complete
 
-A valid solo campaign setup creates one server-owned player and begins the active level as soon as required local content is validated and pinned. It must not:
+A valid solo campaign setup creates one server-owned player and begins the active level as soon as required content is validated and pinned by the server. It must not:
 
 - wait for another human;
 - create or require a bot;
@@ -65,6 +65,8 @@ Solo and party campaign play use the same fixed-step authoritative simulation, e
 A party may wait in a lobby with one joined player, but it cannot start until 2–10 players are joined and all are ready.
 
 Readiness is server state, not a client assertion about the overall room. The server evaluates the start predicate after every accepted ready change, join, disconnect, or membership removal. A newly joined player is unready and therefore invalidates a pending start. Ready state resets after a round abort, level failure, return to the lobby, or membership-changing boundary.
+
+Every newly pinned next-level content revision also resets all party ready states. Each present party member must explicitly acknowledge that exact revision before the next active level starts; a `ready=true` value from an earlier revision can never satisfy the new all-ready gate.
 
 The server assigns unique stable slots from `0` through `9`. It rejects an eleventh connection before it becomes joined. Names are display data and never identity.
 
@@ -156,16 +158,20 @@ Detailed health, hurt, death, respawn, and checkpoint mechanics are implemented 
 
 ### 9. Authority and deterministic ordering
 
-Every session pins:
+Every session pins for its lifetime:
 
 - protocol and engine version;
 - mode and topology;
+- the server-owned membership registry and its monotonic revision.
+
+Every active level separately pins:
+
 - immutable content revision and digest;
 - seed and fixed-step clock origin;
-- ordered server-assigned member IDs and slots;
+- the ordered participant IDs and slots selected from the membership registry at the level boundary;
 - objective and checkpoint revision.
 
-The server processes same-tick player actions in stable slot order unless the deterministic simulation contract defines another recorded ordering. Snapshots identify session phase, mode, topology, content revision, seed/replay lineage, and authoritative members. Cosmetic rendering and interpolation never alter these values.
+The server processes same-tick player actions in stable slot order unless the deterministic simulation contract defines another recorded ordering. Snapshots identify session phase, mode, topology, membership revision, per-level participant set, content revision, seed/replay lineage, and authoritative members. Cosmetic rendering and interpolation never alter these values.
 
 The exact protocol fields remain the responsibility of `td-ac4b.2.3` and the replay/clock rules of `td-ac4b.2.4`.
 
@@ -204,7 +210,7 @@ Implementation cannot close this contract without automated and real-client evid
 1. Solo campaign starts with one browser, no ready action, no second socket, and no bot.
 2. A second member cannot enter a solo session.
 3. A one-member party lobby waits; 2–10 all-ready members start exactly once.
-4. A newly joined unready party member prevents start; the eleventh member is rejected.
+4. A newly joined unready party member prevents start; every newly pinned next-level revision resets all ready states and requires fresh acknowledgement; the eleventh member is rejected.
 5. New membership is rejected during an active level and accepted only at a boundary.
 6. Solo disconnect pauses; valid rejoin restores the same server-owned slot and state.
 7. Party campaign disconnect leaves remaining players active; in-grace rejoin restores identity without accepting client state.
