@@ -61,6 +61,19 @@ and completion behavior; level data cannot contain scripts, URLs, or physics
 settings. Invalid or oversized JSON selects the bundled known-good level and
 reports the stable rejection code through `/slice-healthz`.
 
+## Fixed level feedback loop
+
+`npm run evaluate:token-rush` replays every line of
+`content/token-rush-learning/history.jsonl` through one frozen authoritative
+controller, seed, evaluator, and score formula. Each append-only line records
+the level hash, completion, deaths, damage, tokens, ticks, score, prior-run
+memory, and one durable lesson. The bounded Designer can only move an enemy or
+token in level JSON. Its memory-withheld control uses the same Designer and seed
+but omits prior lessons. The command fails closed on result drift, non-improving
+mainline trials, a counterfactual that beats baseline, or an active level that
+is not byte-identical to the latest mainline trial. It does not add a service,
+protocol, runtime generator, or executable level behavior.
+
 ## Dedicated deployment
 
 The approved host is a separate 1 vCPU / 1 GB VM. `game.tinyfat.dev` is an

@@ -1,0 +1,21 @@
+{
+  "schema": "token-rush-feedback-loop/v1",
+  "designer": "token-rush-bounded-designer/v1",
+  "designerSeed": 539363096,
+  "evaluator": "token-rush-authority-evaluator/v1",
+  "controller": "hold-right-grounded-five-jump/v1",
+  "evaluatorSeed": 539363096,
+  "scoreFormula": "completed*10000-deaths*5000-damage*500+tokens*100-ticks",
+  "mainline": {
+    "source": "latest mainline level",
+    "memory": "all earlier mainline history lines",
+    "change": "apply only the latest allowlisted nextEdit to level JSON"
+  },
+  "counterfactual": {
+    "source": "run-1 baseline level",
+    "memory": "withheld",
+    "change": "same Designer and seed canonicalize the source without applying nextEdit"
+  },
+  "allowedEdits": ["moveEnemy", "moveToken"],
+  "runtimeChanges": ["content/token-rush-level.json"]
+}
