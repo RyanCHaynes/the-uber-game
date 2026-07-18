@@ -1,9 +1,7 @@
-node_modules/
-dist/
+.venv/
 .env
 .DS_Store
-coinrush-server.log
-coinrush-server.pid
 __pycache__/
 *.pyc
-npm-debug.log*
+work/
+outputs/

@@ -1,74 +1,33 @@
-# Coin Rush
+# Game Design Agent
 
-Coin Rush is a browser-based two-player castle race rendered with Three.js. A
-central Node server owns lobby state, movement, collision, coin placement,
-scores, wins, and round reset over same-origin WebSockets.
+This repository contains an LLM-assisted game-design loop for a browser-based
+platformer. Playtest feedback and telemetry are analyzed between rounds, useful
+lessons are retained, and the next level is generated and validated before it
+is made available to play.
 
-The original native C++/SFML implementation is preserved at Git tag
-`sfml-baseline-2026-07-18`.
+## Setup
 
-## Architecture
-
-- **Browser:** Three.js rendering and keyboard input only; no client-authoritative
-  physics or scoring.
-- **Backend:** one authoritative two-player `GameRoom`, 50 Hz physics, 20 Hz
-  snapshots, bounded JSON messages, heartbeat, handshake timeout, origin check,
-  and per-peer input-rate budget.
-- **Levels:** immutable versioned data sent by the server before `gameStart`.
-  Candidate revisions are bounded and validated before publication.
-- **Ingress:** Caddy terminates HTTPS/WSS and proxies to Node on
-  `127.0.0.1:3000`. The backend is not publicly bound.
-
-## Local development
-
-Requires Node 22.12 or newer.
+Requires Python 3.10 or newer.
 
 ```sh
-npm ci --ignore-scripts
-npm test
-npm run build
-npm start
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.txt
 ```
 
-Open `http://127.0.0.1:3000` in two separate browser contexts, join both, and
-ready both players.
+## Run locally
 
-## Protocol
-
-Browser messages:
-
-- `hello` with a player name
-- `ready` with a boolean state
-- `input` with boolean `up`, `down`, `left`, and `right`
-
-Server messages:
-
-- `welcome`, `lobby`, and `notice`
-- a complete validated `level` revision
-- `gameStart`
-- authoritative `snapshot` state
-
-Unknown, malformed, binary, oversized, wrong-origin, and over-rate traffic is
-rejected. A third concurrent connection is refused.
-
-## Dedicated deployment
-
-The approved host is a separate 1 vCPU / 1 GB VM. `game.tinyfat.dev` is an
-unproxied DNS `A` record to that VM so Caddy can terminate HTTPS directly.
-
-From an exact source release on the VM:
+Mock mode is deterministic and requires no API key:
 
 ```sh
-sudo SOURCE_COMMIT="<full-git-sha>" \
-  COINRUSH_IMAGE="coinrush-web:<short-git-sha>" \
-  ./deploy/install-release.sh
+AGENT_MOCK=1 python -m agent.webui
 ```
 
-The installer builds the pinned image, runs tests during the image build,
-starts a non-root/read-only/capability-free container bound only to localhost,
-waits for container health, validates and reloads Caddy, then verifies public
-HTTPS health.
+Open <http://localhost:8777>.
 
-The preserved SFML service is intentionally not removed by the installer.
-Remove its public TCP `53000` listener and firewall rule only after two-browser
-WSS play acceptance succeeds.
+For Anthropic API mode, set `ANTHROPIC_API_KEY` and start the same module
+without `AGENT_MOCK=1`. The agent can also use a signed-in Claude Code CLI when
+it is available.
+
+See [`agent/README.md`](agent/README.md) for the level format, gameplay details,
+and architecture.
