@@ -161,14 +161,15 @@ Detailed health, hurt, death, respawn, and checkpoint mechanics are implemented 
 Every session pins for its lifetime:
 
 - protocol and engine version;
-- mode and topology;
-- the server-owned membership registry and its monotonic revision.
+- mode and topology.
+
+Every session owns one server-side membership registry. Membership may change only at a boundary, and each accepted mutation increments the registry's monotonic revision.
 
 Every active level separately pins:
 
+- the exact membership revision and ordered participant IDs and slots selected at the level boundary;
 - immutable content revision and digest;
 - seed and fixed-step clock origin;
-- the ordered participant IDs and slots selected from the membership registry at the level boundary;
 - objective and checkpoint revision.
 
 The server processes same-tick player actions in stable slot order unless the deterministic simulation contract defines another recorded ordering. Snapshots identify session phase, mode, topology, membership revision, per-level participant set, content revision, seed/replay lineage, and authoritative members. Cosmetic rendering and interpolation never alter these values.
