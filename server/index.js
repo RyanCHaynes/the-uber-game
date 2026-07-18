@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import { WebSocketServer } from 'ws';
 
+import { MAX_ACTION_MESSAGE_BYTES } from '../shared/action-protocol.js';
 import { GAME } from '../shared/game.js';
 import { activeLevelCandidate } from '../shared/levels/index.js';
 import { GameRoom } from './game-room.js';
@@ -91,7 +92,7 @@ export function createCoinRushServer({
   level = activeLevelCandidate,
   handshakeTimeoutMs = 5000,
 } = {}) {
-  const room = new GameRoom({ level });
+  const room = new GameRoom({ level, now: () => performance.now() });
   const server = createServer((request, response) => {
     const pathname = new URL(request.url, 'http://localhost').pathname;
     if (pathname === '/healthz') {
@@ -111,7 +112,7 @@ export function createCoinRushServer({
   });
   const webSockets = new WebSocketServer({
     noServer: true,
-    maxPayload: 4096,
+    maxPayload: MAX_ACTION_MESSAGE_BYTES,
     perMessageDeflate: false,
   });
 
@@ -155,7 +156,7 @@ export function createCoinRushServer({
         socket.close(1007, 'Invalid JSON');
         return;
       }
-      room.receive(socket, message);
+      room.receive(socket, message, { byteLength: data.byteLength });
       if (peer.joined) clearTimeout(handshakeTimer);
     });
     socket.on('close', () => {
