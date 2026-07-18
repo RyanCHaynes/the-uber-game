@@ -1,7 +1,8 @@
 import './slice-style.css';
+import { actionForSliceCode } from './slice-input.js';
 
 const elements = Object.fromEntries([
-  'game-canvas', 'setup', 'player-name', 'play-button', 'hud', 'health', 'jumps',
+  'game-canvas', 'setup', 'player-name', 'play-button', 'hud', 'health',
   'enemy-health', 'feedback', 'complete', 'complete-text', 'again-button', 'error',
   'error-text', 'retry-button', 'legend',
 ].map((id) => [id, document.getElementById(id)]));
@@ -9,11 +10,14 @@ const elements = Object.fromEntries([
 const canvas = elements['game-canvas'];
 const context = canvas.getContext('2d', { alpha: false });
 const input = { left: false, right: false, jump: false, attack: false };
+const INTERPOLATION_DELAY_TICKS = 4;
 let socket = null;
 let sequence = 0;
 let intentionalClose = false;
 let level = null;
 let snapshot = null;
+let renderSamples = [];
+let serverClockOffset = null;
 let lastFeedbackId = 0;
 let feedbackTimer = null;
 
@@ -40,7 +44,7 @@ function connect() {
   const name = elements['player-name'].value.trim().slice(0, 18) || 'Player';
   localStorage.setItem('coinrush-slice-name', name);
   elements['play-button'].disabled = true;
-  elements['play-button'].textContent = 'OPENING THE CRYPT…';
+  elements['play-button'].textContent = 'OPENING TOKEN RUSH…';
   intentionalClose = false;
   socket = new WebSocket(websocketUrl());
   socket.addEventListener('open', () => send({ type: 'hello', name }));
@@ -63,18 +67,21 @@ function handleMessage(message) {
   if (!message || typeof message.type !== 'string') throw new Error('missing message type');
   if (message.type === 'sliceWelcome') return;
   if (message.type === 'sliceStart') {
-    if (!message.level || message.level.revision !== 'solo-slice-v1') throw new Error('slice revision mismatch');
+    if (!message.level || message.level.revision !== 'solo-slice-v2') throw new Error('slice revision mismatch');
     level = message.level;
+    renderSamples = [];
+    serverClockOffset = null;
     show('game');
     return;
   }
   if (message.type === 'sliceSnapshot') {
     if (!level || message.revision !== level.revision) throw new Error('snapshot revision mismatch');
     snapshot = message;
+    recordRenderSample(message);
     renderHud();
     consumeFeedback(message.feedback || []);
     if (message.complete) {
-      elements['complete-text'].textContent = `The Crypt Warden fell after ${message.player.jumpCount} authoritative jumps.`;
+      elements['complete-text'].textContent = 'The Crypt Warden fell. Token Rush is complete.';
       elements.complete.classList.remove('hidden');
     }
     return;
@@ -84,6 +91,43 @@ function handleMessage(message) {
     return;
   }
   throw new Error(`unknown message type ${message.type}`);
+}
+
+function recordRenderSample(message) {
+  if (!Number.isSafeInteger(message.tick) || !message.player?.position || !message.enemy?.position) return;
+  const receivedAt = performance.now();
+  const tickDuration = 1000 / (level.tickRate || 50);
+  const offset = receivedAt - message.tick * tickDuration;
+  serverClockOffset = serverClockOffset === null ? offset : Math.min(serverClockOffset, offset);
+  renderSamples.push({
+    tick: message.tick,
+    player: { ...message.player.position },
+    enemy: { ...message.enemy.position },
+  });
+  if (renderSamples.length > 12) renderSamples.shift();
+}
+
+function renderedPosition(entity, now) {
+  const authoritative = snapshot?.[entity]?.position;
+  if (!authoritative || renderSamples.length < 2 || serverClockOffset === null) return authoritative;
+  const tickDuration = 1000 / (level.tickRate || 50);
+  const renderTick = (now - serverClockOffset) / tickDuration - INTERPOLATION_DELAY_TICKS;
+  let before = null;
+  let after = null;
+  for (const sample of renderSamples) {
+    if (sample.tick <= renderTick) before = sample;
+    if (sample.tick >= renderTick) {
+      after = sample;
+      break;
+    }
+  }
+  if (!before) return renderSamples[0][entity];
+  if (!after || after.tick === before.tick) return before[entity];
+  const amount = Math.max(0, Math.min(1, (renderTick - before.tick) / (after.tick - before.tick)));
+  return {
+    x: before[entity].x + (after[entity].x - before[entity].x) * amount,
+    y: before[entity].y + (after[entity].y - before[entity].y) * amount,
+  };
 }
 
 function consumeFeedback(events) {
@@ -109,7 +153,6 @@ function showFeedback(event) {
 function renderHud() {
   if (!snapshot) return;
   elements.health.textContent = `${snapshot.player.health} / ${snapshot.player.maxHealth}`;
-  elements.jumps.textContent = `${snapshot.player.jumpCount} / ${level.intendedJumpCount} JUMPS`;
   elements['enemy-health'].textContent = snapshot.enemy.alive
     ? `${snapshot.enemy.health} / ${snapshot.enemy.maxHealth}`
     : 'DEFEATED';
@@ -129,16 +172,9 @@ function clearInput() {
   for (const key of Object.keys(input)) input[key] = false;
 }
 
-const bindings = new Map([
-  ['KeyA', 'left'], ['ArrowLeft', 'left'],
-  ['KeyD', 'right'], ['ArrowRight', 'right'],
-  ['KeyW', 'jump'], ['ArrowUp', 'jump'], ['Space', 'jump'],
-  ['KeyJ', 'attack'],
-]);
-
 for (const eventName of ['keydown', 'keyup']) {
   window.addEventListener(eventName, (event) => {
-    const action = bindings.get(event.code);
+    const action = actionForSliceCode(event.code);
     if (!action) return;
     if (event.target?.closest?.('input, textarea, select, [contenteditable="true"]')) {
       if (eventName === 'keyup') input[action] = false;
@@ -174,7 +210,7 @@ function rect(x, y, width, height, color) {
   context.fillRect(Math.round(x), Math.round(y), Math.round(width), Math.round(height));
 }
 
-function draw() {
+function draw(now) {
   const viewWidth = window.innerWidth;
   const viewHeight = window.innerHeight;
   context.setTransform(1, 0, 0, 1, 0, 0);
@@ -186,7 +222,9 @@ function draw() {
   const worldHeight = level?.height || 720;
   const scale = viewHeight / worldHeight;
   const visibleWorldWidth = viewWidth / scale;
-  const playerX = snapshot?.player?.position?.x || 82;
+  const renderedPlayerPosition = renderedPosition('player', now);
+  const renderedEnemyPosition = renderedPosition('enemy', now);
+  const playerX = renderedPlayerPosition?.x || 82;
   const camera = level
     ? Math.max(0, Math.min(level.width - visibleWorldWidth, playerX - visibleWorldWidth * 0.28))
     : 0;
@@ -214,8 +252,8 @@ function draw() {
 
   if (snapshot) {
     const player = snapshot.player;
-    const px = player.position.x;
-    const py = player.position.y;
+    const px = renderedPlayerPosition.x;
+    const py = renderedPlayerPosition.y;
     rect(px - 18, py - 24, 36, 48, player.health <= 2 ? '#ff6b74' : '#48d1c5');
     rect(px - 10, py - 17, 20, 12, '#e6e1cf');
     rect(px - (player.facing > 0 ? 17 : 2), py + 3, 19, 26, '#225c67');
@@ -227,8 +265,8 @@ function draw() {
 
     const enemy = snapshot.enemy;
     if (enemy.alive) {
-      const ex = enemy.position.x;
-      const ey = enemy.position.y;
+      const ex = renderedEnemyPosition.x;
+      const ey = renderedEnemyPosition.y;
       rect(ex - 22, ey - 28, 44, 56, enemy.hit ? '#fff3c4' : '#9d3448');
       rect(ex - 14, ey - 20, 28, 14, '#291a26');
       rect(ex - 11, ey - 16, 6, 5, '#ffce66');

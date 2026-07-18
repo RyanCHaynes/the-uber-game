@@ -53,7 +53,7 @@ button:hover, button:focus-visible { background: #c34250; outline: 2px solid #ff
 
 #hud {
   position: fixed; z-index: 4; top: 14px; left: 14px; right: 14px;
-  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
   pointer-events: none;
 }
 .hud-block {

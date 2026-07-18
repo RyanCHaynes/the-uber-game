@@ -71,6 +71,15 @@ test('public shape serves health and a real ten-client WebSocket round with rejo
   const health = await fetch(`${httpUrl}/healthz`).then((response) => response.json());
   assert.equal(health.ok, true);
   assert.equal(health.revision, 'castle-v1');
+  assert.equal(health.sliceRevision, 'solo-slice-v2');
+  const sliceHealth = await fetch(`${httpUrl}/slice-healthz`).then((response) => response.json());
+  assert.deepEqual(sliceHealth, {
+    ok: true,
+    revision: 'solo-slice-v2',
+    connections: 0,
+    running: false,
+    complete: false,
+  });
   assert.match(await fetch(httpUrl).then((response) => response.text()), /Three\.js/);
 
   const clients = [];

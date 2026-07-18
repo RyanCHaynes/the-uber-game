@@ -9,7 +9,7 @@ import { WebSocketServer } from 'ws';
 import { GAME } from '../shared/game.js';
 import { activeLevelCandidate } from '../shared/levels/index.js';
 import { GameRoom } from './game-room.js';
-import { SoloSliceRoom } from './solo-slice-room.js';
+import { SLICE, SoloSliceRoom } from './solo-slice-room.js';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const defaultDist = path.join(repositoryRoot, 'dist');
@@ -102,7 +102,7 @@ export function createCoinRushServer({
         revision: room.level.revision,
         connections: room.connectionCount,
         running: room.running,
-        sliceRevision: 'solo-slice-v1',
+        sliceRevision: SLICE.revision,
         sliceConnections: sliceRoom.connectionCount,
         sliceRunning: sliceRoom.running,
         sliceComplete: sliceRoom.complete,
@@ -113,7 +113,7 @@ export function createCoinRushServer({
     if (pathname === '/slice-healthz') {
       const body = JSON.stringify({
         ok: true,
-        revision: 'solo-slice-v1',
+        revision: SLICE.revision,
         connections: sliceRoom.connectionCount,
         running: sliceRoom.running,
         complete: sliceRoom.complete,
