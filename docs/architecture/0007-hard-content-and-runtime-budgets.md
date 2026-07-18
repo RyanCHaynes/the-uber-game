@@ -87,7 +87,20 @@ These limits apply before content semantics. They are compatible with the atomic
 | Resource | v1 limit | Stable rejection code |
 | --- | --- | --- |
 | Configured producers | 4 per Engine scope | `budget_producer_count` |
-| Ready entries | 64 per producer; later entries remain unclaimed until capacity exists | `budget_ready_count` |
+| Per-producer inbox allocation | Hard filesystem/project quota of 192 MiB allocated blocks across `staging/` + `ready/` | `budget_inbox_allocated_bytes` |
+| Per-producer inbox inodes | Hard quota of 6,144 including the two fixed phase roots; at most 6,142 untrusted descendants | `budget_inbox_inodes` |
+| Staging subtree | At most the shared 6,142 descendants and 192 MiB hard allocation; Engine performs no recursive staging walk | `budget_staging_quota` |
+| Physical ready entries | At most 64 direct children; observing a 65th disables that producer's intake before stat/open/claim | `budget_ready_physical_entries` |
+| Eligible ready offers | At most 64 exact final-name directories after the physical-entry gate | `budget_ready_count` |
+| One prepublication file | `st_size` at most 32 MiB before read; a larger/sparse file is rejected without reading its body | `budget_prepublication_file_bytes` |
+| Ready names read per scan | At most 65 direct names and 17 KiB aggregate name bytes | `budget_scan_entries` |
+| Metadata operations per scan | At most 64 no-follow `fstatat` calls | `budget_scan_metadata_ops` |
+| Offer opens per scan | At most 16 directory/file opens | `budget_scan_open_ops` |
+| Bytes read per scan | At most 4 MiB before yielding | `budget_scan_read_bytes` |
+| Claim attempts per scan | At most 8 no-replace renames | `budget_scan_claim_ops` |
+| Ingestion syscalls per scan | At most 512 metered filesystem operations | `budget_scan_syscalls` |
+| Ingestion file descriptors | At most 32 per producer and 128 across Engine intake | `budget_ingestion_fds` |
+| Scan cadence | At most 5 passes/second/producer and 20 passes/second/Engine | `budget_scan_rate` |
 | Candidate attempts | 4 per producer per target boundary | `budget_attempt_count` |
 | Pending claimed candidates | 32 per Engine scope | `budget_claim_count` |
 | Concurrent validators | 2; excess valid claims queue without delaying gameplay | `budget_validator_concurrency` |
@@ -106,7 +119,11 @@ These limits apply before content semantics. They are compatible with the atomic
 | One rejection report | 256 KiB encoded and at most 64 findings | `budget_report_bytes` |
 | One provenance block | 4 KiB encoded, at most 16 references | `budget_provenance_bytes` |
 
-Filesystem quota must reserve at least two maximum candidates plus one complete active and rollback revision before intake is enabled. Lack of reserve disables intake with `budget_storage_reserve`; it never evicts active, pinned, rollback, replay-, receipt-, or release-referenced bytes.
+Before a producer UID is enabled, its complete `staging/` + `ready/` inbox must live on a dedicated fixed-capacity local filesystem or a tested hard project quota that enforces the 192 MiB block and 6,144-inode limits in the kernel. An O(1) quota API, not `find`, `du`, recursive enumeration, or watcher history, proves the caps at install/startup and before each pass. Unsupported, inactive, or ambiguous quota enforcement disables intake with `budget_inbox_quota_unavailable` while gameplay continues.
+
+The Engine never recursively enumerates staging. It reads at most 65 direct ready names. If name 65 exists, it emits `budget_ready_physical_entries`, stops without sorting, stating, opening, or claiming any offer from that overfull directory, and keeps the producer disabled until a bounded quota/status probe shows operator cleanup. With 64 or fewer names, it sorts those names and applies the remaining per-pass metadata/open/read/claim/syscall budgets. Oversized logical/sparse files fail from no-follow metadata before body read; the hard allocated-block and inode quotas contain physical abuse independently.
+
+The Engine intake worker has an OS `RLIMIT_NOFILE` no greater than 256 plus per-producer/global semaphores enforcing the tighter 32/128 ingestion caps. Reaching a scan, descriptor, quota, or cadence cap yields or disables that producer with the exact code; it never spins, recursively cleans producer bytes, borrows gameplay descriptors, delays the 12-second next-level pin, or evicts active, pinned, rollback, replay-, receipt-, or release-referenced bytes. Separate Engine storage must still reserve at least two maximum candidates plus one complete active and rollback revision; lack of that reserve disables intake with `budget_storage_reserve`.
 
 ## 5. Complete revision budgets
 
@@ -371,22 +388,23 @@ Implementation cannot close this contract from prose alone. Automated and indepe
 2. For every scalar/count/byte/time limit, tests accept the minimum and maximum valid values and reject one-below/one-above values with the exact code where representable.
 3. Property/fuzz tests reject unknown keys, duplicate keys, invalid UTF-8, fractional/non-finite numbers, negative zero, sparse/oversized arrays, deep JSON, and node explosions without unbounded allocation.
 4. File, JSON, PNG, decoded-byte, candidate, revision, request, report, and receipt limits hold both locally and in aggregate; splitting cannot evade them.
-5. PNG header/chunk bombs, oversized dimensions, decompression bombs, animated/interlaced/trailing content, palette excess, and wrong pose/tile canvases reject before unsafe allocation.
-6. A content set at every revision count maximum validates; adding one level, enemy, attack, projectile, pose pack, tile, backdrop, objective, or reference rejects under the exact code.
-7. Level boundary fixtures cover width, height, layers, cells, colliders, markers, waves, spawns, waypoints, objectives, duration, and solvability operations at `N` and `N+1`.
-8. Enemy/AI fixtures cover all stat ranges, 8 states, 24 transitions, condition/action counts, finite timers, random weights, path operations, and unsupported cycles/primitives.
-9. Attack/projectile fixtures cover timing, hitboxes, damage, targets, live/total/per-tick projectiles, lifetime, speed, acceleration, pierce, and bounce at `N` and `N+1`.
-10. The deterministic dry run meters every content-controlled loop and rejects before any per-tick operation cap can be exceeded in active play.
-11. A worst-case accepted room with 10 players, 64 enemies, 256 projectiles, 256 pickups, and maximum bounded queries remains under all deterministic per-tick operation caps.
-12. The pinned-host 10,000-tick performance fixture meets p95/p99/max tick SLOs, process/room memory limits, and produces the same replay digest across repeated runs.
-13. Network tests enforce bytes before parse, JSON shape, message token bucket, snapshots, bootstrap, send backpressure, 10-player cap, and wrong-origin rejection.
-14. Telemetry and feedback fixtures hit exact event/sample/text/bundle caps; optional sampling truncates deterministically while result/replay/damage/death/completion truth remains complete.
-15. A missing/slow/crashed producer and a candidate still generating at 10 seconds cannot extend the 12-second intermission; the next level pins last-known-good content.
-16. Validator wall/CPU/memory, PNG decode, solvability, dry-run, staging, and retry limits produce exact rejection receipts and no active-pointer change.
-17. Storage saturation disables intake without deleting protected revisions or preventing last-known-good level start, play, finish, and transition.
-18. Revalidation during staging recomputes every encoded and derived budget from immutable Engine-owned bytes and rejects disagreement.
-19. Rejection reports contain at most 64 deterministically ordered findings, exact observed/allowed values, the profile ID, and no secrets/host paths/raw private feedback.
-20. The actual Designer, image model, network, and annotator remain absent from the entire acceptance run; a deterministic fake writer is sufficient.
+5. A real two-UID Linux flood fixture enables the exact 192 MiB/6,144-inode hard producer quota, fills staging to block and inode limits, creates 65 and then quota-maximum malformed ready names, and offers oversized sparse files. It proves kernel `EDQUOT`/`ENOSPC`, zero recursive staging work, no more than 65 names/64 metadata calls/16 opens/8 claims/512 syscalls/32 producer FDs in one pass, exact stable codes, no body read for oversized files, and an unchanged last-known-good pin by 12 seconds. The same fixture fails intake startup when quota enforcement is absent or inactive.
+6. PNG header/chunk bombs, oversized dimensions, decompression bombs, animated/interlaced/trailing content, palette excess, and wrong pose/tile canvases reject before unsafe allocation.
+7. A content set at every revision count maximum validates; adding one level, enemy, attack, projectile, pose pack, tile, backdrop, objective, or reference rejects under the exact code.
+8. Level boundary fixtures cover width, height, layers, cells, colliders, markers, waves, spawns, waypoints, objectives, duration, and solvability operations at `N` and `N+1`.
+9. Enemy/AI fixtures cover all stat ranges, 8 states, 24 transitions, condition/action counts, finite timers, random weights, path operations, and unsupported cycles/primitives.
+10. Attack/projectile fixtures cover timing, hitboxes, damage, targets, live/total/per-tick projectiles, lifetime, speed, acceleration, pierce, and bounce at `N` and `N+1`.
+11. The deterministic dry run meters every content-controlled loop and rejects before any per-tick operation cap can be exceeded in active play.
+12. A worst-case accepted room with 10 players, 64 enemies, 256 projectiles, 256 pickups, and maximum bounded queries remains under all deterministic per-tick operation caps.
+13. The pinned-host 10,000-tick performance fixture meets p95/p99/max tick SLOs, process/room memory limits, and produces the same replay digest across repeated runs.
+14. Network tests enforce bytes before parse, JSON shape, message token bucket, snapshots, bootstrap, send backpressure, 10-player cap, and wrong-origin rejection.
+15. Telemetry and feedback fixtures hit exact event/sample/text/bundle caps; optional sampling truncates deterministically while result/replay/damage/death/completion truth remains complete.
+16. A missing/slow/crashed producer and a candidate still generating at 10 seconds cannot extend the 12-second intermission; the next level pins last-known-good content.
+17. Validator wall/CPU/memory, PNG decode, solvability, dry-run, staging, and retry limits produce exact rejection receipts and no active-pointer change.
+18. Storage saturation disables intake without deleting protected revisions or preventing last-known-good level start, play, finish, and transition.
+19. Revalidation during staging recomputes every encoded and derived budget from immutable Engine-owned bytes and rejects disagreement.
+20. Rejection reports contain at most 64 deterministically ordered findings, exact observed/allowed values, the profile ID, and no secrets/host paths/raw private feedback.
+21. The actual Designer, image model, network, and annotator remain absent from the entire acceptance run; a deterministic fake writer is sufficient.
 
 ## 17. Explicit non-goals
 
