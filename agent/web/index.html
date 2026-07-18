@@ -204,13 +204,16 @@ function levelNames() { return Object.keys(state.levels).sort(); }
 function levelNum(name) { return parseInt(name.split("_")[1], 10); }
 
 function render() {
-  $("mode").textContent = state.mode !== "llm" ? "MOCK (offline)"
-    : state.backend === "claude_code" ? "LLM (Claude Code · subscription)" : "LLM (Claude API)";
+  $("mode").textContent = state.mode !== "llm"
+    ? "MOCK (offline)"
+    : "LLM (NVIDIA hosted · Nemotron 3 Ultra 550B)";
   $("mode").className = "badge " + state.mode;
   $("busy").style.display = state.running ? "" : "none";
   if (state.running && state.tokens) {
-    $("busy").textContent =
-      `agent designing… ${(state.tokens.used / 1000).toFixed(1)}k / ${(state.tokens.budget / 1000).toFixed(0)}k tokens`;
+    const q = state.llm_queue || {};
+    $("busy").textContent = q.retry_in > 0
+      ? `NVIDIA busy — request queued; retry ${q.attempt + 1}/${q.max_attempts} in ${q.retry_in}s`
+      : `agent designing… ${(state.tokens.used / 1000).toFixed(1)}k / ${(state.tokens.budget / 1000).toFixed(0)}k tokens${q.queued ? ` · ${q.queued} queued` : ""}`;
   }
   $("resetBtn").disabled = state.running;
   $("err").textContent = state.error ? state.error : "";
@@ -392,8 +395,8 @@ function renderLlmLog() {
         <b>${esc(e.label || "call")}</b>
         <span class="modelChip">${esc(e.model)}</span>
         <span class="dim">${esc(e.ts.replace("T", " "))} · ${e.duration_s}s ·
-          ${e.input_tokens + (e.cache_creation_input_tokens || 0)} in → ${e.output_tokens} out tokens${e.attempt > 1 ? ` · attempt ${e.attempt}` : ""}
-          · via ${e.backend === "claude_code" ? "Claude Code" : "API"}${e.cycle_used ? ` · cycle total ${(e.cycle_used / 1000).toFixed(1)}k` : ""}</span>
+          ${e.input_tokens + (e.cache_creation_input_tokens || 0)} in → ${e.output_tokens} out tokens${e.attempt > 1 ? ` · format attempt ${e.attempt}` : ""}${e.provider_attempts > 1 ? ` · provider attempts ${e.provider_attempts}` : ""}
+          · via ${e.backend === "nvidia" ? "NVIDIA" : esc(e.backend || "unknown")}${e.cycle_used ? ` · cycle total ${(e.cycle_used / 1000).toFixed(1)}k` : ""}</span>
       </div>
       <details><summary>system prompt (${e.system.length.toLocaleString()} chars)</summary><pre>${esc(e.system)}</pre></details>
       ${e.messages.map(m => `<details><summary>➜ ${esc(m.role)} message (${m.content.length.toLocaleString()} chars)</summary><pre>${esc(m.content)}</pre></details>`).join("")}

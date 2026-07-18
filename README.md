@@ -12,7 +12,6 @@ Requires Python 3.10 or newer.
 ```sh
 python3 -m venv .venv
 . .venv/bin/activate
-python -m pip install -r requirements.txt
 ```
 
 ## Run locally
@@ -25,9 +24,19 @@ AGENT_MOCK=1 python -m agent.webui
 
 Open <http://localhost:8777>.
 
-For Anthropic API mode, set `ANTHROPIC_API_KEY` and start the same module
-without `AGENT_MOCK=1`. The agent can also use a signed-in Claude Code CLI when
-it is available.
+For NVIDIA Nemotron 3 Ultra 550B on NVIDIA's hosted NIM endpoint:
+
+```sh
+export NVIDIA_API_KEY="<your-key>"
+python -m agent.webui
+```
+
+The backend, endpoint, model, temperature, reasoning mode, timeout, and token
+budget are fixed in code. The only runtime setting is `NVIDIA_API_KEY`. The
+hardcoded model is `nvidia/nemotron-3-ultra-550b-a55b` at NVIDIA's hosted
+`integrate.api.nvidia.com` endpoint. Provider requests pass through a bounded
+in-process queue and retry temporary capacity/rate-limit failures with backoff.
+Never commit API keys.
 
 See [`agent/README.md`](agent/README.md) for the level format, gameplay details,
 and architecture.

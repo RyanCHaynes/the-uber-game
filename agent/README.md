@@ -14,8 +14,8 @@ From the `uber-game` directory:
 # Offline — no API key needed (rule-based mock analyst/designer)
 AGENT_MOCK=1 python3 -m agent.webui
 
-# Real LLM mode (Claude)
-export ANTHROPIC_API_KEY=sk-ant-...
+# Real LLM mode (NVIDIA hosted NIM, Nemotron 3 Ultra 550B)
+export NVIDIA_API_KEY=nvapi-...
 python3 -m agent.webui
 ```
 
@@ -56,7 +56,7 @@ webui.py         writes data/rounds/round_NNN/feedback.json, runs the cycle
 analyst.py       playtest -> diagnosis, lessons, fun score      (LLM call 1)
 store.py         lessons -> data/store/lessons.json (deduped)
                  standout levels -> data/library/levels/
-designer.py      diagnosis + lessons + library -> next CSV      (LLM call 2)
+designer.py      diagnosis + lessons + library -> JSON plan -> compiled next CSV
 csv_level.py     parse + validate: structure, exactly one S/E, exit standable,
                  spawn has ground, exit reachable under jump physics
                  (MAX_JUMP_DX/MAX_JUMP_UP — keep in sync with the JS physics)
@@ -64,6 +64,15 @@ pipeline.py      orchestrates a cycle; writes data/levels/level_NNN.csv
                  + next_level.ready marker
 ```
 
-`llm.py` is the only file that knows the provider — swap LLMs by rewriting
-`complete_text()`/`complete_json()` there. `mock.py` mirrors the
-analyst/designer interfaces with deterministic rules for offline testing.
+`llm.py` is the only file that knows the provider. Production calls always use
+NVIDIA's hosted `nvidia/nemotron-3-ultra-550b-a55b` endpoint. All request
+settings are fixed in code; only `NVIDIA_API_KEY` comes from the environment.
+Without a key, the pipeline uses its deterministic mock fallback.
+NVIDIA calls are serialized through an in-process queue. Temporary capacity,
+rate-limit, and upstream failures retry after 5, 15, 30, 60, and 120 seconds
+(or NVIDIA's `Retry-After` value); authentication and validation errors fail
+immediately.
+
+The designer never asks the model to count or emit raw grid characters. The
+model returns a compact JSON plan of solid rectangles and entity coordinates;
+Python compiles it into the exact tile grid and runs the reachability validator.
