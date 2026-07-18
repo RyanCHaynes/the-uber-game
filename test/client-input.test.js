@@ -20,6 +20,12 @@ test('gameplay keys do not swallow letters while a name field is focused', () =>
   assert.equal(updateInputFromKeyboard(event, 'keydown', input), false);
   assert.equal(event.prevented, false);
   assert.equal(input.left, false);
+
+  input.left = true;
+  const released = keyboardEvent('KeyA', true);
+  assert.equal(updateInputFromKeyboard(released, 'keyup', input), false);
+  assert.equal(released.prevented, false);
+  assert.equal(input.left, false);
 });
 
 test('gameplay keys still update and suppress browser defaults outside fields', () => {

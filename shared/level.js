@@ -1,4 +1,4 @@
-import { TILE } from './game.js';
+import { GAME, TILE } from './game.js';
 
 export const LEVEL_LIMITS = Object.freeze({
   minWidth: 8,
@@ -17,7 +17,7 @@ export function validateLevel(candidate) {
     return { ok: false, errors: ['Level must be an object.'] };
   }
 
-  const { revision, tileSize, width, height, tiles } = candidate;
+  const { revision, tileSize, width, height, tiles, spawnTiles } = candidate;
   if (typeof revision !== 'string' || !/^[A-Za-z0-9._-]{1,64}$/.test(revision)) {
     errors.push('Revision must be 1-64 safe identifier characters.');
   }
@@ -57,6 +57,59 @@ export function validateLevel(candidate) {
     errors.push(`Level must contain 1-${LEVEL_LIMITS.maxCoins} coin spawns (tile 7).`);
   }
 
+  if (!Array.isArray(spawnTiles) || spawnTiles.length !== GAME.maxPlayers) {
+    errors.push(`Level must define exactly ${GAME.maxPlayers} player spawn positions.`);
+  } else {
+    const seen = new Set();
+    const solidTiles = new Set([TILE.STONE, TILE.BRICK, TILE.PLATFORM]);
+    for (let slot = 0; slot < spawnTiles.length; slot += 1) {
+      const spawn = spawnTiles[slot];
+      if (!spawn || !Number.isInteger(spawn.x) || !Number.isInteger(spawn.y)) {
+        errors.push(`Player spawn ${slot + 1} must use integer tile coordinates.`);
+        continue;
+      }
+      const key = `${spawn.x},${spawn.y}`;
+      if (seen.has(key)) errors.push(`Player spawn ${slot + 1} overlaps another spawn.`);
+      seen.add(key);
+      for (let previous = 0; previous < slot; previous += 1) {
+        const other = spawnTiles[previous];
+        if (!other || !Number.isInteger(other.x) || !Number.isInteger(other.y)) continue;
+        if (Math.abs(spawn.x - other.x) * tileSize < GAME.playerHalfWidth * 2 &&
+            Math.abs(spawn.y - other.y) * tileSize < GAME.playerHalfHeight * 2) {
+          errors.push(`Player spawn ${slot + 1} overlaps another player's body.`);
+        }
+      }
+      if (spawn.x < 1 || spawn.x >= width - 1 || spawn.y < 0 || spawn.y >= height - 1) {
+        errors.push(`Player spawn ${slot + 1} is outside the safe level bounds.`);
+        continue;
+      }
+      const tile = tiles[spawn.y * width + spawn.x];
+      const below = tiles[(spawn.y + 1) * width + spawn.x];
+      if (solidTiles.has(tile) || tile === TILE.COIN_SPAWN || !solidTiles.has(below)) {
+        errors.push(`Player spawn ${slot + 1} must be empty and stand on solid ground.`);
+        continue;
+      }
+      const centerX = (spawn.x + 0.5) * tileSize;
+      const centerY = (spawn.y + 1) * tileSize - GAME.playerHalfHeight;
+      const left = Math.floor((centerX - GAME.playerHalfWidth + 1) / tileSize);
+      const right = Math.floor((centerX + GAME.playerHalfWidth - 1) / tileSize);
+      const top = Math.floor((centerY - GAME.playerHalfHeight + 1) / tileSize);
+      const bottom = Math.floor((centerY + GAME.playerHalfHeight - 1) / tileSize);
+      let intersectsSolid = false;
+      for (let y = top; y <= bottom; y += 1) {
+        for (let x = left; x <= right; x += 1) {
+          if (solidTiles.has(tiles[y * width + x])) intersectsSolid = true;
+        }
+      }
+      if (intersectsSolid) errors.push(`Player spawn ${slot + 1} does not clear nearby solid tiles.`);
+    }
+    const firstTile = spawnTiles[0] && tiles[spawnTiles[0].y * width + spawnTiles[0].x];
+    const secondTile = spawnTiles[1] && tiles[spawnTiles[1].y * width + spawnTiles[1].x];
+    if (firstTile !== TILE.PLAYER_ONE_SPAWN || secondTile !== TILE.PLAYER_TWO_SPAWN) {
+      errors.push('The first two spawn positions must preserve the original player markers.');
+    }
+  }
+
   return { ok: errors.length === 0, errors };
 }
 
@@ -71,6 +124,7 @@ export function prepareLevel(candidate) {
     width: candidate.width,
     height: candidate.height,
     tiles: Object.freeze([...candidate.tiles]),
+    spawnTiles: Object.freeze(candidate.spawnTiles.map(({ x, y }) => Object.freeze({ x, y }))),
   });
 }
 
@@ -86,6 +140,13 @@ export function isSolid(level, tileX, tileY) {
   if (tileY < 0) return false;
   const tile = tileAt(level, tileX, tileY);
   return tile === TILE.STONE || tile === TILE.BRICK || tile === TILE.PLATFORM;
+}
+
+export function playerSpawnPositions(level) {
+  return level.spawnTiles.map(({ x, y }) => ({
+    x: (x + 0.5) * level.tileSize,
+    y: (y + 0.5) * level.tileSize,
+  }));
 }
 
 export function positionsFor(level, tileId) {

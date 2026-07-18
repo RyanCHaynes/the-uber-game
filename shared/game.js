@@ -9,7 +9,14 @@ export const TILE = Object.freeze({
   COIN_SPAWN: 7,
 });
 
+export const PLAYER_COLORS = Object.freeze([
+  '#4fd1c5', '#ef6d86', '#ffd152', '#8fa8ff', '#bd8cff',
+  '#ff9a62', '#79d878', '#f58bd5', '#5ec8ff', '#d0d56b',
+]);
+
 export const GAME = Object.freeze({
+  minPlayers: 2,
+  maxPlayers: PLAYER_COLORS.length,
   windowWidth: 1280,
   windowHeight: 720,
   arenaTop: 92,

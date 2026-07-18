@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { GameRoom } from '../server/game-room.js';
-import { castleLevel } from '../shared/levels/castle.js';
+import { GAME, PLAYER_COLORS } from '../shared/game.js';
+import { activeLevelCandidate } from '../shared/levels/index.js';
 
 class FakeSocket {
   readyState = 1;
@@ -20,7 +21,12 @@ class FakeSocket {
 }
 
 function makeRoom(options = {}) {
-  return new GameRoom({ level: { ...castleLevel, tiles: [...castleLevel.tiles] }, random: () => 0, ...options });
+  const level = {
+    ...activeLevelCandidate,
+    tiles: [...activeLevelCandidate.tiles],
+    spawnTiles: activeLevelCandidate.spawnTiles.map((spawn) => ({ ...spawn })),
+  };
+  return new GameRoom({ level, random: () => 0, ...options });
 }
 
 function join(room, socket, name) {
@@ -89,6 +95,42 @@ test('disconnect ends a live match and returns the survivor to lobby', () => {
   assert.ok(first.sent.some((message) => message.type === 'notice' && /disconnected/.test(message.text)));
 });
 
+test('ten players get unique slots and spawns, all ready, move, score, disconnect, and rejoin', () => {
+  const room = makeRoom();
+  const sockets = Array.from({ length: GAME.maxPlayers }, () => new FakeSocket());
+  sockets.forEach((socket, index) => join(room, socket, `Player ${index + 1}`));
+
+  assert.deepEqual(sockets.map((socket) => room.peers.get(socket).slot), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  assert.equal(PLAYER_COLORS.length, GAME.maxPlayers);
+  assert.equal(new Set(PLAYER_COLORS).size, GAME.maxPlayers);
+  sockets.slice(0, -1).forEach((socket) => room.receive(socket, { type: 'ready', ready: true }));
+  assert.equal(room.running, false);
+  room.receive(sockets.at(-1), { type: 'ready', ready: true });
+
+  assert.equal(room.running, true);
+  assert.equal(room.players.size, GAME.maxPlayers);
+  assert.equal(new Set([...room.players.values()].map((player) => `${player.position.x},${player.position.y}`)).size, GAME.maxPlayers);
+
+  const tenthState = room.players.get(room.peers.get(sockets.at(-1)).id);
+  const startX = tenthState.position.x;
+  room.receive(sockets.at(-1), {
+    type: 'input',
+    input: { up: false, down: false, left: true, right: false },
+  });
+  room.tick(0.02);
+  assert.ok(tenthState.position.x < startX);
+  room.coin = { ...tenthState.position };
+  room.tick(0.02);
+  assert.equal(tenthState.score, 1);
+
+  const vacatedSlot = room.peers.get(sockets[4]).slot;
+  room.disconnect(sockets[4]);
+  assert.equal(room.running, false);
+  const replacement = new FakeSocket();
+  join(room, replacement, 'Replacement');
+  assert.equal(room.peers.get(replacement).slot, vacatedSlot);
+});
+
 test('malformed and over-rate input are rejected fail-closed', () => {
   let now = 0;
   const malformedRoom = makeRoom({ now: () => now });
@@ -108,11 +150,12 @@ test('malformed and over-rate input are rejected fail-closed', () => {
   assert.match(noisy.closed.reason, /rate/i);
 });
 
-test('a third concurrent connection is refused', () => {
+test('an eleventh concurrent connection is refused', () => {
   const room = makeRoom();
-  join(room, new FakeSocket(), 'One');
-  join(room, new FakeSocket(), 'Two');
-  const third = new FakeSocket();
-  assert.equal(room.connect(third), null);
-  assert.equal(third.closed.code, 1008);
+  for (let index = 0; index < GAME.maxPlayers; index += 1) {
+    join(room, new FakeSocket(), `Player ${index + 1}`);
+  }
+  const eleventh = new FakeSocket();
+  assert.equal(room.connect(eleventh), null);
+  assert.equal(eleventh.closed.code, 1008);
 });

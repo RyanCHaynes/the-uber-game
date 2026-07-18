@@ -1,7 +1,5 @@
 import { GAME, SERVER_MESSAGE, TILE } from '../shared/game.js';
-import { isSolid, positionsFor, prepareLevel } from '../shared/level.js';
-
-const MAX_PEERS = 2;
+import { isSolid, playerSpawnPositions, positionsFor, prepareLevel } from '../shared/level.js';
 
 function cleanName(value) {
   const printable = String(value ?? '').replace(/[^\x20-\x7e]/g, '').trim().slice(0, 18);
@@ -30,14 +28,18 @@ export class GameRoom {
   }
 
   connect(socket) {
-    if (this.peers.size >= MAX_PEERS) {
-      this.send(socket, { type: SERVER_MESSAGE.NOTICE, text: 'This lobby already has two players.' });
+    if (this.peers.size >= GAME.maxPlayers) {
+      this.send(socket, { type: SERVER_MESSAGE.NOTICE, text: `This lobby already has ${GAME.maxPlayers} players.` });
       socket.close?.(1008, 'Lobby full');
       return null;
     }
+    const occupiedSlots = new Set([...this.peers.values()].map((peer) => peer.slot));
+    const slot = Array.from({ length: GAME.maxPlayers }, (_unused, index) => index)
+      .find((candidate) => !occupiedSlots.has(candidate));
     const peer = {
       socket,
       id: this.nextId,
+      slot,
       joined: false,
       name: '',
       ready: false,
@@ -62,6 +64,7 @@ export class GameRoom {
     }
     this.broadcastNotice(`${peer.name} left the lobby.`);
     this.broadcastLobby();
+    this.beginGameIfReady();
   }
 
   receive(socket, message) {
@@ -73,12 +76,12 @@ export class GameRoom {
     }
 
     if (message.type === 'hello') {
-      if (peer.joined || typeof message.name !== 'string' || message.name.length > 64) {
-        return this.reject(peer, 'Malformed hello.');
+      if (peer.joined || this.running || typeof message.name !== 'string' || message.name.length > 64) {
+        return this.reject(peer, 'Malformed hello or match already in progress.');
       }
       peer.name = this.uniqueName(cleanName(message.name));
       peer.joined = true;
-      this.send(peer.socket, { type: SERVER_MESSAGE.WELCOME, id: peer.id });
+      this.send(peer.socket, { type: SERVER_MESSAGE.WELCOME, id: peer.id, slot: peer.slot });
       this.sendLevel(peer.socket);
       this.broadcastNotice(`${peer.name} joined the lobby.`);
       this.broadcastLobby();
@@ -178,19 +181,17 @@ export class GameRoom {
 
   beginGameIfReady() {
     const peers = this.joinedPeers();
-    if (peers.length === MAX_PEERS && peers.every((peer) => peer.ready)) this.beginGame();
+    if (peers.length >= GAME.minPlayers && peers.every((peer) => peer.ready)) this.beginGame();
   }
 
   beginGame() {
-    const spawns = [
-      positionsFor(this.level, TILE.PLAYER_ONE_SPAWN)[0],
-      positionsFor(this.level, TILE.PLAYER_TWO_SPAWN)[0],
-    ];
+    const spawns = playerSpawnPositions(this.level);
     this.players.clear();
-    this.joinedPeers().forEach((peer, slot) => {
-      const spawn = spawns[slot];
+    this.joinedPeers().forEach((peer) => {
+      const spawn = spawns[peer.slot];
       this.players.set(peer.id, {
         id: peer.id,
+        slot: peer.slot,
         name: peer.name,
         position: {
           x: spawn.x,
@@ -296,7 +297,9 @@ export class GameRoom {
   }
 
   joinedPeers() {
-    return [...this.peers.values()].filter((peer) => peer.joined);
+    return [...this.peers.values()]
+      .filter((peer) => peer.joined)
+      .sort((left, right) => left.slot - right.slot);
   }
 
   uniqueName(base) {
@@ -314,7 +317,7 @@ export class GameRoom {
   broadcastLobby() {
     this.broadcast({
       type: SERVER_MESSAGE.LOBBY,
-      players: this.joinedPeers().map(({ id, name, ready }) => ({ id, name, ready })),
+      players: this.joinedPeers().map(({ id, slot, name, ready }) => ({ id, slot, name, ready })),
     });
   }
 
@@ -323,8 +326,8 @@ export class GameRoom {
       type: SERVER_MESSAGE.SNAPSHOT,
       revision: this.level.revision,
       coin: this.coin,
-      players: [...this.players.values()].map(({ id, name, position, score }) => ({
-        id, name, position, score,
+      players: [...this.players.values()].map(({ id, slot, name, position, score }) => ({
+        id, slot, name, position, score,
       })),
       winnerId: this.winnerId,
     });

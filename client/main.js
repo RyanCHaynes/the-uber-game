@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import './style.css';
 
-import { GAME, SERVER_MESSAGE, TILE } from '../shared/game.js';
+import { GAME, PLAYER_COLORS, SERVER_MESSAGE, TILE } from '../shared/game.js';
 import { prepareLevel } from '../shared/level.js';
 import { updateInputFromKeyboard } from './input.js';
 
@@ -136,8 +136,8 @@ function handleMessage(message) {
 
 function renderLobby() {
   elements['lobby-players'].replaceChildren();
-  for (let slot = 0; slot < 2; slot += 1) {
-    const player = lobbyPlayers[slot];
+  for (let slot = 0; slot < GAME.maxPlayers; slot += 1) {
+    const player = lobbyPlayers.find((candidate) => candidate.slot === slot);
     const card = document.createElement('div');
     card.className = `player-card${player ? '' : ' empty'}`;
     if (!player) {
@@ -145,6 +145,8 @@ function renderLobby() {
     } else {
       const avatar = document.createElement('div');
       avatar.className = 'avatar';
+      avatar.style.backgroundColor = PLAYER_COLORS[slot];
+      avatar.style.boxShadow = `0 0 24px ${PLAYER_COLORS[slot]}55`;
       const name = document.createElement('div');
       name.className = 'player-name';
       name.textContent = `${player.name}${player.id === myId ? ' (you)' : ''}`;
@@ -229,19 +231,21 @@ function buildWorld(nextLevel) {
   worldGroup.add(coinMesh);
 }
 
-function makePlayer(id) {
+function makePlayer(id, slot) {
   const group = new THREE.Group();
   const own = id === myId;
+  const color = PLAYER_COLORS[slot] ?? PLAYER_COLORS[0];
+  const capeColor = new THREE.Color(color).multiplyScalar(0.5);
   const body = new THREE.Mesh(
     new THREE.BoxGeometry(GAME.playerHalfWidth * 2, GAME.playerHalfHeight * 2, 28),
-    new THREE.MeshStandardMaterial({ color: own ? 0x4fd1c5 : 0xef6d86, roughness: 0.55 }),
+    new THREE.MeshStandardMaterial({ color, emissive: own ? color : 0x000000, emissiveIntensity: own ? 0.22 : 0, roughness: 0.55 }),
   );
   body.castShadow = true;
   body.receiveShadow = true;
   group.add(body);
   const cape = new THREE.Mesh(
     new THREE.ConeGeometry(25, 55, 3),
-    new THREE.MeshStandardMaterial({ color: own ? 0x207b78 : 0x812d43, side: THREE.DoubleSide }),
+    new THREE.MeshStandardMaterial({ color: capeColor, side: THREE.DoubleSide }),
   );
   cape.rotation.z = Math.PI;
   cape.position.set(-12, -8, -12);
@@ -256,7 +260,7 @@ function renderSnapshot(snapshot) {
   const liveIds = new Set();
   for (const player of snapshot.players ?? []) {
     liveIds.add(player.id);
-    const mesh = playerMeshes.get(player.id) ?? makePlayer(player.id);
+    const mesh = playerMeshes.get(player.id) ?? makePlayer(player.id, player.slot);
     mesh.userData.target.set(player.position.x, worldHeight - player.position.y, 25);
     if (!mesh.userData.initialized) {
       mesh.position.copy(mesh.userData.target);
@@ -274,6 +278,7 @@ function renderSnapshot(snapshot) {
   for (const player of snapshot.players ?? []) {
     const score = document.createElement('span');
     score.className = 'score';
+    score.style.color = PLAYER_COLORS[player.slot] ?? PLAYER_COLORS[0];
     score.textContent = `${player.name}  ${player.score}`;
     elements.scores.append(score);
   }
@@ -330,6 +335,10 @@ function resetConnectionButton() {
   elements['join-button'].textContent = 'JOIN LOBBY';
 }
 
+function clearInput() {
+  for (const key of Object.keys(input)) input[key] = false;
+}
+
 function resetSession() {
   socket = null;
   myId = null;
@@ -338,7 +347,7 @@ function resetSession() {
   localReady = false;
   gameActive = false;
   errorVisible = false;
-  for (const key of Object.keys(input)) input[key] = false;
+  clearInput();
 }
 
 function leave() {
@@ -353,9 +362,16 @@ for (const eventName of ['keydown', 'keyup']) {
     updateInputFromKeyboard(event, eventName, input);
   });
 }
+window.addEventListener('blur', clearInput);
+document.addEventListener('focusin', (event) => {
+  if (event.target?.closest?.('input, textarea, select, [contenteditable="true"]')) clearInput();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) clearInput();
+});
 setInterval(() => {
   if (gameActive) send({ type: 'input', input });
-}, 50);
+}, 33);
 
 const savedName = localStorage.getItem('coinrush-name');
 if (savedName) elements['player-name'].value = savedName.slice(0, 18);

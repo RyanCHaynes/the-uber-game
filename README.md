@@ -1,8 +1,8 @@
 # Coin Rush
 
-Coin Rush is a browser-based two-player castle race rendered with Three.js. A
-central Node server owns lobby state, movement, collision, coin placement,
-scores, wins, and round reset over same-origin WebSockets.
+Coin Rush is a browser-based castle race for two to ten players, rendered with
+Three.js. A central Node server owns lobby state, movement, collision, coin
+placement, scores, wins, and round reset over same-origin WebSockets.
 
 The original native C++/SFML implementation is preserved at Git tag
 `sfml-baseline-2026-07-18`.
@@ -11,9 +11,9 @@ The original native C++/SFML implementation is preserved at Git tag
 
 - **Browser:** Three.js rendering and keyboard input only; no client-authoritative
   physics or scoring.
-- **Backend:** one authoritative two-player `GameRoom`, 50 Hz physics, 20 Hz
+- **Backend:** one authoritative 2–10-player `GameRoom`, 50 Hz physics, 20 Hz
   snapshots, bounded JSON messages, heartbeat, handshake timeout, origin check,
-  and per-peer input-rate budget.
+  deterministic slots/spawns, and per-peer input-rate budgets.
 - **Levels:** immutable versioned data sent by the server before `gameStart`.
   Candidate revisions are bounded and validated before publication.
 - **Ingress:** Caddy terminates HTTPS/WSS and proxies to Node on
@@ -30,8 +30,8 @@ npm run build
 npm start
 ```
 
-Open `http://127.0.0.1:3000` in two separate browser contexts, join both, and
-ready both players.
+Open `http://127.0.0.1:3000` in 2–10 separate browser contexts, join them, and
+ready every connected player.
 
 ## Protocol
 
@@ -49,7 +49,7 @@ Server messages:
 - authoritative `snapshot` state
 
 Unknown, malformed, binary, oversized, wrong-origin, and over-rate traffic is
-rejected. A third concurrent connection is refused.
+rejected. An eleventh concurrent connection is refused.
 
 ## Dedicated deployment
 
@@ -70,5 +70,5 @@ waits for container health, validates and reloads Caddy, then verifies public
 HTTPS health.
 
 The preserved SFML service is intentionally not removed by the installer.
-Remove its public TCP `53000` listener and firewall rule only after two-browser
-WSS play acceptance succeeds.
+Remove its public TCP `53000` listener and firewall rule only after independent
+real-browser WSS play acceptance succeeds.

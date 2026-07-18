@@ -6,10 +6,14 @@ export const KEY_BINDINGS = new Map([
 ]);
 
 export function updateInputFromKeyboard(event, eventName, input) {
-  if (event.target?.closest?.('input, textarea, select, [contenteditable="true"]')) return false;
-
   const action = KEY_BINDINGS.get(event.code);
   if (!action) return false;
+
+  const editable = event.target?.closest?.('input, textarea, select, [contenteditable="true"]');
+  if (editable) {
+    if (eventName === 'keyup') input[action] = false;
+    return false;
+  }
 
   event.preventDefault();
   input[action] = eventName === 'keydown';

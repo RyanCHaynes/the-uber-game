@@ -7,7 +7,7 @@ import { performance } from 'node:perf_hooks';
 import { WebSocketServer } from 'ws';
 
 import { GAME } from '../shared/game.js';
-import { castleLevel } from '../shared/levels/castle.js';
+import { activeLevelCandidate } from '../shared/levels/index.js';
 import { GameRoom } from './game-room.js';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -88,7 +88,7 @@ export function createCoinRushServer({
   port = 3000,
   allowedOrigin = '',
   distDirectory = defaultDist,
-  level = castleLevel,
+  level = activeLevelCandidate,
   handshakeTimeoutMs = 5000,
 } = {}) {
   const room = new GameRoom({ level });

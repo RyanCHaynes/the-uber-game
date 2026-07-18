@@ -51,7 +51,7 @@ function open(url, origin = 'https://game.test') {
   });
 }
 
-test('public shape serves client health and a real two-browser WebSocket round start', async (context) => {
+test('public shape serves health and a real ten-client WebSocket round with rejoin limits', async (context) => {
   const dist = await mkdtemp(path.join(tmpdir(), 'coinrush-dist-'));
   await writeFile(path.join(dist, 'index.html'), '<h1>Coin Rush Three.js</h1>');
   const instance = createCoinRushServer({
@@ -73,29 +73,46 @@ test('public shape serves client health and a real two-browser WebSocket round s
   assert.equal(health.revision, 'castle-v1');
   assert.match(await fetch(httpUrl).then((response) => response.text()), /Three\.js/);
 
-  const first = await open(wsUrl);
-  const second = await open(wsUrl);
-  first.socket.send(JSON.stringify({ type: 'hello', name: 'Ada' }));
-  second.socket.send(JSON.stringify({ type: 'hello', name: 'Grace' }));
-  await first.messages.wait((message) => message.type === 'lobby' && message.players.length === 2);
-  await second.messages.wait((message) => message.type === 'level' && message.level.revision === 'castle-v1');
+  const clients = [];
+  for (let index = 0; index < 10; index += 1) {
+    const client = await open(wsUrl);
+    clients.push(client);
+    client.socket.send(JSON.stringify({ type: 'hello', name: `Browser ${index + 1}` }));
+  }
+  const firstWelcome = await clients[0].messages.wait((message) => message.type === 'welcome');
+  await clients[0].messages.wait((message) => message.type === 'lobby' && message.players.length === 10);
+  await Promise.all(clients.map((client) =>
+    client.messages.wait((message) => message.type === 'level' && message.level.revision === 'castle-v1')));
 
-  first.socket.send(JSON.stringify({ type: 'ready', ready: true }));
-  second.socket.send(JSON.stringify({ type: 'ready', ready: true }));
+  clients.forEach((client) => client.socket.send(JSON.stringify({ type: 'ready', ready: true })));
   await Promise.all([
-    first.messages.wait((message) => message.type === 'gameStart'),
-    second.messages.wait((message) => message.type === 'gameStart'),
-    first.messages.wait((message) => message.type === 'snapshot' && message.players.length === 2),
+    ...clients.map((client) => client.messages.wait((message) => message.type === 'gameStart')),
+    clients[0].messages.wait((message) => message.type === 'snapshot' && message.players.length === 10),
   ]);
-  first.socket.send(JSON.stringify({
+  clients[0].socket.send(JSON.stringify({
     type: 'input',
     input: { up: false, down: false, left: false, right: true },
   }));
-  const snapshot = await first.messages.wait((message) =>
-    message.type === 'snapshot' && message.players.some((player) => player.position.x > 112));
+  const snapshot = await clients[0].messages.wait((message) =>
+    message.type === 'snapshot' &&
+    message.players.some((player) => player.id === firstWelcome.id && player.position.x > 112));
   assert.equal(snapshot.revision, 'castle-v1');
-  first.socket.close();
-  second.socket.close();
+
+  clients[4].socket.close();
+  await clients[0].messages.wait((message) =>
+    message.type === 'lobby' && message.players.length === 9 &&
+    message.players.every((player) => player.name !== 'Browser 5'));
+  const replacement = await open(wsUrl);
+  clients.push(replacement);
+  replacement.socket.send(JSON.stringify({ type: 'hello', name: 'Replacement' }));
+  await clients[0].messages.wait((message) =>
+    message.type === 'lobby' && message.players.length === 10 &&
+    message.players.some((player) => player.name === 'Replacement'));
+
+  const eleventh = await open(wsUrl);
+  const refused = new Promise((resolve) => eleventh.socket.once('close', (code) => resolve(code)));
+  assert.equal(await refused, 1008);
+  clients.forEach((client) => client.socket.close());
 });
 
 test('wrong origin and malformed JSON are rejected', async (context) => {
