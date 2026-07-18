@@ -1,0 +1,22 @@
+{
+  "round": 7,
+  "level": "level_006",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 3,
+      "completed": false,
+      "deaths": 1,
+      "fall_locations": [
+        {
+          "x": 6022,
+          "y": 548
+        }
+      ],
+      "time_seconds": 74.2,
+      "enemies_killed": 5,
+      "hits_taken": 3,
+      "comment": "having pitfalls where its imppossible to escape from feels bad, the player should be able to traverse out of these pitfalls but at the cost of platforming skills and time"
+    }
+  ]
+}

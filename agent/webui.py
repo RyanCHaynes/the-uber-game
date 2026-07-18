@@ -142,6 +142,7 @@ def _snapshot() -> dict:
         "levels": levels,
         "rounds": rounds,
         "lessons": store.load_lessons(),
+        "memory": store.memory_status(),
         "library": store.library_summary(),
     }
 

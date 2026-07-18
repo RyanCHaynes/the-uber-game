@@ -48,6 +48,11 @@
   .quote { font-style: italic; }
   ul { margin: 4px 0; padding-left: 18px; }
   li { margin: 3px 0; }
+  .lessonGroup { margin: 10px 0 14px; }
+  .lessonGroup h3 { color: var(--blue); font-size: 12px; text-transform: uppercase;
+                    letter-spacing: .06em; margin: 0 0 5px; }
+  .lessonItem { margin-bottom: 8px; }
+  .lessonMeta { color: var(--dim); font-size: 11px; }
   .dim { color: var(--dim); }
   #log { font: 12px/1.5 ui-monospace, monospace; white-space: pre-wrap; max-height: 240px;
          overflow-y: auto; background: #0e1015; border-radius: 6px; padding: 10px; }
@@ -153,7 +158,8 @@
     <div class="panel"><h2>Playtest feedback <span id="fbRound" class="dim"></span></h2>
       <div id="feedback" class="dim">this level hasn't been played yet</div></div>
     <div class="panel"><h2>Analyst diagnosis</h2><div id="diagnosis" class="dim">—</div></div>
-    <div class="panel"><h2>Lessons learned</h2><div id="lessons" class="dim">none yet</div></div>
+    <div class="panel"><h2>Persistent lesson catalog <span id="memoryStats" class="dim"></span></h2>
+      <div id="lessons" class="dim">none yet</div></div>
     <div class="panel"><h2>Level library</h2><div id="library" class="dim">empty</div></div>
   </section>
 </main>
@@ -277,9 +283,31 @@ function renderHistory() {
 function pick(name) { selected = name; $("follow").checked = false; render(); }
 
 function renderLessons() {
-  if (!state.lessons.length) { $("lessons").innerHTML = '<span class="dim">none yet</span>'; return; }
-  $("lessons").innerHTML = "<ul>" + state.lessons.map(l =>
-    `<li>${esc(l.lesson)} <span class="dim">(seen ${l.seen_count}x, round ${l.source_round})</span></li>`).join("") + "</ul>";
+  const memory = state.memory || {};
+  $("memoryStats").textContent = state.lessons.length
+    ? `(${state.lessons.length} lessons · ${memory.categories || 0} categories${memory.last_consolidated_at ? ` · consolidated ${memory.last_consolidated_at.replace("T", " ")}` : ""})`
+    : "";
+  if (!state.lessons.length) {
+    $("lessons").innerHTML = '<span class="dim">none yet</span>';
+    return;
+  }
+  const groups = {};
+  for (const lesson of state.lessons) (groups[lesson.category || "other"] ||= []).push(lesson);
+  $("lessons").innerHTML = Object.keys(groups).sort().map(category => `
+    <div class="lessonGroup">
+      <h3>${esc(category.replace(/_/g, " "))} (${groups[category].length})</h3>
+      <ul>${groups[category].map(lesson => `
+        <li class="lessonItem">
+          ${esc(lesson.lesson)}
+          <div class="lessonMeta">
+            ${esc(lesson.id)} · confidence ${Number(lesson.confidence || 0).toFixed(2)} ·
+            seen ${lesson.seen_count}x · evidence rounds ${(lesson.evidence_rounds || []).join(", ") || "—"} ·
+            applied ${lesson.applied_count || 0}x · successful ${lesson.successful_applications || 0}x${lesson.merged_from?.length ? ` · merged ${lesson.merged_from.length} prior lessons` : ""}
+          </div>
+          ${lesson.conditions?.length ? `<div class="lessonMeta">when: ${lesson.conditions.map(esc).join(", ")}</div>` : ""}
+          ${lesson.outcome ? `<div class="lessonMeta">outcome: ${esc(lesson.outcome)}</div>` : ""}
+        </li>`).join("")}</ul>
+    </div>`).join("");
 }
 
 function drawMap(csvText) {

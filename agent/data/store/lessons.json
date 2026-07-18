@@ -1,107 +1,592 @@
 [
   {
+    "id": "lesson_0001",
     "lesson": "A level with clean platforming but zero enemies or hazards can still feel flat and low-fun even with a perfect, fast clear \u2014 traversal alone isn't enough stimulation.",
+    "category": "enemy_placement",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
     "source_round": 1,
-    "seen_count": 1
+    "evidence_rounds": [
+      1
+    ],
+    "seen_count": 1,
+    "applied_count": 3,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 7,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 8,
+        "rating": 2,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 9
+      }
+    ],
+    "merged_from": []
   },
   {
+    "id": "lesson_0002",
     "lesson": "Fast completion time with zero deaths/falls signals the level was too easy/under-stimulating rather than well-tuned.",
+    "category": "difficulty",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
     "source_round": 1,
-    "seen_count": 1
+    "evidence_rounds": [
+      1
+    ],
+    "seen_count": 1,
+    "applied_count": 3,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 7,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 8,
+        "rating": 2,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 9
+      }
+    ],
+    "merged_from": []
   },
   {
+    "id": "lesson_0003",
     "lesson": "Enemies and hazard density can make a level feel fun and engaging even when the layout has no vertical variation \u2014 fun and 'verticality' are judged as separate axes by players.",
+    "category": "enemy_placement",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
     "source_round": 2,
-    "seen_count": 1
+    "evidence_rounds": [
+      2
+    ],
+    "seen_count": 1,
+    "applied_count": 3,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 7,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 8,
+        "rating": 2,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 9
+      }
+    ],
+    "merged_from": []
   },
   {
+    "id": "lesson_0004",
     "lesson": "Horizontal floor gaps/pits are not perceived as verticality by players even if platforms sit at different heights \u2014 true verticality needs traversal that changes the player's elevation (climbing/descending), not just gaps at one baseline.",
+    "category": "traversal",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
     "source_round": 2,
-    "seen_count": 1
+    "evidence_rounds": [
+      2
+    ],
+    "seen_count": 1,
+    "applied_count": 3,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 7,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 8,
+        "rating": 2,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 9
+      }
+    ],
+    "merged_from": []
   },
   {
+    "id": "lesson_0005",
     "lesson": "Flying enemies placed above the player's maximum projectile arc create unfair, uncounterable threats that frustrate rather than challenge.",
+    "category": "enemy_placement",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
     "source_round": 2,
-    "seen_count": 1
+    "evidence_rounds": [
+      2
+    ],
+    "seen_count": 1,
+    "applied_count": 1,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 7,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      }
+    ],
+    "merged_from": []
   },
   {
+    "id": "lesson_0006",
     "lesson": "An exit placed on a high platform without climbable paths or vertical traversal options renders the goal unreachable, turning exploration into guesswork.",
+    "category": "fairness",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
     "source_round": 2,
-    "seen_count": 1
+    "evidence_rounds": [
+      2
+    ],
+    "seen_count": 1,
+    "applied_count": 0,
+    "successful_applications": 0,
+    "applications": [],
+    "merged_from": []
   },
   {
+    "id": "lesson_0007",
     "lesson": "Flat levels with no vertical traversal (climbing/descending) and poorly positioned aerial enemies fail to deliver engaging platforming or combat.",
+    "category": "enemy_placement",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
     "source_round": 2,
-    "seen_count": 1
+    "evidence_rounds": [
+      2
+    ],
+    "seen_count": 1,
+    "applied_count": 2,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 7,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 8,
+        "rating": 2,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      }
+    ],
+    "merged_from": []
   },
   {
+    "id": "lesson_0008",
     "lesson": "A level that can be beaten by holding one direction with zero player inputs beyond movement provides no engagement and will always rate poorly regardless of polish.",
+    "category": "other",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
     "source_round": 3,
-    "seen_count": 2
+    "evidence_rounds": [
+      3
+    ],
+    "seen_count": 2,
+    "applied_count": 0,
+    "successful_applications": 0,
+    "applications": [],
+    "merged_from": []
   },
   {
+    "id": "lesson_0009",
     "lesson": "Exit placement at the same elevation as spawn with no intervening obstacles turns the level into a walk simulator rather than a platformer.",
+    "category": "traversal",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
     "source_round": 3,
-    "seen_count": 1
+    "evidence_rounds": [
+      3
+    ],
+    "seen_count": 1,
+    "applied_count": 3,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 7,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 8,
+        "rating": 2,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 9
+      }
+    ],
+    "merged_from": []
   },
   {
-    "lesson": "Enemies that turrets or stationary shooters placed on wide horizontal platforms become harmless if the player can pass beneath their firing arc \u2014 elevation or vertical offset is required for threat relevance.",
+    "id": "lesson_0010",
+    "lesson": "Stationary shooters placed on the same horizontal plane as the player's movement path become harmless if the player can pass beneath their firing arc \u2014 vertical offset or elevation change is required to make them threatening.",
+    "category": "enemy_placement",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
     "source_round": 4,
-    "seen_count": 1
+    "evidence_rounds": [
+      4
+    ],
+    "seen_count": 3,
+    "applied_count": 2,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 7,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 8,
+        "rating": 2,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      }
+    ],
+    "merged_from": [
+      {
+        "id": "lesson_0012",
+        "lesson": "Turrets or stationary shooters placed on wide horizontal platforms become harmless if the player can pass beneath their firing arc \u2014 elevation or vertical offset is required for threat relevance."
+      },
+      {
+        "id": "lesson_0013",
+        "lesson": "Stationary shooters placed on the same elevation as the player's movement path become irrelevant if the player can pass beneath their firing line \u2014 vertical offset or elevation change is required to make them threatening."
+      }
+    ]
   },
   {
-    "lesson": "Repetitive enemy patterns without variation in positioning or timing create predictable, low-engagement encounters even with high enemy counts.",
+    "id": "lesson_0011",
+    "lesson": "Repeating identical enemy-and-platform patterns without variation in spacing, height, or timing creates predictable, low-engagement encounters that players optimize away.",
+    "category": "enemy_placement",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
     "source_round": 4,
-    "seen_count": 1
+    "evidence_rounds": [
+      4
+    ],
+    "seen_count": 2,
+    "applied_count": 3,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 7,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 8,
+        "rating": 2,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 9
+      }
+    ],
+    "merged_from": [
+      {
+        "id": "lesson_0014",
+        "lesson": "Repeating identical platform-and-turret patterns without variation in spacing, height, or timing create predictable, low-engagement encounters that players optimize away."
+      }
+    ]
   },
   {
-    "lesson": "Turrets or stationary shooters placed on wide horizontal platforms become harmless if the player can pass beneath their firing arc \u2014 elevation or vertical offset is required for threat relevance.",
-    "source_round": 4,
-    "seen_count": 1
-  },
-  {
-    "lesson": "Stationary shooters placed on the same elevation as the player's movement path become irrelevant if the player can pass beneath their firing line \u2014 vertical offset or elevation change is required to make them threatening.",
-    "source_round": 4,
-    "seen_count": 1
-  },
-  {
-    "lesson": "Repeating identical platform-and-turret patterns without variation in spacing, height, or timing create predictable, low-engagement encounters that players optimize away.",
-    "source_round": 4,
-    "seen_count": 1
-  },
-  {
-    "lesson": "A single repeated macro-pattern (e.g., stair-step hills) across an entire level creates visual and mechanical fatigue even if local geometry varies slightly.",
+    "id": "lesson_0015",
+    "lesson": "A level composed of a single repeated macro-structure (e.g., stair-step hills or one continuous slope) creates mechanical fatigue even if local geometry varies slightly.",
+    "category": "terrain",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
     "source_round": 5,
-    "seen_count": 1
+    "evidence_rounds": [
+      5
+    ],
+    "seen_count": 2,
+    "applied_count": 1,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 9
+      }
+    ],
+    "merged_from": [
+      {
+        "id": "lesson_0018",
+        "lesson": "A level composed of a single repeated macro-structure (e.g., one continuous slope) creates mechanical fatigue even if local geometry varies slightly."
+      }
+    ]
   },
   {
+    "id": "lesson_0016",
     "lesson": "Collision transitions between sloped ramps and flat ceilings produce unexpected falls that feel unfair rather than challenging.",
+    "category": "fairness",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
     "source_round": 5,
-    "seen_count": 1
+    "evidence_rounds": [
+      5
+    ],
+    "seen_count": 1,
+    "applied_count": 3,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 7,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 8,
+        "rating": 2,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 9
+      }
+    ],
+    "merged_from": []
   },
   {
+    "id": "lesson_0017",
     "lesson": "Enemy variety without terrain variety still yields low engagement \u2014 enemies need diverse spatial contexts (verticality, cover, chokepoints) to create distinct encounters.",
+    "category": "enemy_placement",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
     "source_round": 5,
-    "seen_count": 1
+    "evidence_rounds": [
+      5
+    ],
+    "seen_count": 1,
+    "applied_count": 0,
+    "successful_applications": 0,
+    "applications": [],
+    "merged_from": []
   },
   {
-    "lesson": "A level composed of a single repeated macro-structure (e.g., one continuous slope) creates mechanical fatigue even if local geometry varies slightly.",
-    "source_round": 5,
-    "seen_count": 1
-  },
-  {
+    "id": "lesson_0019",
     "lesson": "Terrain variance requires distinct spatial contexts \u2014 gaps, platforms at multiple elevations, ceilings, and chokepoints \u2014 not just a continuous height gradient.",
+    "category": "terrain",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
     "source_round": 5,
-    "seen_count": 1
+    "evidence_rounds": [
+      5
+    ],
+    "seen_count": 1,
+    "applied_count": 0,
+    "successful_applications": 0,
+    "applications": [],
+    "merged_from": []
   },
   {
+    "id": "lesson_0020",
     "lesson": "Spawn points must be validated for clear vertical and horizontal clearance \u2014 at minimum one empty tile above and to each side \u2014 before a level is considered playable.",
+    "category": "other",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
     "source_round": 6,
-    "seen_count": 1
+    "evidence_rounds": [
+      6
+    ],
+    "seen_count": 1,
+    "applied_count": 0,
+    "successful_applications": 0,
+    "applications": [],
+    "merged_from": []
   },
   {
+    "id": "lesson_0021",
     "lesson": "A level that prevents the first player input (movement/jump) fails before any design intent can be evaluated; structural validity is a prerequisite for fun, not a result of it.",
+    "category": "traversal",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
     "source_round": 6,
-    "seen_count": 1
+    "evidence_rounds": [
+      6
+    ],
+    "seen_count": 1,
+    "applied_count": 3,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 7,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 8,
+        "rating": 2,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 9
+      }
+    ],
+    "merged_from": []
+  },
+  {
+    "id": "lesson_0022",
+    "lesson": "Deep, unclimbable pits at the bottom of a level act as soft locks \u2014 players perceive them as unfair traps rather than skill challenges when no recovery path exists.",
+    "category": "fairness",
+    "conditions": [
+      "pit depth exceeds max jump height",
+      "no wall-kick or climb surfaces",
+      "exit located above pit"
+    ],
+    "outcome": "player falls, cannot recover, rates level poorly despite earlier engagement",
+    "confidence": 0.85,
+    "source_round": 7,
+    "evidence_rounds": [
+      7
+    ],
+    "seen_count": 1,
+    "applied_count": 3,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 7,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 8,
+        "rating": 2,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 9
+      }
+    ],
+    "merged_from": []
+  },
+  {
+    "id": "lesson_0023",
+    "lesson": "Horizontal length alone cannot substitute for structural variety \u2014 when a level extends for hundreds of tiles without meaningful changes in elevation, pacing, or encounter type, players perceive it as a grind rather than a progression.",
+    "category": "pacing",
+    "conditions": [
+      "level width greatly exceeds height",
+      "no significant elevation changes over long stretches",
+      "repeating enemy/platform patterns"
+    ],
+    "outcome": "player disengagement, mid-level falls from fatigue, incomplete run, mediocre rating despite functional mechanics",
+    "confidence": 0.85,
+    "source_round": 8,
+    "evidence_rounds": [
+      8
+    ],
+    "seen_count": 1,
+    "applied_count": 2,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 8,
+        "rating": 2,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 9
+      }
+    ],
+    "merged_from": []
+  },
+  {
+    "id": "lesson_0024",
+    "lesson": "When a single jump archetype (e.g., a fixed-height gap or climb) repeats at high density across a long horizontal stretch, it creates mechanical fatigue that manifests as late-level falls and disengagement, even if the jump is fair in isolation.",
+    "category": "pacing",
+    "conditions": [
+      "level width greatly exceeds height",
+      "one jump type dominates traversal",
+      "repetition density is high over hundreds of tiles"
+    ],
+    "outcome": "player falls from fatigue deep in level, rates experience poorly despite functional mechanics",
+    "confidence": 0.85,
+    "source_round": 9,
+    "evidence_rounds": [
+      9
+    ],
+    "seen_count": 1,
+    "applied_count": 1,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 9
+      }
+    ],
+    "merged_from": []
   }
 ]

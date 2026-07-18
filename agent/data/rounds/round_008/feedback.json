@@ -1,0 +1,26 @@
+{
+  "round": 8,
+  "level": "level_007",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 3,
+      "completed": false,
+      "deaths": 2,
+      "fall_locations": [
+        {
+          "x": 2022,
+          "y": 548
+        },
+        {
+          "x": 4857,
+          "y": 420
+        }
+      ],
+      "time_seconds": 159.3,
+      "enemies_killed": 8,
+      "hits_taken": 6,
+      "comment": "better the pitfals were scapable at most parts but not all, the level needs to be even more variance, obsticles should not feel repeated but each part of the level should present a new challange to the player"
+    }
+  ]
+}

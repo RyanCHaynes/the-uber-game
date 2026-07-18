@@ -81,3 +81,19 @@ limits, and relocates overlapping spawn, exit, and enemy cells. If reachability
 fails, a minimum-change path search connects existing terrain with the fewest
 practical edits and relocates displaced enemies. Any remaining failure sends the
 repaired previous plan plus exact validator errors back to the model.
+
+## Persistent memory
+
+Lessons use a structured catalog with stable IDs, categories, applicability
+conditions, outcomes, confidence, evidence rounds, and application results. The
+dashboard shows the full catalog, while each design receives only the 12 lessons
+most relevant to its diagnosis and player feedback.
+
+Memory consolidation is event-driven rather than time-based. After feedback adds
+new knowledge, consolidation runs only when the catalog has materially grown,
+contains likely overlap, or has become large. Nemotron identifies genuinely
+redundant causal lessons; Python validates its ID groups, retains the canonical
+lesson, and preserves every merged source in `merged_from` and the append-only
+`data/store/consolidation_log.jsonl` audit log. Consolidation failures never block
+level delivery. Each retrieved lesson is also linked to the generated round and
+later player rating so the system can measure whether applying it succeeded.

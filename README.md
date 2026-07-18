@@ -43,5 +43,10 @@ entity limits are enforced and overlapping entities are relocated. Remaining
 reachability failures use a minimum-change connector path before another model
 retry is considered.
 
+The persistent lesson catalog records categories, evidence, confidence, and
+application outcomes. Relevant memories are retrieved for each design, and
+Nemotron performs event-driven semantic consolidation after meaningful memory
+growth or likely duplication. All merged source knowledge remains auditable.
+
 See [`agent/README.md`](agent/README.md) for the level format, gameplay details,
 and architecture.

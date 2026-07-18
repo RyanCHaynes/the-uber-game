@@ -54,16 +54,36 @@ def run_cycle(round_number: int, level_path: Path) -> Path:
     level_csv = level_path.read_text()
     feedback_path = ROUNDS_DIR / f"round_{round_number:03d}" / "feedback.json"
     feedback = json.loads(feedback_path.read_text())
+    if round_number > 1 and feedback.get("players"):
+        store.record_feedback_outcome(round_number - 1, feedback["players"][0])
 
     print(f"[round {round_number}] analyzing playtest ({brain})...")
-    analysis = analyze(level_csv, feedback, store.lessons_as_text())
+    analysis = analyze(level_csv, feedback, store.lessons_as_text(limit=50))
     (feedback_path.parent / "analysis.json").write_text(json.dumps(analysis, indent=2))
     print(f"  diagnosis: {analysis['diagnosis']}")
 
     new_lessons = analysis.get("lessons", [])
+    added_count = 0
     if new_lessons:
-        store.add_lessons(new_lessons, round_number)
-        print(f"  recorded {len(new_lessons)} lesson(s)")
+        before_count = len(store.load_lessons())
+        updated_lessons = store.add_lessons(new_lessons, round_number)
+        added_count = max(0, len(updated_lessons) - before_count)
+        print(f"  recorded {added_count} new lesson(s); reinforced "
+              f"{len(new_lessons) - added_count} existing lesson(s)")
+    should_run, reason = store.should_consolidate(added_count)
+    if brain == "llm" and should_run:
+        print(f"  consolidating memory ({reason})...")
+        try:
+            from . import analyst as analyst_module
+            groups = analyst_module.consolidate_lessons(store.load_lessons())
+            report = store.consolidate_lessons(groups, reason)
+            print(
+                f"  memory consolidation merged {report['merged_groups']} group(s): "
+                f"{report['before_count']} -> {report['after_count']} lessons"
+            )
+        except Exception as err:
+            # Memory maintenance must never prevent delivery of the next level.
+            print(f"  memory consolidation skipped after error: {err}")
 
     if analysis.get("save_level"):
         store.save_to_library(
@@ -76,12 +96,25 @@ def run_cycle(round_number: int, level_path: Path) -> Path:
 
     print(f"  designing next level ({brain})...")
     player_comment = feedback["players"][0].get("comment", "")
-    new_csv = design(level_csv, analysis, store.lessons_as_text(), store.library_summary(),
+    memory_query = " ".join([
+        str(analysis.get("diagnosis", "")),
+        player_comment,
+        " ".join(
+            str(item.get("lesson", "")) if isinstance(item, dict) else str(item)
+            for item in new_lessons
+        ),
+    ])
+    selected_memory = store.relevant_lessons(memory_query, limit=12)
+    new_csv = design(level_csv, analysis, store.format_lessons(selected_memory),
+                     store.library_summary(),
                      player_comment=player_comment, roster_text=roster_summary())
 
     errors = csv_level.validate_text(new_csv)
     if errors:  # llm designer validates internally; this guards the mock path too
         raise RuntimeError(f"generated level failed validation: {errors}")
+    store.record_applications(
+        [entry["id"] for entry in selected_memory], design_round=round_number
+    )
 
     next_path = LEVELS_DIR / f"level_{round_number:03d}.csv"
     next_path.write_text(new_csv if new_csv.endswith("\n") else new_csv + "\n")
