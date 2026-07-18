@@ -3,50 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Coin Rush — a networked castle race for up to ten players.">
-  <title>Coin Rush</title>
+  <meta name="description" content="Coin Rush solo combat slice — cross the crypt and defeat the warden.">
+  <title>Coin Rush — Solo Combat Slice</title>
 </head>
 <body>
   <main id="app">
-    <canvas id="game-canvas" aria-label="Coin Rush game world"></canvas>
+    <canvas id="game-canvas" aria-label="Coin Rush solo combat preview"></canvas>
 
     <section id="setup" class="panel screen">
-      <p class="eyebrow">TINYFAT GAME LAB</p>
-      <h1>COIN RUSH</h1>
-      <p class="subtitle">A networked gothic castle race for up to ten players.</p>
+      <p class="eyebrow">TINYFAT GAME LAB · PLACEHOLDER PREVIEW</p>
+      <h1>CRYPT RUN</h1>
+      <p class="subtitle">Cross five barriers. Defeat the Crypt Warden.</p>
       <label for="player-name">PLAYER NAME</label>
       <input id="player-name" maxlength="18" value="Player" autocomplete="nickname">
-      <button id="join-button" type="button">JOIN LOBBY</button>
-      <p class="hint">Move: A/D or arrows · Jump: W or ↑</p>
-    </section>
-
-    <section id="lobby" class="panel screen hidden">
-      <p class="eyebrow">CASTLE LOBBY</p>
-      <h2>READY YOUR CAPE</h2>
-      <div id="lobby-players" class="players"></div>
-      <button id="ready-button" type="button">READY UP</button>
-      <button id="leave-button" class="secondary" type="button">LEAVE</button>
-      <p id="notice" class="notice" aria-live="polite"></p>
+      <button id="play-button" type="button">PLAY SOLO NOW</button>
+      <p class="hint">Move: A/D or ←/→ · Jump: Space/W/↑ · Attack: J</p>
     </section>
 
     <section id="hud" class="hidden" aria-live="polite">
-      <div id="scores"></div>
-      <div class="goal">FIRST TO 5</div>
-      <button id="game-leave-button" class="small" type="button">LEAVE</button>
+      <div class="hud-block"><span>VITALITY</span><strong id="health">5 / 5</strong></div>
+      <div class="hud-block center"><span>INTENDED PATH</span><strong id="jumps">0 / 5 JUMPS</strong></div>
+      <div class="hud-block right"><span>CRYPT WARDEN</span><strong id="enemy-health">3 / 3</strong></div>
     </section>
 
-    <section id="winner" class="panel winner hidden">
-      <h2 id="winner-text">YOU WIN!</h2>
-      <p>Returning to the lobby…</p>
+    <div id="feedback" class="feedback hidden" aria-live="assertive"></div>
+
+    <section id="complete" class="panel complete hidden" aria-live="assertive">
+      <p class="eyebrow">AUTHORITATIVE RESULT</p>
+      <h2>WARDEN DEFEATED</h2>
+      <p id="complete-text">The combat slice is complete.</p>
+      <button id="again-button" type="button">PLAY AGAIN</button>
     </section>
 
     <section id="error" class="panel screen hidden">
       <p class="eyebrow">CONNECTION LOST</p>
-      <h2>THE DRAWBRIDGE IS UP</h2>
+      <h2>THE CRYPT IS SEALED</h2>
       <p id="error-text"></p>
-      <button id="retry-button" type="button">BACK TO SETUP</button>
+      <button id="retry-button" type="button">BACK</button>
     </section>
+
+    <div id="legend" class="legend hidden">A/D MOVE · SPACE JUMP · J ATTACK</div>
   </main>
-  <script type="module" src="/client/main.js"></script>
+  <script type="module" src="/client/slice-main.js"></script>
 </body>
 </html>
