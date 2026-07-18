@@ -1,0 +1,17 @@
+{
+  "round": 6,
+  "level": "level_005",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 1,
+      "completed": false,
+      "deaths": 0,
+      "fall_locations": [],
+      "time_seconds": 49.5,
+      "enemies_killed": 0,
+      "hits_taken": 0,
+      "comment": "This level is not valid, the starting block blocks movement"
+    }
+  ]
+}

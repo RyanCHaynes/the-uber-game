@@ -76,3 +76,8 @@ immediately.
 The designer never asks the model to count or emit raw grid characters. The
 model returns a compact JSON plan of solid rectangles and entity coordinates;
 Python compiles it into the exact tile grid and runs the reachability validator.
+Before validation, Python safely clips off-by-one rectangles, enforces entity
+limits, and relocates overlapping spawn, exit, and enemy cells. If reachability
+fails, a minimum-change path search connects existing terrain with the fewest
+practical edits and relocates displaced enemies. Any remaining failure sends the
+repaired previous plan plus exact validator errors back to the model.

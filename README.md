@@ -38,5 +38,10 @@ hardcoded model is `nvidia/nemotron-3-ultra-550b-a55b` at NVIDIA's hosted
 in-process queue and retry temporary capacity/rate-limit failures with backoff.
 Never commit API keys.
 
+Generated level plans are mechanically repaired before validation: bounds and
+entity limits are enforced and overlapping entities are relocated. Remaining
+reachability failures use a minimum-change connector path before another model
+retry is considered.
+
 See [`agent/README.md`](agent/README.md) for the level format, gameplay details,
 and architecture.

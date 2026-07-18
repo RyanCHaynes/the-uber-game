@@ -1,0 +1,17 @@
+{
+  "round": 5,
+  "level": "level_004",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 3,
+      "completed": false,
+      "deaths": 0,
+      "fall_locations": [],
+      "time_seconds": 28.8,
+      "enemies_killed": 0,
+      "hits_taken": 1,
+      "comment": "Meh, would like to see more use of platfoorms instead of hills on hills, the level is too uniform, there should be terrain variance throughout"
+    }
+  ]
+}

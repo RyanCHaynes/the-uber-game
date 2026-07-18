@@ -111,7 +111,7 @@
         <span id="ptName" class="dim"></span>
         <span class="spacer"></span>
         <button id="endRun">🏳 End run &amp; rate</button>
-        <button id="ptReload">↻ Reload</button>
+        <button id="ptRestart" title="Restart this level and clear the current run's telemetry">↻ Restart level</button>
       </div>
       <canvas id="cv2" width="960" height="480" tabindex="0"
               style="outline:none; cursor:pointer"></canvas>
@@ -576,6 +576,7 @@ function restartRun() {
   playerShots = []; enemyShots = [];
   hp = MAX_HP; kills = 0; hitsTaken = 0; invulnUntil = 0; lastShotAt = 0;
   phase = "playing"; runCompleted = false; chosenRating = 0;
+  $("ptRestart").disabled = false;
   $("fbForm").style.display = "none";
   $("fbWaiting").style.display = "none";
   $("fbComment").value = "";
@@ -726,6 +727,7 @@ $("fbSubmit").onclick = async () => {
     }
     phase = "waiting";
     waitingForNext = true;
+    $("ptRestart").disabled = true;
     $("fbForm").style.display = "none";
     $("fbWaiting").style.display = "block";
     $("ptStatus").textContent = "feedback sent — waiting for the agent's next level";
@@ -737,7 +739,11 @@ $("fbSubmit").onclick = async () => {
 };
 
 $("endRun").onclick = () => { if (phase !== "waiting") showRatingForm(); };
-$("ptReload").onclick = loadPlayLevel;
+$("ptRestart").onclick = () => {
+  if (!world.grid.length || phase === "waiting") return;
+  restartRun();
+  cv2.focus();
+};
 
 function ptDraw() {
   ctx2.setTransform(1, 0, 0, 1, 0, 0);

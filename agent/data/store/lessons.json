@@ -37,7 +37,7 @@
   {
     "lesson": "A level that can be beaten by holding one direction with zero player inputs beyond movement provides no engagement and will always rate poorly regardless of polish.",
     "source_round": 3,
-    "seen_count": 1
+    "seen_count": 2
   },
   {
     "lesson": "Exit placement at the same elevation as spawn with no intervening obstacles turns the level into a walk simulator rather than a platformer.",
@@ -52,6 +52,56 @@
   {
     "lesson": "Repetitive enemy patterns without variation in positioning or timing create predictable, low-engagement encounters even with high enemy counts.",
     "source_round": 4,
+    "seen_count": 1
+  },
+  {
+    "lesson": "Turrets or stationary shooters placed on wide horizontal platforms become harmless if the player can pass beneath their firing arc \u2014 elevation or vertical offset is required for threat relevance.",
+    "source_round": 4,
+    "seen_count": 1
+  },
+  {
+    "lesson": "Stationary shooters placed on the same elevation as the player's movement path become irrelevant if the player can pass beneath their firing line \u2014 vertical offset or elevation change is required to make them threatening.",
+    "source_round": 4,
+    "seen_count": 1
+  },
+  {
+    "lesson": "Repeating identical platform-and-turret patterns without variation in spacing, height, or timing create predictable, low-engagement encounters that players optimize away.",
+    "source_round": 4,
+    "seen_count": 1
+  },
+  {
+    "lesson": "A single repeated macro-pattern (e.g., stair-step hills) across an entire level creates visual and mechanical fatigue even if local geometry varies slightly.",
+    "source_round": 5,
+    "seen_count": 1
+  },
+  {
+    "lesson": "Collision transitions between sloped ramps and flat ceilings produce unexpected falls that feel unfair rather than challenging.",
+    "source_round": 5,
+    "seen_count": 1
+  },
+  {
+    "lesson": "Enemy variety without terrain variety still yields low engagement \u2014 enemies need diverse spatial contexts (verticality, cover, chokepoints) to create distinct encounters.",
+    "source_round": 5,
+    "seen_count": 1
+  },
+  {
+    "lesson": "A level composed of a single repeated macro-structure (e.g., one continuous slope) creates mechanical fatigue even if local geometry varies slightly.",
+    "source_round": 5,
+    "seen_count": 1
+  },
+  {
+    "lesson": "Terrain variance requires distinct spatial contexts \u2014 gaps, platforms at multiple elevations, ceilings, and chokepoints \u2014 not just a continuous height gradient.",
+    "source_round": 5,
+    "seen_count": 1
+  },
+  {
+    "lesson": "Spawn points must be validated for clear vertical and horizontal clearance \u2014 at minimum one empty tile above and to each side \u2014 before a level is considered playable.",
+    "source_round": 6,
+    "seen_count": 1
+  },
+  {
+    "lesson": "A level that prevents the first player input (movement/jump) fails before any design intent can be evaluated; structural validity is a prerequisite for fun, not a result of it.",
+    "source_round": 6,
     "seen_count": 1
   }
 ]

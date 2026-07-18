@@ -4,18 +4,13 @@
   "players": [
     {
       "player": "playtester",
-      "rating": 3,
+      "rating": 2,
       "completed": false,
-      "deaths": 1,
-      "fall_locations": [
-        {
-          "x": 8889,
-          "y": 644
-        }
-      ],
-      "time_seconds": 130.0,
-      "enemies_killed": 16,
-      "hits_taken": 3,
+      "deaths": 0,
+      "fall_locations": [],
+      "time_seconds": 19.7,
+      "enemies_killed": 1,
+      "hits_taken": 1,
       "comment": "A bit better but the turrents are useless enemies, they cannot shoot beyond their floor, they need to be placed on x1 blocks"
     }
   ]
