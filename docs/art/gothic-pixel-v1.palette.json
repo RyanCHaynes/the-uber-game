@@ -1,0 +1,58 @@
+{
+  "specVersion": "gothic-pixel-v1",
+  "colorSpace": "srgb",
+  "alphaMode": "binary",
+  "limits": {
+    "masterPaletteEntriesIncludingTransparency": 32,
+    "maxVisibleEntriesPerPose": 24,
+    "maxVisibleEntriesPerTile": 16
+  },
+  "targets": {
+    "worldTile": {
+      "width": 32,
+      "height": 32,
+      "alpha": 255
+    },
+    "enemyPose": {
+      "width": 64,
+      "height": 64,
+      "anchorX": 32,
+      "anchorY": 60,
+      "minimumTransparentPadding": 2
+    }
+  },
+  "masterPalette": [
+    { "name": "transparent", "rgba": "#00000000" },
+    { "name": "ink", "rgba": "#0b0910ff" },
+    { "name": "deep_navy", "rgba": "#151522ff" },
+    { "name": "charcoal", "rgba": "#232332ff" },
+    { "name": "dark_stone", "rgba": "#333345ff" },
+    { "name": "stone", "rgba": "#4a4b5bff" },
+    { "name": "light_stone", "rgba": "#6c6e7eff" },
+    { "name": "pale_stone", "rgba": "#9a9baaff" },
+    { "name": "moon", "rgba": "#c8c7d2ff" },
+    { "name": "deep_burgundy", "rgba": "#2a1019ff" },
+    { "name": "burgundy", "rgba": "#4b1825ff" },
+    { "name": "blood", "rgba": "#772333ff" },
+    { "name": "ember", "rgba": "#aa3841ff" },
+    { "name": "salmon", "rgba": "#d05b56ff" },
+    { "name": "deep_purple", "rgba": "#251632ff" },
+    { "name": "purple", "rgba": "#3c2451ff" },
+    { "name": "violet", "rgba": "#5b3670ff" },
+    { "name": "mauve", "rgba": "#80527fff" },
+    { "name": "dark_brown", "rgba": "#2c1c18ff" },
+    { "name": "brown", "rgba": "#4b2f20ff" },
+    { "name": "ochre", "rgba": "#75502cff" },
+    { "name": "gold", "rgba": "#a5793eff" },
+    { "name": "pale_gold", "rgba": "#d0ae62ff" },
+    { "name": "forest", "rgba": "#172a24ff" },
+    { "name": "moss", "rgba": "#2c4835ff" },
+    { "name": "sage", "rgba": "#58705aff" },
+    { "name": "bone_shadow", "rgba": "#756b5aff" },
+    { "name": "bone", "rgba": "#aaa087ff" },
+    { "name": "skin_shadow", "rgba": "#724642ff" },
+    { "name": "skin", "rgba": "#aa6f5eff" },
+    { "name": "skin_light", "rgba": "#d69b7cff" },
+    { "name": "cold_glow", "rgba": "#8db7c3ff" }
+  ]
+}
