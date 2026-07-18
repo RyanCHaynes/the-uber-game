@@ -18,7 +18,10 @@
       "height": 64,
       "anchorX": 32,
       "anchorY": 60,
-      "minimumTransparentPadding": 2
+      "anchorSemantics": "baseline_between_rows_59_and_60",
+      "maximumOpaqueY": 59,
+      "minimumTransparentPadding": 2,
+      "transparentBottomRows": 4
     }
   },
   "masterPalette": [

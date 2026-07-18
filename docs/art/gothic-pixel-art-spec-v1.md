@@ -15,8 +15,8 @@ The rejected painterly brick-floor candidate is reference-only and must not be i
 
 - One world tile is exactly **32×32 native pixels**.
 - A standard enemy pose uses an exact **64×64 RGBA8 canvas** and visually occupies approximately one tile wide by one-and-a-half tiles tall.
-- Enemy feet share a bottom-center anchor at native coordinate **(32, 60)**.
-- At least **2 transparent pixels** remain between opaque enemy pixels and every canvas edge. The four bottom padding rows are reserved so every pose can share the same foot anchor.
+- Enemy poses share a bottom-center baseline anchor at native coordinate **(32, 60)**. This is an inter-pixel rendering pivot on the boundary between rows 59 and 60, not an opaque foot pixel.
+- Opaque foot pixels may extend through row **59**; rows **60–63** are always transparent. At least **2 transparent pixels** remain between opaque enemy pixels and the top, left, and right canvas edges. This exact bottom baseline and padding let every pose share one anchor without conflicting with transparent-edge validation.
 - The default visible enemy height is **40–56 pixels**. Oversized bosses are outside the v1 generated pack and require a later, versioned art profile.
 - The image-generation adapter requests one **1024×1024** square source image for each pose or tile candidate. If a provider returns another size, the adapter records the original dimensions and deterministically fits it to the canonical source canvas before raster normalization.
 - The engine loads only the normalized 32×32 tile or 64×64 pose PNG. It never loads the model’s source image.
@@ -46,7 +46,7 @@ Adding colors requires a new reviewed profile version. Individual generated enem
 
 - Strict orthographic side view; no perspective convergence, three-quarter camera, fisheye, camera tilt, or isometric view.
 - The canonical enemy faces **right**. The renderer mirrors the normalized pose for left-facing movement.
-- The body’s ground contact remains on the shared `(32, 60)` anchor in all five poses.
+- The body’s ground-contact baseline remains at shared pivot `(32, 60)` in all five poses; the lowest opaque sole pixel is on row 59.
 - The silhouette must remain identifiable as the same creature in every pose when viewed at native 1× scale and as a solid black shape.
 - Head, torso, primary weapon/limb, and ground-contact shape must remain consistent across the pack. Costume accents cannot jump sides between poses.
 - Pose files contain one creature only, centered on transparent background, without scenery, floor, UI, border, frame, shadow, or caption.
@@ -74,7 +74,7 @@ Every generated enemy pack contains exactly these five semantic poses:
 
 | Pose | Required read | Stable constraints |
 | --- | --- | --- |
-| `idle` | Alert neutral stance and clearest identity silhouette | Feet at anchor; weapon/limb in resting location |
+| `idle` | Alert neutral stance and clearest identity silhouette | Soles end on row 59 above the baseline anchor; weapon/limb in resting location |
 | `move` | Strong contact or passing pose indicating rightward travel | Same scale and body proportions; no implied extra limb |
 | `attack` | Unambiguous anticipation or contact silhouette for the primary attack | Direction is right; visible action supports but does not define hit timing |
 | `hit` | Readable recoil away from an incoming hit | Identity, equipment, and anchor remain coherent |
