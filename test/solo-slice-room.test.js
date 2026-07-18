@@ -39,17 +39,22 @@ function inputSender(room, socket) {
   };
 }
 
-test('one player starts immediately, clears exactly five jumps, receives combat feedback, and defeats the mob', () => {
+test('one player starts from JSON, accepts exactly five jumps, and reaches the JSON exit', () => {
   let now = 0;
   const room = new SoloSliceRoom({ now: () => now });
   const socket = join(room);
+  const start = socket.messages.find((message) => message.type === 'sliceStart');
+  assert.equal(start.level.schema, 'token-rush-level/v1');
+  assert.equal(start.level.id, 'crypt-fallback');
+  assert.deepEqual(start.level.spawn, { x: 80, y: 616 });
+  assert.equal(start.level.solids.length, 5);
+  assert.equal(start.level.enemies.length, 3);
+  assert.equal(start.level.tokens.length, 4);
+
   const sendInput = inputSender(room, socket);
   sendInput({ right: true });
-
-  let nextObstacle = 0;
-  for (let step = 0; step < 5000 && room.player.position.x < 1360; step += 1) {
-    const obstacle = SLICE.obstacles[nextObstacle];
-    if (obstacle && room.player.grounded && room.player.position.x >= obstacle.x - 72) {
+  for (let step = 0; step < 4000 && !room.complete; step += 1) {
+    if (room.player.grounded && room.player.jumpCount < 5) {
       sendInput({ jump: true });
       room.tick(0.02);
       now += 20;
@@ -57,53 +62,26 @@ test('one player starts immediately, clears exactly five jumps, receives combat 
     }
     room.tick(0.02);
     now += 20;
-    if (obstacle && room.player.position.x > obstacle.x + obstacle.width + SLICE.playerHalfWidth) {
-      nextObstacle += 1;
-    }
   }
 
-  assert.equal(nextObstacle, 5);
-  assert.equal(room.player.jumpCount, 5);
-  assert.ok(room.player.position.x >= 1360, `player stalled at ${room.player.position.x}`);
-
-  sendInput({ right: true });
-  for (let step = 0; step < 500 && room.player.health === room.player.maxHealth; step += 1) {
-    room.tick(0.02);
-    now += 20;
-  }
-  assert.ok(room.player.health < room.player.maxHealth, 'enemy never produced player-hurt feedback');
-
-  sendInput({ right: false });
-  for (let step = 0; step < 2000 && room.enemy.alive; step += 1) {
-    const dx = room.enemy.position.x - room.player.position.x;
-    if (Math.abs(dx) > SLICE.attackRange - 8) sendInput({ right: dx > 0, left: dx < 0 });
-    else sendInput({ right: false, left: false });
-    if (room.player.attackCooldown === 0 && Math.abs(dx) <= SLICE.attackRange) {
-      sendInput({ attack: true });
-      room.tick(0.02);
-      now += 20;
-      sendInput({ attack: false });
-    }
-    room.tick(0.02);
-    now += 20;
-  }
-
-  assert.equal(room.enemy.alive, false);
-  assert.equal(room.enemy.health, 0);
   assert.equal(room.complete, true);
   assert.equal(room.player.jumpCount, 5);
+  assert.ok(room.player.position.x >= room.level.exit.x - SLICE.playerHalfWidth);
+  assert.ok(room.player.health < room.player.maxHealth, 'JSON enemies never produced player-hurt feedback');
   const feedbackTypes = new Set(room.feedback.map((event) => event.type));
-  for (const type of ['jump', 'playerAttack', 'enemyHit', 'playerHurt', 'enemyDeath', 'complete']) {
+  for (const type of ['jump', 'playerHurt', 'complete']) {
     assert.equal(feedbackTypes.has(type), true, `missing ${type}`);
   }
-  assert.equal(room.feedback.find((event) => event.type === 'jump')?.text, 'Leap!');
-  assert.equal(room.feedback.find((event) => event.type === 'complete')?.text, 'Token Rush complete.');
+  assert.equal(room.feedback.find((event) => event.type === 'complete')?.text, 'Token Rush complete. Gate reached.');
   assert.equal(room.feedback.some((event) => /\d+\s*(?:\/\s*5)?\s*jumps?/i.test(event.text)), false);
+
   room.broadcastSnapshot();
   const snapshot = socket.messages.at(-1);
   assert.equal(snapshot.type, 'sliceSnapshot');
   assert.equal(snapshot.complete, true);
   assert.equal(snapshot.player.jumpCount, 5);
+  assert.equal(snapshot.enemies.length, 3);
+  assert.equal(snapshot.tokens.length, 4);
 });
 
 test('authoritative snapshots preserve a 20 Hz average without dropping accumulator remainder', () => {
@@ -139,4 +117,14 @@ test('solo slice rejects a second client and malformed or stale input fail-close
     input: { left: false, right: true, jump: false, attack: false },
   }), false);
   assert.equal(first.closed?.code, 1008);
+});
+
+
+test('allowlisted enemy types change authoritative health and chase speed', () => {
+  const room = new SoloSliceRoom();
+  room.player.position = { x: 500, y: 612 };
+  for (const enemy of room.enemies) enemy.position = { x: 400, y: 612 };
+  room.updateEnemies(0.1);
+  assert.deepEqual(room.enemies.map((enemy) => enemy.maxHealth), [1, 2, 3]);
+  assert.deepEqual(room.enemies.map((enemy) => Number((enemy.position.x - 400).toFixed(1))), [7.8, 5.2, 5.8]);
 });

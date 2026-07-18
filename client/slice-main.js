@@ -66,7 +66,8 @@ function handleMessage(message) {
   if (!message || typeof message.type !== 'string') throw new Error('missing message type');
   if (message.type === 'sliceWelcome') return;
   if (message.type === 'sliceStart') {
-    if (!message.level || message.level.revision !== 'solo-slice-v2') throw new Error('slice revision mismatch');
+    if (!message.level || message.level.schema !== 'token-rush-level/v1' ||
+        typeof message.level.revision !== 'string') throw new Error('level contract mismatch');
     level = message.level;
     renderSamples = [];
     show('game');
@@ -79,7 +80,7 @@ function handleMessage(message) {
     renderHud();
     consumeFeedback(message.feedback || []);
     if (message.complete) {
-      elements['complete-text'].textContent = 'The Crypt Warden fell. Token Rush is complete.';
+      elements['complete-text'].textContent = 'You reached the crypt gate. Token Rush is complete.';
       elements.complete.classList.remove('hidden');
     }
     return;
@@ -92,12 +93,11 @@ function handleMessage(message) {
 }
 
 function recordRenderSample(message) {
-  if (!Number.isSafeInteger(message.tick) || !message.player?.position || !message.enemy?.position) return;
+  if (!Number.isSafeInteger(message.tick) || !message.player?.position) return;
   renderSamples.push({
     tick: message.tick,
     receivedAt: performance.now(),
     player: { ...message.player.position },
-    enemy: { ...message.enemy.position },
   });
   if (renderSamples.length > 12) renderSamples.shift();
 }
@@ -148,9 +148,9 @@ function showFeedback(event) {
 function renderHud() {
   if (!snapshot) return;
   elements.health.textContent = `${snapshot.player.health} / ${snapshot.player.maxHealth}`;
-  elements['enemy-health'].textContent = snapshot.enemy.alive
-    ? `${snapshot.enemy.health} / ${snapshot.enemy.maxHealth}`
-    : 'DEFEATED';
+  const alive = (snapshot.enemies || []).filter((enemy) => enemy.alive).length;
+  const collected = (snapshot.tokens || []).filter((token) => token.collected).length;
+  elements['enemy-health'].textContent = `${alive} MOBS · ${collected}/${snapshot.tokens?.length || 0} TOKENS`;
 }
 
 function fail(message) {
@@ -218,7 +218,6 @@ function draw(now) {
   const scale = viewHeight / worldHeight;
   const visibleWorldWidth = viewWidth / scale;
   const renderedPlayerPosition = renderedPosition('player', now);
-  const renderedEnemyPosition = renderedPosition('enemy', now);
   const playerX = renderedPlayerPosition?.x || 82;
   const camera = level
     ? Math.max(0, Math.min(level.width - visibleWorldWidth, playerX - visibleWorldWidth * 0.28))
@@ -234,15 +233,13 @@ function draw(now) {
     rect(x, 90 + ((x / 210) % 2) * 42, 38, 100, '#1d2538');
     rect(x + 7, 105 + ((x / 210) % 2) * 42, 24, 56, '#8b6d45');
   }
-  for (let x = 0; x < (level?.width || 1600); x += 64) {
-    rect(x, 590, 62, 50, x % 128 ? '#383544' : '#423a48');
+  for (const solid of level?.solids || []) {
+    rect(solid.x, solid.y, solid.width, solid.height, solid.y >= level.floorY ? '#25232d' : '#5b3942');
+    rect(solid.x, solid.y, solid.width, Math.min(7, solid.height), solid.y >= level.floorY ? '#7a6650' : '#8c5a61');
   }
-  rect(0, level?.floorY || 640, level?.width || 1600, 80, '#25232d');
-  rect(0, level?.floorY || 640, level?.width || 1600, 7, '#7a6650');
-
-  for (const obstacle of level?.obstacles || []) {
-    rect(obstacle.x, level.floorY - obstacle.height, obstacle.width, obstacle.height, '#5b3942');
-    rect(obstacle.x + 5, level.floorY - obstacle.height + 6, obstacle.width - 10, 7, '#8c5a61');
+  if (level?.exit) {
+    rect(level.exit.x, level.exit.y, level.exit.width, level.exit.height, '#352a4c');
+    rect(level.exit.x + 7, level.exit.y + 9, level.exit.width - 14, level.exit.height - 9, '#9d6cc2');
   }
 
   if (snapshot) {
@@ -258,19 +255,27 @@ function draw(now) {
       rect(attackX + (player.facing > 0 ? 22 : 36), py - 23, 6, 23, '#d9a844');
     }
 
-    const enemy = snapshot.enemy;
-    if (enemy.alive) {
-      const ex = renderedEnemyPosition.x;
-      const ey = renderedEnemyPosition.y;
-      rect(ex - 22, ey - 28, 44, 56, enemy.hit ? '#fff3c4' : '#9d3448');
+    for (const token of snapshot.tokens || []) {
+      if (token.collected) continue;
+      rect(token.x - 9, token.y - 12, 18, 24, '#f6c85f');
+      rect(token.x - 4, token.y - 8, 8, 16, '#fff0a8');
+    }
+
+    for (const enemy of snapshot.enemies || []) {
+      const ex = enemy.position.x;
+      const ey = enemy.position.y;
+      if (!enemy.alive) {
+        rect(ex - 24, ey + 20, 48, 8, '#6c3742');
+        continue;
+      }
+      const enemyColor = enemy.type === 'crawler' ? '#7b496e' : enemy.type === 'guard' ? '#7a4663' : '#9d3448';
+      rect(ex - 22, ey - 28, 44, 56, enemy.hit ? '#fff3c4' : enemyColor);
       rect(ex - 14, ey - 20, 28, 14, '#291a26');
       rect(ex - 11, ey - 16, 6, 5, '#ffce66');
       rect(ex + 5, ey - 16, 6, 5, '#ffce66');
-      const barWidth = 70;
-      rect(ex - barWidth / 2, ey - 48, barWidth, 7, '#21151a');
-      rect(ex - barWidth / 2, ey - 48, barWidth * enemy.health / enemy.maxHealth, 7, '#d84c58');
-    } else {
-      rect(enemy.position.x - 28, level.floorY - 10, 56, 10, '#6c3742');
+      const barWidth = 54;
+      rect(ex - barWidth / 2, ey - 44, barWidth, 6, '#21151a');
+      rect(ex - barWidth / 2, ey - 44, barWidth * enemy.health / enemy.maxHealth, 6, '#d84c58');
     }
   }
   context.restore();

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Token Rush solo combat slice — cross the crypt and defeat the warden.">
-  <title>Token Rush — Solo Combat Slice</title>
+  <meta name="description" content="Token Rush — cross a bounded JSON-authored crypt and reach the gate.">
+  <title>Token Rush — JSON Crypt</title>
 </head>
 <body>
   <main id="app">
@@ -13,7 +13,7 @@
     <section id="setup" class="panel screen">
       <p class="eyebrow">TINYFAT GAME LAB · PLACEHOLDER PREVIEW</p>
       <h1>TOKEN RUSH</h1>
-      <p class="subtitle">Cross five barriers. Defeat the Crypt Warden.</p>
+      <p class="subtitle">Collect tokens. Survive the crypt. Reach the gate.</p>
       <label for="player-name">PLAYER NAME</label>
       <input id="player-name" maxlength="18" value="Player" autocomplete="nickname">
       <button id="play-button" type="button">PLAY SOLO NOW</button>
@@ -22,15 +22,15 @@
 
     <section id="hud" class="hidden" aria-live="polite">
       <div class="hud-block"><span>VITALITY</span><strong id="health">5 / 5</strong></div>
-      <div class="hud-block right"><span>CRYPT WARDEN</span><strong id="enemy-health">3 / 3</strong></div>
+      <div class="hud-block right"><span>JSON LEVEL</span><strong id="enemy-health">3 MOBS · 0/4 TOKENS</strong></div>
     </section>
 
     <div id="feedback" class="feedback hidden" aria-live="assertive"></div>
 
     <section id="complete" class="panel complete hidden" aria-live="assertive">
       <p class="eyebrow">AUTHORITATIVE RESULT</p>
-      <h2>WARDEN DEFEATED</h2>
-      <p id="complete-text">The combat slice is complete.</p>
+      <h2>CRYPT CLEARED</h2>
+      <p id="complete-text">You reached the gate.</p>
       <button id="again-button" type="button">PLAY AGAIN</button>
     </section>
 

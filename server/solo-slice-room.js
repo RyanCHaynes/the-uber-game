@@ -1,8 +1,7 @@
+import { compileTokenRushLevel, FALLBACK_TOKEN_RUSH_LEVEL } from '../shared/token-rush-level.js';
+
 const SLICE = Object.freeze({
-  revision: 'solo-slice-v2',
-  width: 1600,
-  height: 720,
-  floorY: 640,
+  revision: 'token-rush-level-runtime-v1',
   tickRate: 50,
   snapshotRate: 20,
   playerSpeed: 245,
@@ -15,13 +14,6 @@ const SLICE = Object.freeze({
   attackRange: 72,
   attackCooldownTicks: 16,
   enemyAttackCooldownTicks: 42,
-  obstacles: Object.freeze([
-    Object.freeze({ x: 250, width: 34, height: 52 }),
-    Object.freeze({ x: 490, width: 34, height: 52 }),
-    Object.freeze({ x: 730, width: 34, height: 52 }),
-    Object.freeze({ x: 970, width: 34, height: 52 }),
-    Object.freeze({ x: 1210, width: 34, height: 52 }),
-  ]),
 });
 
 function cleanName(value) {
@@ -33,9 +25,17 @@ function overlapsVertically(positionY, halfHeight, top, bottom) {
   return positionY + halfHeight > top && positionY - halfHeight < bottom;
 }
 
+function overlapsRectangle(position, halfWidth, halfHeight, rectangle) {
+  return position.x + halfWidth > rectangle.x &&
+    position.x - halfWidth < rectangle.x + rectangle.width &&
+    position.y + halfHeight > rectangle.y &&
+    position.y - halfHeight < rectangle.y + rectangle.height;
+}
+
 export class SoloSliceRoom {
-  constructor({ now = Date.now } = {}) {
+  constructor({ now = Date.now, level = compileTokenRushLevel(FALLBACK_TOKEN_RUSH_LEVEL) } = {}) {
     this.now = now;
+    this.level = level;
     this.peer = null;
     this.running = false;
     this.complete = false;
@@ -54,7 +54,7 @@ export class SoloSliceRoom {
     this.player = {
       id: 1,
       name: 'Player',
-      position: { x: 82, y: SLICE.floorY - SLICE.playerHalfHeight },
+      position: { ...this.level.spawn },
       velocity: { x: 0, y: 0 },
       facing: 1,
       grounded: true,
@@ -65,17 +65,21 @@ export class SoloSliceRoom {
       attackTicks: 0,
       invulnerabilityTicks: 0,
     };
-    this.enemy = {
-      id: 'crypt-warden',
-      name: 'Crypt Warden',
-      position: { x: 1480, y: SLICE.floorY - SLICE.enemyHalfHeight },
-      health: 3,
-      maxHealth: 3,
+    this.enemies = this.level.enemies.map((enemy) => ({
+      id: enemy.id,
+      type: enemy.type,
+      name: enemy.name,
+      position: { ...enemy.position },
+      health: enemy.health,
+      maxHealth: enemy.health,
+      speed: enemy.speed,
       alive: true,
       facing: -1,
       attackCooldown: 0,
       hitTicks: 0,
-    };
+    }));
+    this.enemy = this.enemies.at(-1) ?? null;
+    this.tokens = this.level.tokens.map((token) => ({ ...token, collected: false }));
     this.input = { left: false, right: false, jump: false, attack: false };
     this.previousInput = { ...this.input };
     this.lastInputSequence = -1;
@@ -122,9 +126,9 @@ export class SoloSliceRoom {
       peer.joined = true;
       this.player.name = cleanName(message.name);
       this.running = true;
-      this.send(socket, { type: 'sliceWelcome', id: this.player.id, revision: SLICE.revision });
+      this.send(socket, { type: 'sliceWelcome', id: this.player.id, revision: this.level.revision });
       this.send(socket, { type: 'sliceStart', level: this.levelPayload() });
-      this.emitFeedback('notice', 'Five barriers. One warden. Make every hit count.');
+      this.emitFeedback('notice', 'Collect tokens, survive the crypt, and reach the gate.');
       this.broadcastSnapshot();
       return true;
     }
@@ -165,7 +169,9 @@ export class SoloSliceRoom {
     const elapsed = Math.min(Math.max(Number(seconds) || 0, 0), 0.02);
     if (!this.complete) {
       this.updatePlayer(elapsed);
-      this.updateEnemy(elapsed);
+      this.updateEnemies(elapsed);
+      this.collectTokens();
+      this.checkExit();
       this.tickNumber += 1;
     }
     this.snapshotElapsed += elapsed;
@@ -210,12 +216,11 @@ export class SoloSliceRoom {
 
   movePlayerHorizontally(deltaX) {
     const player = this.player;
-    let nextX = Math.max(SLICE.playerHalfWidth, Math.min(SLICE.width - SLICE.playerHalfWidth, player.position.x + deltaX));
-    for (const obstacle of SLICE.obstacles) {
-      const top = SLICE.floorY - obstacle.height;
-      if (!overlapsVertically(player.position.y, SLICE.playerHalfHeight, top, SLICE.floorY)) continue;
-      const left = obstacle.x;
-      const right = obstacle.x + obstacle.width;
+    let nextX = Math.max(SLICE.playerHalfWidth, Math.min(this.level.width - SLICE.playerHalfWidth, player.position.x + deltaX));
+    for (const solid of this.level.solids) {
+      if (!overlapsVertically(player.position.y, SLICE.playerHalfHeight, solid.y, solid.y + solid.height)) continue;
+      const left = solid.x;
+      const right = solid.x + solid.width;
       if (deltaX > 0 && player.position.x + SLICE.playerHalfWidth <= left && nextX + SLICE.playerHalfWidth > left) {
         nextX = left - SLICE.playerHalfWidth;
         player.velocity.x = 0;
@@ -229,17 +234,17 @@ export class SoloSliceRoom {
 
   movePlayerVertically(deltaY) {
     const player = this.player;
+    const previousTop = player.position.y - SLICE.playerHalfHeight;
     const previousBottom = player.position.y + SLICE.playerHalfHeight;
     let nextY = player.position.y + deltaY;
     player.grounded = false;
     if (deltaY >= 0) {
-      let landingY = SLICE.floorY;
-      for (const obstacle of SLICE.obstacles) {
-        const horizontallyOver = player.position.x + SLICE.playerHalfWidth > obstacle.x &&
-          player.position.x - SLICE.playerHalfWidth < obstacle.x + obstacle.width;
-        const top = SLICE.floorY - obstacle.height;
-        if (horizontallyOver && previousBottom <= top && nextY + SLICE.playerHalfHeight >= top) {
-          landingY = Math.min(landingY, top);
+      let landingY = this.level.height;
+      for (const solid of this.level.solids) {
+        const horizontallyOver = player.position.x + SLICE.playerHalfWidth > solid.x &&
+          player.position.x - SLICE.playerHalfWidth < solid.x + solid.width;
+        if (horizontallyOver && previousBottom <= solid.y && nextY + SLICE.playerHalfHeight >= solid.y) {
+          landingY = Math.min(landingY, solid.y);
         }
       }
       if (nextY + SLICE.playerHalfHeight >= landingY) {
@@ -247,17 +252,34 @@ export class SoloSliceRoom {
         player.velocity.y = 0;
         player.grounded = true;
       }
+    } else {
+      let ceilingY = -Infinity;
+      for (const solid of this.level.solids) {
+        const horizontallyOver = player.position.x + SLICE.playerHalfWidth > solid.x &&
+          player.position.x - SLICE.playerHalfWidth < solid.x + solid.width;
+        const bottom = solid.y + solid.height;
+        if (horizontallyOver && previousTop >= bottom && nextY - SLICE.playerHalfHeight <= bottom) {
+          ceilingY = Math.max(ceilingY, bottom);
+        }
+      }
+      if (ceilingY > -Infinity) {
+        nextY = ceilingY + SLICE.playerHalfHeight;
+        player.velocity.y = 0;
+      }
     }
     player.position.y = nextY;
   }
 
   resolvePlayerAttack() {
     const player = this.player;
-    const enemy = this.enemy;
-    if (!enemy.alive) return;
-    const dx = enemy.position.x - player.position.x;
-    const inFront = Math.sign(dx || player.facing) === player.facing;
-    if (!inFront || Math.abs(dx) > SLICE.attackRange || Math.abs(enemy.position.y - player.position.y) > 58) return;
+    const targets = this.enemies
+      .filter((enemy) => enemy.alive)
+      .map((enemy) => ({ enemy, dx: enemy.position.x - player.position.x }))
+      .filter(({ enemy, dx }) => Math.sign(dx || player.facing) === player.facing &&
+        Math.abs(dx) <= SLICE.attackRange && Math.abs(enemy.position.y - player.position.y) <= 58)
+      .sort((left, right) => Math.abs(left.dx) - Math.abs(right.dx));
+    const enemy = targets[0]?.enemy;
+    if (!enemy) return;
     enemy.health -= 1;
     enemy.hitTicks = 8;
     this.emitFeedback('enemyHit', `${enemy.name} -1`);
@@ -265,29 +287,45 @@ export class SoloSliceRoom {
       enemy.health = 0;
       enemy.alive = false;
       this.emitFeedback('enemyDeath', `${enemy.name} defeated`);
-      this.complete = true;
-      this.emitFeedback('complete', 'Token Rush complete.');
     }
   }
 
-  updateEnemy(seconds) {
-    const enemy = this.enemy;
+  updateEnemies(seconds) {
     const player = this.player;
-    if (!enemy.alive) return;
-    if (enemy.hitTicks > 0) enemy.hitTicks -= 1;
-    if (enemy.attackCooldown > 0) enemy.attackCooldown -= 1;
-    const dx = player.position.x - enemy.position.x;
-    enemy.facing = dx < 0 ? -1 : 1;
-    if (Math.abs(dx) < 300 && Math.abs(dx) > 42) {
-      enemy.position.x += Math.sign(dx) * 58 * seconds;
-      enemy.position.x = Math.max(1320, Math.min(1538, enemy.position.x));
+    for (const enemy of this.enemies) {
+      if (!enemy.alive) continue;
+      if (enemy.hitTicks > 0) enemy.hitTicks -= 1;
+      if (enemy.attackCooldown > 0) enemy.attackCooldown -= 1;
+      const dx = player.position.x - enemy.position.x;
+      enemy.facing = dx < 0 ? -1 : 1;
+      if (Math.abs(dx) < 300 && Math.abs(dx) > 42) {
+        enemy.position.x += Math.sign(dx) * enemy.speed * seconds;
+        enemy.position.x = Math.max(SLICE.enemyHalfWidth, Math.min(this.level.width - SLICE.enemyHalfWidth, enemy.position.x));
+      }
+      if (Math.abs(dx) <= 46 && Math.abs(enemy.position.y - player.position.y) <= 58 &&
+          enemy.attackCooldown === 0 && player.invulnerabilityTicks === 0) {
+        enemy.attackCooldown = SLICE.enemyAttackCooldownTicks;
+        player.invulnerabilityTicks = 24;
+        player.health = Math.max(1, player.health - 1);
+        this.emitFeedback('playerHurt', `${enemy.name} hits you`);
+      }
     }
-    if (Math.abs(dx) <= 46 && enemy.attackCooldown === 0 && player.invulnerabilityTicks === 0) {
-      enemy.attackCooldown = SLICE.enemyAttackCooldownTicks;
-      player.invulnerabilityTicks = 24;
-      player.health = Math.max(1, player.health - 1);
-      this.emitFeedback('playerHurt', `${enemy.name} hits you`);
+  }
+
+  collectTokens() {
+    for (const token of this.tokens) {
+      if (token.collected) continue;
+      if (Math.abs(token.x - this.player.position.x) <= 32 && Math.abs(token.y - this.player.position.y) <= 44) {
+        token.collected = true;
+        this.emitFeedback('token', 'Token claimed');
+      }
     }
+  }
+
+  checkExit() {
+    if (!overlapsRectangle(this.player.position, SLICE.playerHalfWidth, SLICE.playerHalfHeight, this.level.exit)) return;
+    this.complete = true;
+    this.emitFeedback('complete', 'Token Rush complete. Gate reached.');
   }
 
   emitFeedback(type, text) {
@@ -297,22 +335,38 @@ export class SoloSliceRoom {
 
   levelPayload() {
     return {
-      revision: SLICE.revision,
-      width: SLICE.width,
-      height: SLICE.height,
-      floorY: SLICE.floorY,
-      obstacles: SLICE.obstacles.map((obstacle) => ({ ...obstacle })),
-      intendedJumpCount: SLICE.obstacles.length,
+      schema: this.level.schema,
+      id: this.level.id,
+      revision: this.level.revision,
+      tileSize: this.level.tileSize,
+      width: this.level.width,
+      height: this.level.height,
+      floorY: this.level.floorY,
+      spawn: { ...this.level.spawn },
+      exit: { ...this.level.exit },
+      solids: this.level.solids.map((solid) => ({ ...solid })),
+      enemies: this.level.enemies.map((enemy) => ({ id: enemy.id, type: enemy.type, name: enemy.name, position: { ...enemy.position } })),
+      tokens: this.level.tokens.map((token) => ({ ...token })),
       tickRate: SLICE.tickRate,
       snapshotRate: SLICE.snapshotRate,
-      enemy: { id: this.enemy.id, name: this.enemy.name },
     };
   }
 
   broadcastSnapshot() {
+    const enemies = this.enemies.map((enemy) => ({
+      id: enemy.id,
+      type: enemy.type,
+      name: enemy.name,
+      position: { ...enemy.position },
+      facing: enemy.facing,
+      health: enemy.health,
+      maxHealth: enemy.maxHealth,
+      alive: enemy.alive,
+      hit: enemy.hitTicks > 0,
+    }));
     this.send(this.peer?.socket, {
       type: 'sliceSnapshot',
-      revision: SLICE.revision,
+      revision: this.level.revision,
       tick: this.tickNumber,
       complete: this.complete,
       player: {
@@ -326,16 +380,9 @@ export class SoloSliceRoom {
         jumpCount: this.player.jumpCount,
         attacking: this.player.attackTicks > 0,
       },
-      enemy: {
-        id: this.enemy.id,
-        name: this.enemy.name,
-        position: { ...this.enemy.position },
-        facing: this.enemy.facing,
-        health: this.enemy.health,
-        maxHealth: this.enemy.maxHealth,
-        alive: this.enemy.alive,
-        hit: this.enemy.hitTicks > 0,
-      },
+      enemy: enemies.at(-1) ?? null,
+      enemies,
+      tokens: this.tokens.map((token) => ({ ...token })),
       feedback: this.feedback.map((event) => ({ ...event })),
     });
   }

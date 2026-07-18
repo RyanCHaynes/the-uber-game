@@ -8,8 +8,9 @@ import { WebSocketServer } from 'ws';
 
 import { GAME } from '../shared/game.js';
 import { activeLevelCandidate } from '../shared/levels/index.js';
+import { DEFAULT_TOKEN_RUSH_LEVEL_FILE, loadTokenRushLevelFile } from '../shared/token-rush-level.js';
 import { GameRoom } from './game-room.js';
-import { SLICE, SoloSliceRoom } from './solo-slice-room.js';
+import { SoloSliceRoom } from './solo-slice-room.js';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const defaultDist = path.join(repositoryRoot, 'dist');
@@ -90,10 +91,12 @@ export function createCoinRushServer({
   allowedOrigin = '',
   distDirectory = defaultDist,
   level = activeLevelCandidate,
+  tokenRushLevelFile = DEFAULT_TOKEN_RUSH_LEVEL_FILE,
   handshakeTimeoutMs = 5000,
 } = {}) {
   const room = new GameRoom({ level });
-  const sliceRoom = new SoloSliceRoom();
+  const tokenRushLevel = loadTokenRushLevelFile(tokenRushLevelFile);
+  const sliceRoom = new SoloSliceRoom({ level: tokenRushLevel.level });
   const server = createServer((request, response) => {
     const pathname = new URL(request.url, 'http://localhost').pathname;
     if (pathname === '/healthz') {
@@ -102,7 +105,9 @@ export function createCoinRushServer({
         revision: room.level.revision,
         connections: room.connectionCount,
         running: room.running,
-        sliceRevision: SLICE.revision,
+        sliceRevision: sliceRoom.level.revision,
+        sliceLevelSource: tokenRushLevel.source,
+        sliceLevelRejection: tokenRushLevel.rejectionCode,
         sliceConnections: sliceRoom.connectionCount,
         sliceRunning: sliceRoom.running,
         sliceComplete: sliceRoom.complete,
@@ -113,7 +118,10 @@ export function createCoinRushServer({
     if (pathname === '/slice-healthz') {
       const body = JSON.stringify({
         ok: true,
-        revision: SLICE.revision,
+        revision: sliceRoom.level.revision,
+        levelId: sliceRoom.level.id,
+        levelSource: tokenRushLevel.source,
+        levelRejection: tokenRushLevel.rejectionCode,
         connections: sliceRoom.connectionCount,
         running: sliceRoom.running,
         complete: sliceRoom.complete,
@@ -280,6 +288,7 @@ async function main() {
     host,
     port,
     allowedOrigin: process.env.ALLOWED_ORIGIN || '',
+    tokenRushLevelFile: process.env.TOKEN_RUSH_LEVEL_FILE || DEFAULT_TOKEN_RUSH_LEVEL_FILE,
   });
   await instance.listen();
   console.log(`Coin Rush listening on http://${host}:${port}`);
