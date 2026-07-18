@@ -10,14 +10,13 @@ const elements = Object.fromEntries([
 const canvas = elements['game-canvas'];
 const context = canvas.getContext('2d', { alpha: false });
 const input = { left: false, right: false, jump: false, attack: false };
-const INTERPOLATION_DELAY_TICKS = 4;
+const INTERPOLATION_DELAY_MS = 120;
 let socket = null;
 let sequence = 0;
 let intentionalClose = false;
 let level = null;
 let snapshot = null;
 let renderSamples = [];
-let serverClockOffset = null;
 let lastFeedbackId = 0;
 let feedbackTimer = null;
 
@@ -70,7 +69,6 @@ function handleMessage(message) {
     if (!message.level || message.level.revision !== 'solo-slice-v2') throw new Error('slice revision mismatch');
     level = message.level;
     renderSamples = [];
-    serverClockOffset = null;
     show('game');
     return;
   }
@@ -95,12 +93,9 @@ function handleMessage(message) {
 
 function recordRenderSample(message) {
   if (!Number.isSafeInteger(message.tick) || !message.player?.position || !message.enemy?.position) return;
-  const receivedAt = performance.now();
-  const tickDuration = 1000 / (level.tickRate || 50);
-  const offset = receivedAt - message.tick * tickDuration;
-  serverClockOffset = serverClockOffset === null ? offset : Math.min(serverClockOffset, offset);
   renderSamples.push({
     tick: message.tick,
+    receivedAt: performance.now(),
     player: { ...message.player.position },
     enemy: { ...message.enemy.position },
   });
@@ -109,21 +104,21 @@ function recordRenderSample(message) {
 
 function renderedPosition(entity, now) {
   const authoritative = snapshot?.[entity]?.position;
-  if (!authoritative || renderSamples.length < 2 || serverClockOffset === null) return authoritative;
-  const tickDuration = 1000 / (level.tickRate || 50);
-  const renderTick = (now - serverClockOffset) / tickDuration - INTERPOLATION_DELAY_TICKS;
+  if (!authoritative || renderSamples.length < 2) return authoritative;
+  const renderAt = now - INTERPOLATION_DELAY_MS;
   let before = null;
   let after = null;
   for (const sample of renderSamples) {
-    if (sample.tick <= renderTick) before = sample;
-    if (sample.tick >= renderTick) {
+    if (sample.receivedAt <= renderAt) before = sample;
+    if (sample.receivedAt >= renderAt) {
       after = sample;
       break;
     }
   }
   if (!before) return renderSamples[0][entity];
-  if (!after || after.tick === before.tick) return before[entity];
-  const amount = Math.max(0, Math.min(1, (renderTick - before.tick) / (after.tick - before.tick)));
+  if (!after || after.receivedAt === before.receivedAt) return before[entity];
+  const amount = Math.max(0, Math.min(1,
+    (renderAt - before.receivedAt) / (after.receivedAt - before.receivedAt)));
   return {
     x: before[entity].x + (after[entity].x - before[entity].x) * amount,
     y: before[entity].y + (after[entity].y - before[entity].y) * amount,
