@@ -18,5 +18,40 @@
     "lesson": "Horizontal floor gaps/pits are not perceived as verticality by players even if platforms sit at different heights \u2014 true verticality needs traversal that changes the player's elevation (climbing/descending), not just gaps at one baseline.",
     "source_round": 2,
     "seen_count": 1
+  },
+  {
+    "lesson": "Flying enemies placed above the player's maximum projectile arc create unfair, uncounterable threats that frustrate rather than challenge.",
+    "source_round": 2,
+    "seen_count": 1
+  },
+  {
+    "lesson": "An exit placed on a high platform without climbable paths or vertical traversal options renders the goal unreachable, turning exploration into guesswork.",
+    "source_round": 2,
+    "seen_count": 1
+  },
+  {
+    "lesson": "Flat levels with no vertical traversal (climbing/descending) and poorly positioned aerial enemies fail to deliver engaging platforming or combat.",
+    "source_round": 2,
+    "seen_count": 1
+  },
+  {
+    "lesson": "A level that can be beaten by holding one direction with zero player inputs beyond movement provides no engagement and will always rate poorly regardless of polish.",
+    "source_round": 3,
+    "seen_count": 1
+  },
+  {
+    "lesson": "Exit placement at the same elevation as spawn with no intervening obstacles turns the level into a walk simulator rather than a platformer.",
+    "source_round": 3,
+    "seen_count": 1
+  },
+  {
+    "lesson": "Enemies that turrets or stationary shooters placed on wide horizontal platforms become harmless if the player can pass beneath their firing arc \u2014 elevation or vertical offset is required for threat relevance.",
+    "source_round": 4,
+    "seen_count": 1
+  },
+  {
+    "lesson": "Repetitive enemy patterns without variation in positioning or timing create predictable, low-engagement encounters even with high enemy counts.",
+    "source_round": 4,
+    "seen_count": 1
   }
 ]

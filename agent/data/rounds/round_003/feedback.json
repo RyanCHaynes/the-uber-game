@@ -1,0 +1,17 @@
+{
+  "round": 3,
+  "level": "level_002",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 2,
+      "completed": false,
+      "deaths": 0,
+      "fall_locations": [],
+      "time_seconds": 23.4,
+      "enemies_killed": 0,
+      "hits_taken": 0,
+      "comment": "This level was trivially easy, all you ahve to do is run allong the bottom to win."
+    }
+  ]
+}

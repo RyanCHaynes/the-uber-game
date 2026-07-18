@@ -4,23 +4,19 @@
   "players": [
     {
       "player": "playtester",
-      "rating": 5,
-      "completed": true,
-      "deaths": 2,
+      "rating": 2,
+      "completed": false,
+      "deaths": 1,
       "fall_locations": [
         {
-          "x": 70,
+          "x": 54,
           "y": 388
-        },
-        {
-          "x": 1267,
-          "y": 318
         }
       ],
-      "time_seconds": 484.1,
-      "enemies_killed": 8,
-      "hits_taken": 6,
-      "comment": "That was fun. But the level was pretty flat. I'd like more verticality."
+      "time_seconds": 24.9,
+      "enemies_killed": 2,
+      "hits_taken": 4,
+      "comment": "The flying enemy is placed too high and uncreachable by projectiles"
     }
   ]
 }
