@@ -1,0 +1,15 @@
+game.tinyfat.dev {
+	encode zstd gzip
+
+	@health path /healthz
+	respond @health "ok" 200
+
+	root * /srv/coinrush-status
+	file_server
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+}

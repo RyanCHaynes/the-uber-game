@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Coin Rush Game Server</title>
+  <meta name="description" content="Connection details for the Coin Rush hackathon game server.">
+  <style>
+    :root { color-scheme: dark; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0d1220; color: #e8edf8; }
+    main { width: min(42rem, calc(100% - 3rem)); padding: 2.5rem; border: 1px solid #39445f; border-radius: 1rem; background: #171e30; box-shadow: 0 1.5rem 5rem #0008; }
+    h1 { margin-top: 0; color: #ffd152; letter-spacing: .04em; }
+    code { display: block; padding: 1rem; border-radius: .5rem; background: #0a0f1b; color: #4fd1c5; font-size: 1.1rem; overflow-wrap: anywhere; }
+    p { line-height: 1.6; color: #b7c1d9; }
+    .note { font-size: .9rem; color: #8995b2; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Coin Rush</h1>
+    <p>Native game clients connect to the authoritative server at:</p>
+    <code>game.tinyfat.dev:53000</code>
+    <p class="note">The game protocol uses raw TCP. This HTTPS page is the connection card; gameplay does not run in the browser.</p>
+  </main>
+</body>
+</html>

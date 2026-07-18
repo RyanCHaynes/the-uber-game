@@ -23,6 +23,16 @@ The server currently bundles one static level. Agent-generated level delivery
 requires a separate protocol change; this deployment does not claim that
 feature yet.
 
+## DNS and Caddy
+
+Create an **unproxied** `A` record from `game.tinyfat.dev` directly to the game
+VM. Native clients connect to `game.tinyfat.dev:53000`; ordinary Caddy and
+Cloudflare HTTP proxying cannot carry the SFML raw TCP protocol.
+
+Caddy serves only the HTTPS connection card and `/healthz` on ports 80/443. The
+game container remains the central authoritative backend on TCP 53000. No
+level-generation worker port should be public.
+
 ## Build and test
 
 From the repository root:
@@ -41,7 +51,25 @@ docker run --rm \
 
 Expected results include `Level test passed` and `Network smoke test passed`.
 
-## Start
+## Install a release
+
+On the dedicated Ubuntu VM, after installing Docker, Compose, and Caddy, run
+from the repository root:
+
+```sh
+sudo SOURCE_COMMIT="$(git rev-parse --short HEAD)" \
+  COINRUSH_IMAGE="coinrush-server:$(git rev-parse --short HEAD)" \
+  ./deploy/install-release.sh
+```
+
+The installer builds the image, runs both smoke tests, starts the hardened
+Compose service, waits for container health, and installs/reloads the Caddy
+connection card. It fails before publication if a build or test fails.
+
+For a source archive without `.git`, supply its recorded commit as
+`SOURCE_COMMIT` explicitly.
+
+## Start manually
 
 ```sh
 docker compose -f deploy/compose.yaml up -d
