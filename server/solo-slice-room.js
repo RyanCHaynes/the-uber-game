@@ -1,4 +1,8 @@
-import { compileTokenRushLevel, FALLBACK_TOKEN_RUSH_LEVEL } from '../shared/token-rush-level.js';
+import {
+  compileTokenRushLevel,
+  FALLBACK_TOKEN_RUSH_LEVEL,
+  TOKEN_RUSH_ACTOR_BODIES,
+} from '../shared/token-rush-level.js';
 
 const SLICE = Object.freeze({
   revision: 'token-rush-level-runtime-v1',
@@ -7,10 +11,10 @@ const SLICE = Object.freeze({
   playerSpeed: 245,
   gravity: 1450,
   jumpSpeed: 570,
-  playerHalfWidth: 18,
-  playerHalfHeight: 24,
-  enemyHalfWidth: 22,
-  enemyHalfHeight: 28,
+  playerHalfWidth: TOKEN_RUSH_ACTOR_BODIES.player.halfWidth,
+  playerHalfHeight: TOKEN_RUSH_ACTOR_BODIES.player.halfHeight,
+  enemyHalfWidth: TOKEN_RUSH_ACTOR_BODIES.enemy.halfWidth,
+  enemyHalfHeight: TOKEN_RUSH_ACTOR_BODIES.enemy.halfHeight,
   attackRange: 72,
   attackCooldownTicks: 16,
   enemyAttackCooldownTicks: 42,

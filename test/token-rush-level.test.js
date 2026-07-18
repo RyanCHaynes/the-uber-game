@@ -9,6 +9,7 @@ import {
   DEFAULT_TOKEN_RUSH_LEVEL_FILE,
   FALLBACK_TOKEN_RUSH_LEVEL,
   loadTokenRushLevelFile,
+  TOKEN_RUSH_ACTOR_BODIES,
   TokenRushLevelError,
   validateTokenRushLevel,
 } from '../shared/token-rush-level.js';
@@ -72,6 +73,42 @@ test('contract rejects unknown keys, floats, bounds, overlap, unsupported placem
     mutate(value);
     rejection(value, code);
   }
+});
+
+test('contract rejects occupied tiles across spawn, exit, enemy, and token classes', async () => {
+  const original = await authoredLevel();
+  const cases = [
+    (value) => { value.enemies[0] = { type: 'crawler', ...value.spawn }; },
+    (value) => { value.enemies[0] = { type: 'crawler', ...value.exit }; },
+    (value) => { value.tokens[0] = { ...value.spawn }; },
+    (value) => { value.tokens[0] = { x: value.enemies[0].x, y: value.enemies[0].y }; },
+    (value) => { value.tokens[0] = { ...value.exit }; },
+  ];
+  for (const mutate of cases) {
+    const value = clone(original);
+    mutate(value);
+    rejection(value, 'ENTITY_OVERLAP');
+  }
+});
+
+test('spawn and enemy clearance checks use their exact authoritative runtime AABBs', async () => {
+  assert.deepEqual(TOKEN_RUSH_ACTOR_BODIES, {
+    player: { halfWidth: 18, halfHeight: 24 },
+    enemy: { halfWidth: 22, halfHeight: 28 },
+  });
+  const original = await authoredLevel();
+
+  const spawnBesideWall = clone(original);
+  spawnBesideWall.solids.push({ x: spawnBesideWall.spawn.x + 1, y: spawnBesideWall.spawn.y, w: 1, h: 2 });
+  rejection(spawnBesideWall, 'SPAWN_SOLID_CLEARANCE');
+
+  const enemyBesideWall = clone(original);
+  enemyBesideWall.solids.push({ x: enemyBesideWall.enemies[0].x + 1, y: enemyBesideWall.enemies[0].y, w: 1, h: 2 });
+  rejection(enemyBesideWall, 'ENEMY_SOLID_CLEARANCE');
+
+  const oneTileGap = clone(original);
+  oneTileGap.solids.push({ x: oneTileGap.spawn.x + 2, y: oneTileGap.spawn.y, w: 1, h: 2 });
+  assert.doesNotThrow(() => validateTokenRushLevel(oneTileGap));
 });
 
 test('invalid or oversized files fail safely to the immutable known-good level', async (context) => {
