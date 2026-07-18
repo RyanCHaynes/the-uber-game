@@ -3,6 +3,7 @@ import './style.css';
 
 import { GAME, SERVER_MESSAGE, TILE } from '../shared/game.js';
 import { prepareLevel } from '../shared/level.js';
+import { updateInputFromKeyboard } from './input.js';
 
 const elements = Object.fromEntries([
   'setup', 'lobby', 'hud', 'winner', 'error', 'player-name', 'join-button',
@@ -347,18 +348,9 @@ function leave() {
   showScreen('setup');
 }
 
-const keyMap = new Map([
-  ['KeyW', 'up'], ['ArrowUp', 'up'],
-  ['KeyS', 'down'], ['ArrowDown', 'down'],
-  ['KeyA', 'left'], ['ArrowLeft', 'left'],
-  ['KeyD', 'right'], ['ArrowRight', 'right'],
-]);
 for (const eventName of ['keydown', 'keyup']) {
   window.addEventListener(eventName, (event) => {
-    const action = keyMap.get(event.code);
-    if (!action) return;
-    event.preventDefault();
-    input[action] = eventName === 'keydown';
+    updateInputFromKeyboard(event, eventName, input);
   });
 }
 setInterval(() => {
