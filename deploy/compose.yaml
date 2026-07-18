@@ -1,0 +1,33 @@
+services:
+  coinrush-server:
+    image: ${COINRUSH_IMAGE:-coinrush-server:local}
+    build:
+      context: ..
+      dockerfile: deploy/server.Dockerfile
+    command: ["--server", "53000"]
+    init: true
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 128m
+    cpus: 0.50
+    pids_limit: 64
+    ports:
+      - "${COINRUSH_BIND_ADDRESS:-0.0.0.0}:${COINRUSH_PORT:-53000}:53000/tcp"
+    healthcheck:
+      test: ["CMD-SHELL", "grep -q ' 00000000:CF08 ' /proc/net/tcp"]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+      start_period: 5s
+    networks:
+      - game
+
+networks:
+  game:
+    driver: bridge

@@ -1,0 +1,7 @@
+.git
+.gitignore
+build
+.cache
+.DS_Store
+coinrush-server.log
+coinrush-server.pid
