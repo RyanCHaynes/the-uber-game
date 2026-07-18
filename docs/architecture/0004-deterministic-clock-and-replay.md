@@ -154,6 +154,8 @@ Inputs for one apply tick are ordered by:
 
 `inputClass` is a release-owned finite ordinal. Lifecycle safety records such as disconnect neutralization apply before ordinary player intent. Participant slots are server assigned. Client sequence is accepted only after monotonic validation. Ingress sequence is the final server-owned tie-break and can never override a lower participant slot or valid earlier client sequence.
 
+The order-key integer profile is unsigned 32-bit and reserves its top values. Player-authored records use `participantSlot` in `0..9` and monotonic `clientSequence` in `0..4294967294`. A system control with no participant uses `participantSlot = 4294967294` (`0xfffffffe`) and `clientSequence = 4294967295` (`0xffffffff`); an administrative control with no participant uses `participantSlot = 4294967295` (`0xffffffff`) and the same missing-client sentinel `clientSequence = 4294967295`. These values are canonical replay data, not nullable fields. Participant-bound safety records use the affected participant's real slot, while their release-owned `inputClass` establishes safety precedence. In the paused-control tuple, the same system/admin `participantSlot` sentinels apply; the admission still carries the canonical missing-client sentinel even though `clientSequence` is not a paused-control sort component. Multiple unowned controls with otherwise equal keys are ordered only by their unique server-owned `ingressSequence`.
+
 Held-control messages establish a complete reviewed control state. Discrete edges such as attack or interact can apply at most once. Multiple accepted updates for one participant in one tick are folded in canonical client-sequence order; the resulting state and every retained edge remain explicit in the admission ledger.
 
 Input silence is measured from the last applied intent in completed ticks, never wall time. At the release-pinned timeout, the Engine deterministically emits and applies one neutralization safety event before ordinary intent; replay derives the same event without a synthetic client message.
@@ -210,7 +212,7 @@ Every assignment is normalized with `>>> 0`. For a requested unsigned range `n` 
 
 ### 9.2 Seed and stream derivation
 
-Each replay segment records a 32-byte master seed. A live seed may be created with a cryptographic source only before the segment begins; the exact bytes become replay data.
+Each replay segment records a 32-byte master seed. A live seed may be created with a cryptographic source only before the segment begins; the exact bytes become replay data. In replay JSON, `masterSeed` is exactly the lowercase hexadecimal encoding of those bytes: a 64-character string matching `^[0-9a-f]{64}$`, with two characters per byte in original byte order. Decoding converts each successive character pair to one byte before seed derivation. Uppercase, a `0x` prefix, whitespace, separators, odd length, any non-hex character, or any decoded length other than 32 bytes is invalid; an encoder must emit the unique lowercase form.
 
 Independent stream state is derived from:
 
@@ -263,7 +265,7 @@ The first record is `segment_header_v1`. It binds at least:
 - protocol, mode, topology, session ID, segment index, and level ID;
 - immutable content revision and manifest digest;
 - tick rate, arithmetic profile, tick-pipeline ID, and RNG profile;
-- 32-byte master seed;
+- `masterSeed`, the exact lowercase 64-hex encoding of the 32-byte master seed defined in Section 9.2;
 - the pinned session-membership revision plus the separately ordered active-level participant IDs/slots and initial presence/absence state;
 - objective/scaling/checkpoint revision digests;
 - canonical initial-state digest and all initial RNG stream states;
@@ -339,7 +341,19 @@ authorityDigest[C] = SHA-256(
 )
 ```
 
-All digest operands after the domain separator are raw bytes. `kindByte` is `0x00` for a tick commit and `0x01` for a control commit. `completedTickOrdinal` is the last completed tick plus one, so `0` unambiguously means no tick has completed and tick `0` encodes as `1`. The header digest derives the genesis `eventDigest[-1]` and `authorityDigest[-1]` through separate schema-fixed domain separators.
+All digest operands after the domain separator are raw bytes. `kindByte` is `0x00` for a tick commit and `0x01` for a control commit. `completedTickOrdinal` is the last completed tick plus one, so `0` unambiguously means no tick has completed and tick `0` encodes as `1`. Let `headerRecordDigest` be the raw 32 bytes obtained by decoding the `segment_header_v1.recordDigest` lowercase hex value. Genesis is exactly:
+
+```text
+eventDigest[-1] = SHA-256(
+  "coin-rush/event-chain-genesis/v1\0" || headerRecordDigest
+)
+authorityDigest[-1] = SHA-256(
+  "coin-rush/authority-chain-genesis/v1\0" ||
+  headerRecordDigest || eventDigest[-1]
+)
+```
+
+The quoted domain strings are their exact UTF-8 bytes followed by one `0x00` byte; `headerRecordDigest` and `eventDigest[-1]` are raw 32-byte operands, never hexadecimal text. No zero digest, omitted operand, parent replay digest, or implementation default may substitute for these formulas.
 
 A tick commit exposes `authorityDigest[C]` as its `tickDigest`; a control commit exposes it as its `controlDigest`. Empty event batches are explicit and still advance both chains. Thus every completed simulation tick has a digest, while lifecycle truth can also change safely during a pause without inventing a tick.
 
