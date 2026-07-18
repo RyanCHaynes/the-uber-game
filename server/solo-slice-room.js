@@ -84,6 +84,7 @@ export class SoloSliceRoom {
     }));
     this.enemy = this.enemies.at(-1) ?? null;
     this.tokens = this.level.tokens.map((token) => ({ ...token, collected: false }));
+    this.dead = false;
     this.input = { left: false, right: false, jump: false, attack: false };
     this.previousInput = { ...this.input };
     this.lastInputSequence = -1;
@@ -138,6 +139,13 @@ export class SoloSliceRoom {
     }
 
     if (!peer.joined) return this.reject(peer, 'Hello required.');
+    if (message.type === 'sliceRestart') {
+      if (Object.keys(message).length !== 1 || (!this.dead && !this.complete)) {
+        return this.reject(peer, 'Restart unavailable.');
+      }
+      this.restartRound();
+      return true;
+    }
     if (message.type !== 'sliceInput') return this.reject(peer, 'Unknown message type.');
     if (!Number.isSafeInteger(message.sequence) || message.sequence <= this.lastInputSequence) {
       return this.reject(peer, 'Invalid input sequence.');
@@ -148,8 +156,25 @@ export class SoloSliceRoom {
       return this.reject(peer, 'Malformed input.');
     }
     this.lastInputSequence = message.sequence;
-    this.input = { left: input.left, right: input.right, jump: input.jump, attack: input.attack };
+    this.input = this.dead || this.complete
+      ? { left: false, right: false, jump: false, attack: false }
+      : { left: input.left, right: input.right, jump: input.jump, attack: input.attack };
     return true;
+  }
+
+  restartRound() {
+    const name = this.player.name;
+    const lastInputSequence = this.lastInputSequence;
+    this.complete = false;
+    this.tickNumber = 0;
+    this.snapshotElapsed = 0;
+    this.feedback = [];
+    this.resetState();
+    this.player.name = name;
+    this.lastInputSequence = lastInputSequence;
+    this.send(this.peer?.socket, { type: 'sliceStart', level: this.levelPayload() });
+    this.emitFeedback('restart', 'The crypt resets. Try again.');
+    this.broadcastSnapshot();
   }
 
   consumeMessageToken(peer) {
@@ -171,11 +196,13 @@ export class SoloSliceRoom {
   tick(seconds) {
     if (!this.running || !this.peer?.joined) return;
     const elapsed = Math.min(Math.max(Number(seconds) || 0, 0), 0.02);
-    if (!this.complete) {
+    if (!this.complete && !this.dead) {
       this.updatePlayer(elapsed);
       this.updateEnemies(elapsed);
-      this.collectTokens();
-      this.checkExit();
+      if (!this.dead) {
+        this.collectTokens();
+        this.checkExit();
+      }
       this.tickNumber += 1;
     }
     this.snapshotElapsed += elapsed;
@@ -188,6 +215,7 @@ export class SoloSliceRoom {
   }
 
   updatePlayer(seconds) {
+    if (this.dead) return;
     const player = this.player;
     const horizontal = Number(this.input.right) - Number(this.input.left);
     player.velocity.x = horizontal * SLICE.playerSpeed;
@@ -275,6 +303,7 @@ export class SoloSliceRoom {
   }
 
   resolvePlayerAttack() {
+    if (this.dead) return;
     const player = this.player;
     const targets = this.enemies
       .filter((enemy) => enemy.alive)
@@ -295,6 +324,7 @@ export class SoloSliceRoom {
   }
 
   updateEnemies(seconds) {
+    if (this.dead) return;
     const player = this.player;
     for (const enemy of this.enemies) {
       if (!enemy.alive) continue;
@@ -310,13 +340,28 @@ export class SoloSliceRoom {
           enemy.attackCooldown === 0 && player.invulnerabilityTicks === 0) {
         enemy.attackCooldown = SLICE.enemyAttackCooldownTicks;
         player.invulnerabilityTicks = 24;
-        player.health = Math.max(1, player.health - 1);
+        player.health = Math.max(0, player.health - 1);
+        if (player.health === 0) {
+          this.killPlayer(enemy);
+          break;
+        }
         this.emitFeedback('playerHurt', `${enemy.name} hits you`);
       }
     }
   }
 
+  killPlayer(enemy) {
+    if (this.dead) return;
+    this.dead = true;
+    this.input = { left: false, right: false, jump: false, attack: false };
+    this.previousInput = { ...this.input };
+    this.player.velocity = { x: 0, y: 0 };
+    this.player.attackTicks = 0;
+    this.emitFeedback('playerDeath', `${enemy.name} defeated you`);
+  }
+
   collectTokens() {
+    if (this.dead) return;
     for (const token of this.tokens) {
       if (token.collected) continue;
       if (Math.abs(token.x - this.player.position.x) <= 32 && Math.abs(token.y - this.player.position.y) <= 44) {
@@ -327,6 +372,7 @@ export class SoloSliceRoom {
   }
 
   checkExit() {
+    if (this.dead) return;
     if (!overlapsRectangle(this.player.position, SLICE.playerHalfWidth, SLICE.playerHalfHeight, this.level.exit)) return;
     this.complete = true;
     this.emitFeedback('complete', 'Token Rush complete. Gate reached.');
@@ -373,6 +419,7 @@ export class SoloSliceRoom {
       revision: this.level.revision,
       tick: this.tickNumber,
       complete: this.complete,
+      dead: this.dead,
       player: {
         id: this.player.id,
         name: this.player.name,
