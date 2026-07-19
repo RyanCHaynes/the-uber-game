@@ -43,7 +43,7 @@ def roster_summary() -> str:
     return enemy_designer.roster_summary()
 
 
-def run_cycle(round_number: int, level_path: Path) -> Path:
+def run_cycle(round_number: int, level_path: Path, level_size: str = "medium") -> Path:
     """Process feedback for `round_number` and write the next level. Returns its path."""
     analyze, design, brain = _get_brains()
     from . import llm
@@ -146,6 +146,7 @@ def run_cycle(round_number: int, level_path: Path) -> Path:
         store.library_summary(), player_comment=player_comment,
         roster_text=roster_summary(),
         object_roster_text=object_designer.roster_summary(), return_plan=True,
+        level_size=level_size,
     )
 
     if brain == "llm":

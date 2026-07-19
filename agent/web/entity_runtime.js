@@ -411,12 +411,16 @@
       }
       // Non-projectile entities (flyers included) are blocked by solid tiles, resolved
       // axis-by-axis so they slide along walls/platforms instead of phasing through.
+      // Only entities that START the step clear of solids are blocked — otherwise a body
+      // that already overlaps a tile (e.g. a multi-tile boss straddling a platform) would
+      // be wedged in place and unable to move toward the player.
+      const clear = !solidBox(entity.x, entity.y, entity.w, entity.h);
       const oldX = entity.x;
       entity.x += entity.vx * dt;
-      if (solidBox(entity.x, entity.y, entity.w, entity.h)) { entity.x = oldX; entity.vx = 0; }
+      if (clear && solidBox(entity.x, entity.y, entity.w, entity.h)) { entity.x = oldX; entity.vx = 0; }
       const oldY = entity.y;
       entity.y += entity.vy * dt;
-      if (solidBox(entity.x, entity.y, entity.w, entity.h)) { entity.y = oldY; entity.vy = 0; }
+      if (clear && solidBox(entity.x, entity.y, entity.w, entity.h)) { entity.y = oldY; entity.vy = 0; }
       const world = bounds();
       if (entity.isRoot) {
         entity.x = Math.max(entity.w / 2, Math.min(world.width - entity.w / 2, entity.x));

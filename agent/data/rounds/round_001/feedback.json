@@ -4,14 +4,102 @@
   "players": [
     {
       "player": "playtester",
-      "rating": 2,
+      "rating": 3,
       "completed": true,
       "deaths": 0,
       "fall_locations": [],
-      "time_seconds": 24.1,
+      "time_seconds": 28.4,
       "enemies_killed": 0,
       "hits_taken": 0,
-      "comment": "It was kind of fun but there were no enemies."
+      "objects_collected": 0,
+      "player_trace": [
+        {
+          "x": 80.0,
+          "y": 368.0,
+          "t_ms": 1
+        },
+        {
+          "x": 80.0,
+          "y": 402.0,
+          "t_ms": 381
+        },
+        {
+          "x": 80.0,
+          "y": 402.0,
+          "t_ms": 1130
+        },
+        {
+          "x": 80.0,
+          "y": 402.0,
+          "t_ms": 1880
+        },
+        {
+          "x": 80.0,
+          "y": 402.0,
+          "t_ms": 2630
+        },
+        {
+          "x": 80.0,
+          "y": 402.0,
+          "t_ms": 3380
+        },
+        {
+          "x": 80.0,
+          "y": 402.0,
+          "t_ms": 4130
+        },
+        {
+          "x": 80.0,
+          "y": 402.0,
+          "t_ms": 4880
+        },
+        {
+          "x": 80.0,
+          "y": 402.0,
+          "t_ms": 5629
+        },
+        {
+          "x": 115.2,
+          "y": 402.0,
+          "t_ms": 6384
+        },
+        {
+          "x": 118.4,
+          "y": 402.0,
+          "t_ms": 7135
+        },
+        {
+          "x": 246.4,
+          "y": 269.9,
+          "t_ms": 7883
+        },
+        {
+          "x": 390.4,
+          "y": 241.8,
+          "t_ms": 8631
+        },
+        {
+          "x": 460.8,
+          "y": 402.0,
+          "t_ms": 9381
+        },
+        {
+          "x": 528.0,
+          "y": 277.9,
+          "t_ms": 10137
+        },
+        {
+          "x": 624.0,
+          "y": 194.7,
+          "t_ms": 10887
+        },
+        {
+          "x": 764.8,
+          "y": 133.8,
+          "t_ms": 11631
+        }
+      ],
+      "comment": "It was fun, but a little too easy because there are no enemies."
     }
   ]
 }

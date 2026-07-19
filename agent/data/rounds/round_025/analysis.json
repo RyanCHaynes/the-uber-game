@@ -1,7 +1,0 @@
-{
-  "diagnosis": "The player spawned on a solid floor with the exit visible 180px to the right on the same elevation. They walked straight to it in ~12 seconds, never jumped, never encountered an enemy, and quit after 19.5s rating it 1/5. The level is a flat corridor with zero verticality, zero hazards, and zero meaningful interaction \u2014 a pure walk simulator.",
-  "lessons": [],
-  "fun_score": 1,
-  "save_level": false,
-  "save_reason": ""
-}

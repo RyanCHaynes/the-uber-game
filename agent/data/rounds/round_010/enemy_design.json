@@ -1,0 +1,25 @@
+{
+  "note": "Reduced Iron Moth seeker missile speed and turn rate to make homing projectiles more dodgeable in narrow corridors; slightly lowered Mech Moth missile homing aggression to reduce unavoidable damage in vertical shafts.",
+  "ops": [
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.speed",
+      0.85
+    ],
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.turnRate",
+      0.85
+    ],
+    [
+      "mul",
+      "mech_moth.entity.missile.motion.speed",
+      0.9
+    ],
+    [
+      "mul",
+      "mech_moth.entity.missile.motion.turnRate",
+      0.9
+    ]
+  ]
+}

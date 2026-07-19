@@ -1,7 +1,41 @@
+import json
+import threading
 import unittest
+import urllib.request
+from http.server import ThreadingHTTPServer
 from pathlib import Path
 
 from agent import webui
+
+
+class LevelSizeEndpointTests(unittest.TestCase):
+    def _server(self):
+        server = ThreadingHTTPServer(("127.0.0.1", 0), webui.Handler)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        return server, f"http://127.0.0.1:{server.server_address[1]}"
+
+    def _post(self, base, path, body):
+        req = urllib.request.Request(base + path, data=json.dumps(body).encode(),
+                                     headers={"Content-Type": "application/json"}, method="POST")
+        try:
+            return urllib.request.urlopen(req, timeout=5).status
+        except urllib.error.HTTPError as err:
+            return err.code
+
+    def test_levelsize_sets_state_and_appears_in_snapshot(self):
+        server, base = self._server()
+        try:
+            self.assertEqual(self._post(base, "/api/levelsize", {"size": "small"}), 200)
+            state = json.loads(urllib.request.urlopen(base + "/api/state", timeout=5).read())
+            self.assertEqual(state["level_size"], "small")
+            # invalid size is rejected and does not change the stored value
+            self.assertEqual(self._post(base, "/api/levelsize", {"size": "huge"}), 400)
+            state = json.loads(urllib.request.urlopen(base + "/api/state", timeout=5).read())
+            self.assertEqual(state["level_size"], "small")
+        finally:
+            server.shutdown()
+            with webui._lock:
+                webui._state["level_size"] = "medium"   # restore default for other tests
 
 
 class TraceTelemetryTests(unittest.TestCase):

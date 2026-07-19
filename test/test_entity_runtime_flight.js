@@ -68,5 +68,27 @@ function hoverEnemy(range) {
         rightEdge <= WALL_COL * TILE + 0.5);
 })();
 
+// --- 3. A multi-tile body overlapping a solid is NOT frozen (boss can still seek) ---
+(() => {
+  const player = { x: 360, y: 300, w: 20, h: 28 };   // adjacent to the boss, within range
+  const PLAT_ROW = 9;                                 // solid row cutting through the boss body
+  const host = RT.create({
+    tile: TILE, isSolid: (c, r) => r === PLAT_ROW,
+    getBounds: () => ({ width: 2000, height: 1200 }),
+    getPlayer: () => player,
+  });
+  const boss = {
+    v: 1, id: "b", name: "B", kind: "boss",
+    root: { id: "b", tags: ["boss"], visual: { shape: "box", size: [2.4, 1.2] },
+      body: { shape: "box", size: [2.4, 1.2], gravity: 0 }, health: { max: 100 },
+      contact: { damage: 1 }, motion: { type: "hover", speed: 2, range: 8 } },
+  };
+  const inst = host.spawn(boss, 300, 300);            // body overlaps the platform row
+  const startX = inst.root.x;
+  for (let i = 0; i < 120; i++) host.update(0, 1 / 60, []);
+  check("boss overlapping a platform still moves toward the adjacent player (not frozen)",
+        inst.root.x > startX + 4);
+})();
+
 if (failures) { console.error(`\n${failures} check(s) failed`); process.exit(1); }
 console.log("\nall entity_runtime flight checks passed");

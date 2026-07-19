@@ -1,0 +1,25 @@
+{
+  "note": "Increased missile_patroller homing missile turn rate and speed to better contest vertical movement in fortress levels; slightly increased drone_carrier drone chase speed and range for vertical pressure.",
+  "ops": [
+    [
+      "mul",
+      "missile_patroller.entity.homing_missile.motion.turnRate",
+      1.25
+    ],
+    [
+      "mul",
+      "missile_patroller.entity.homing_missile.motion.speed",
+      1.15
+    ],
+    [
+      "mul",
+      "drone_carrier.entity.drone.motion.speed",
+      1.2
+    ],
+    [
+      "mul",
+      "drone_carrier.entity.drone.motion.range",
+      1.25
+    ]
+  ]
+}

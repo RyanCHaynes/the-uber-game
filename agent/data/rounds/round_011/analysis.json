@@ -1,7 +1,19 @@
 {
-  "diagnosis": "The level is a massive horizontal corridor (200+ tiles wide) with almost no vertical variation \u2014 the player spawns on a flat floor, runs right across a nearly featureless plane, and the exit sits at the same elevation. Two enemies were killed and one hit was taken, but the 50-second incomplete run with zero falls indicates the player simply stopped engaging. The comment explicitly requests ladders for 'long scaling things,' confirming the absence of meaningful vertical traversal.",
-  "lessons": [],
-  "fun_score": 2,
+  "diagnosis": "The player completed the level in 167 seconds with 6 deaths and 17 hits taken, all from combat. The trace shows extensive back-and-forth movement in the first ~60 seconds around the spawn area (x=60-260) before ascending, followed by repeated vertical traversal attempts with frequent falls back to lower tiers. Multiple combat deaths cluster at specific x-coordinates (1078, 1631, 959, 2633, 2892) indicating enemy placement at ladder tops or narrow corridors creates unavoidable damage zones. The player eventually reaches the exit after persistent retrying, rating it 3/5 with 'It was fun' \u2014 suggesting the core loop works but combat fairness needs tuning.",
+  "lessons": [
+    {
+      "lesson": "Enemy clusters at ladder exits or corridor chokepoints where the player must commit to a climb or jump create unavoidable damage zones that feel unfair rather than challenging.",
+      "category": "enemy_placement",
+      "conditions": [
+        "enemies positioned at ladder tops or narrow corridor entries",
+        "player has no invincibility frames or dodge tools during climb/jump commitment",
+        "no safe observation point before engagement"
+      ],
+      "outcome": "repeated combat deaths at same locations, high hits taken, player stalls or quits",
+      "confidence": 0.9
+    }
+  ],
+  "fun_score": 3,
   "save_level": false,
   "save_reason": ""
 }

@@ -1,0 +1,25 @@
+{
+  "note": "Slightly increased early-game enemy threat to reduce initial boredom: faster Grub patrol, quicker Turret lobs, and faster Wasp projectiles with tighter bobbing.",
+  "ops": [
+    [
+      "mul",
+      "grub.movement.speed",
+      1.15
+    ],
+    [
+      "mul",
+      "turret.attack.cooldown_s",
+      0.85
+    ],
+    [
+      "mul",
+      "wasp.attack.speed",
+      1.2
+    ],
+    [
+      "mul",
+      "wasp.movement.bob",
+      0.85
+    ]
+  ]
+}

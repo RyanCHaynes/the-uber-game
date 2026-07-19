@@ -1,11 +1,30 @@
 {
-  "diagnosis": "The level features a flat, linear layout with minimal vertical variation and sparse enemy placement. The player fell once at (54, 388), likely attempting to engage or avoid the flying enemy ('2') positioned at tile row 6 (y \u2248 192px), which sits above the main platform line and out of reliable projectile range. Despite killing 2 enemies and surviving 4 hits, the player failed to complete the level in 24.9 seconds, citing the flying enemy as unreachable. The exit ('E') is placed at the far right on a high platform (row 7), but without accessible vertical traversal, it remains effectively unreachable. The design lacks meaningful elevation changes and places a key threat in a position that breaks combat fairness.",
+  "diagnosis": "The player spent 180 seconds wandering a large, multi-tiered level without locating the boss or exit, eventually giving up at the spawn point. Two combat deaths occurred in a narrow corridor around x=3200\u20133400 where enemies (likely the '4'/'8' shooters on row 1) can attack from above with little cover. The trace shows extensive backtracking and long idle periods (e.g., 30+ seconds stationary at x\u22483580, y=178), indicating the player was lost, not just challenged. No progress past the upper-right region was made, so the boss/exit placement is effectively unreachable without clearer guidance.",
   "lessons": [
-    "Flying enemies placed above the player's maximum projectile arc create unfair, uncounterable threats that frustrate rather than challenge.",
-    "An exit placed on a high platform without climbable paths or vertical traversal options renders the goal unreachable, turning exploration into guesswork.",
-    "Flat levels with no vertical traversal (climbing/descending) and poorly positioned aerial enemies fail to deliver engaging platforming or combat."
+    {
+      "lesson": "When a level spans multiple vertical tiers connected by sparse ladders or gaps, players fail to build a mental map and abandon the search for objectives.",
+      "category": "traversal",
+      "conditions": [
+        "multi-tier layout",
+        "sparse vertical connections",
+        "no minimap or signposting"
+      ],
+      "outcome": "player wanders, backtracks extensively, and quits without finding boss/exit",
+      "confidence": 0.85
+    },
+    {
+      "lesson": "Placing ranged enemies on elevated platforms above narrow horizontal corridors creates unavoidable damage zones that feel unfair rather than challenging.",
+      "category": "enemy_placement",
+      "conditions": [
+        "ranged enemies on high platforms",
+        "narrow corridor below",
+        "limited dodge space"
+      ],
+      "outcome": "repeated combat deaths in same corridor, frustration",
+      "confidence": 0.8
+    }
   ],
-  "fun_score": 2,
+  "fun_score": 1,
   "save_level": false,
   "save_reason": ""
 }

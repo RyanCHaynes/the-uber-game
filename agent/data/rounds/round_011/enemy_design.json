@@ -1,0 +1,20 @@
+{
+  "note": "Reduced missile patroller homing turn rate and seeker missile turn rate to make projectiles more dodgeable in narrow corridors; slightly lowered iron moth seeker speed to reduce unavoidable damage at ladder tops.",
+  "ops": [
+    [
+      "mul",
+      "missile_patroller.entity.homing_missile.motion.turnRate",
+      0.7
+    ],
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.turnRate",
+      0.8
+    ],
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.speed",
+      0.9
+    ]
+  ]
+}

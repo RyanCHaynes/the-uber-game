@@ -23,7 +23,7 @@ MAX_JUMP_DX = 4
 MAX_JUMP_UP = 4
 
 MIN_ROWS, MAX_ROWS = 8, 40
-MIN_COLS, MAX_COLS = 15, 160
+MIN_COLS, MAX_COLS = 15, 250
 
 
 def parse(text: str) -> tuple[list[list[str]], list[str]]:
@@ -80,15 +80,17 @@ def _standable(grid, c, r) -> bool:
     return grid[r][c] != "X" and grid[r + 1][c] == "X"  # enemy digits count as open space
 
 
-def validate(grid: list[list[str]], min_cols: int | None = None) -> list[str]:
+def validate(grid: list[list[str]], min_cols: int | None = None,
+             max_cols: int | None = None) -> list[str]:
     errors = []
     rows = len(grid)
     cols = len(grid[0]) if grid else 0
     floor = max(MIN_COLS, min_cols or 0)
+    ceil = min(MAX_COLS, max_cols) if max_cols else MAX_COLS
     if not (MIN_ROWS <= rows <= MAX_ROWS):
         errors.append(f"level has {rows} rows; must be between {MIN_ROWS} and {MAX_ROWS}")
-    if not (floor <= cols <= MAX_COLS):
-        errors.append(f"level has {cols} columns; must be between {floor} and {MAX_COLS}")
+    if not (floor <= cols <= ceil):
+        errors.append(f"level has {cols} columns; must be between {floor} and {ceil}")
 
     for symbol, label in (("S", "spawn"), ("E", "exit")):
         count = sum(row.count(symbol) for row in grid)
@@ -152,8 +154,9 @@ def validate(grid: list[list[str]], min_cols: int | None = None) -> list[str]:
     return errors
 
 
-def validate_text(text: str, min_cols: int | None = None) -> list[str]:
+def validate_text(text: str, min_cols: int | None = None,
+                  max_cols: int | None = None) -> list[str]:
     grid, errors = parse(text)
     if errors:
         return errors
-    return validate(grid, min_cols=min_cols)
+    return validate(grid, min_cols=min_cols, max_cols=max_cols)

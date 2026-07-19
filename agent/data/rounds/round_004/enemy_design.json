@@ -1,0 +1,25 @@
+{
+  "note": "Reduced early-game pressure from grubs and wasps near spawn; lowered grub contact damage and patrol speed, reduced wasp fire rate and projectile speed to give player breathing room in the opening corridor.",
+  "ops": [
+    [
+      "mul",
+      "grub.movement.speed",
+      0.7
+    ],
+    [
+      "mul",
+      "grub.contact_damage",
+      0.5
+    ],
+    [
+      "mul",
+      "wasp.attack.cooldown_s",
+      1.5
+    ],
+    [
+      "mul",
+      "wasp.attack.speed",
+      0.7
+    ]
+  ]
+}

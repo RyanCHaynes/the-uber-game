@@ -1,7 +1,0 @@
-{
-  "diagnosis": "The player spawned at (176, 624) on a flat floor and moved right, but repeatedly fell into a deep pit around x=1024\u20131040, y=548 (two recorded falls). After each fall they respawned at the start and retraced the same horizontal corridor, never reaching the exit. The trace shows long stalls at the spawn and at the far right (x\u22481878, y=818) where the player idled for ~20 seconds before the session ended. The level is extremely wide with almost no elevation change, no vertical traversal mechanics, and a deep unclimbable pit that acts as a soft lock. The player rated it 1/5 and commented \"inescapable pit again.\"",
-  "lessons": [],
-  "fun_score": 1,
-  "save_level": false,
-  "save_reason": ""
-}

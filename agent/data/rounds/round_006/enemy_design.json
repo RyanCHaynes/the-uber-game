@@ -1,0 +1,20 @@
+{
+  "note": "Reduced Wasp bob amplitude and patrol range to limit vertical sightline exploitation; slightly lowered Iron Moth seeker turn rate to make homing missiles fairer in vertical shafts.",
+  "ops": [
+    [
+      "mul",
+      "wasp.movement.bob",
+      0.85
+    ],
+    [
+      "mul",
+      "wasp.movement.range",
+      0.9
+    ],
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.turnRate",
+      0.85
+    ]
+  ]
+}

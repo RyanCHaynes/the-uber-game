@@ -150,7 +150,7 @@ class LevelPlanCompilerTests(unittest.TestCase):
             "X,X,X,X,X",
             "X,X,X,X,X",
         ])
-        result = designer.design(current, {}, "", "")
+        result = designer.design(current, {}, "", "", level_size="large")
         grid, errors = csv_level.parse(result)
 
         self.assertEqual(errors, [])
@@ -181,13 +181,50 @@ class LevelPlanCompilerTests(unittest.TestCase):
             "X,X,X,X,X",
         ])
 
-        designer.design(current, {}, "", "")
+        designer.design(current, {}, "", "", level_size="large")
 
         self.assertEqual(complete_json.call_count, 2)
         retry_prompt = complete_json.call_args_list[1].args[1]
         self.assertIn("PREVIOUS INVALID PLAN", retry_prompt)
         self.assertIn('"width":150', retry_prompt)
         self.assertIn("cannot place spawn", retry_prompt)
+
+    def test_validate_max_cols_override_and_raised_ceiling(self):
+        row_top = ["S"] + ["."] * 198 + ["E"]        # 200-wide
+        grid = [list(row_top)] + [["."] * 200 for _ in range(9)] + [["X"] * 200 for _ in range(2)]
+        # 200 wide is legal now (MAX_COLS raised to 250) ...
+        self.assertNotIn("columns", " ".join(csv_level.validate(grid)))
+        # ... but a max_cols override rejects anything wider than the band
+        errs = csv_level.validate(grid, max_cols=120)
+        self.assertTrue(any("columns" in e for e in errs))
+
+    def test_level_size_presets(self):
+        self.assertEqual(designer.LEVEL_SIZES["small"], (50, 50))
+        self.assertEqual(designer.LEVEL_SIZES["medium"], (80, 120))
+        self.assertEqual(designer.LEVEL_SIZES["large"], (150, 250))
+
+    def test_repair_plan_clamps_width_to_size_band(self):
+        wide = self.valid_plan()
+        wide["width"] = 200
+        wide["exit"] = {"x": 40, "y": 9}
+        wide["solids"] = [{"x": 0, "y": 10, "width": 200, "height": 2}]
+        lo, hi = designer.LEVEL_SIZES["small"]
+        small, _ = designer._repair_plan(dict(wide), min_cols=lo, max_cols=hi)
+        self.assertEqual(small["width"], 50)
+        lo, hi = designer.LEVEL_SIZES["medium"]
+        medium, _ = designer._repair_plan(dict(wide), min_cols=lo, max_cols=hi)
+        self.assertEqual(medium["width"], 120)
+
+    @mock.patch("agent.designer.llm.complete_json")
+    def test_design_small_size_produces_50_wide_level(self, complete_json):
+        plan = self.valid_plan()          # width 150
+        plan["exit"] = {"x": 40, "y": 9}  # keep the exit inside a 50-wide grid
+        complete_json.return_value = plan
+        current = "\n".join([".,.,.,.,."] * 9 + [".,S,.,E,.", "X,X,X,X,X", "X,X,X,X,X"])
+        result = designer.design(current, {}, "", "", level_size="small")
+        grid, errors = csv_level.parse(result)
+        self.assertEqual(errors, [])
+        self.assertEqual(len(grid[0]), 50)
 
 
 if __name__ == "__main__":

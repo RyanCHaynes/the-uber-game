@@ -48,7 +48,10 @@ def _bottom_gap_columns(grid) -> list[int]:
 
 def design(level_csv: str, analysis: dict, lessons_text: str, library_text: str,
            player_comment: str = "", roster_text: str = "",
-           object_roster_text: str = "", return_plan: bool = False):
+           object_roster_text: str = "", return_plan: bool = False,
+           level_size: str = "medium"):
+    # NOTE: mock reuses the current grid dimensions; the size toggle only resizes on the
+    # real LLM path. `level_size` is accepted for signature parity.
     grid, _ = csv_level.parse(level_csv)
     rng = random.Random(analysis["diagnosis"])
     rows, cols = len(grid), len(grid[0])

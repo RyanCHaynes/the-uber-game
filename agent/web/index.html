@@ -63,6 +63,10 @@
   .chip { background: var(--panel2); border: 1px solid var(--line); border-radius: 6px;
           padding: 3px 10px; font-size: 12px; cursor: pointer; }
   .chip.sel { border-color: var(--accent); color: var(--accent); }
+  .sizeGroup { display: flex; align-items: center; gap: 4px; }
+  .sizeBtn { background: var(--panel2); border: 1px solid var(--line); border-radius: 6px;
+             padding: 3px 9px; font-size: 12px; cursor: pointer; color: var(--text); }
+  .sizeBtn.on { background: var(--bg); border-color: var(--accent); color: var(--accent); }
   .error { color: var(--red); font-weight: 600; margin-left: 8px; }
   /* feedback form */
   #fbForm { display: none; margin-top: 10px; padding: 12px; background: var(--panel2);
@@ -118,6 +122,12 @@
         <h2 style="margin:0">Playtest</h2>
         <span id="ptName" class="dim"></span>
         <span class="spacer"></span>
+        <span class="sizeGroup" title="Width of the NEXT generated level (applies when you rate this one)">
+          <span class="dim">Next size:</span>
+          <button class="sizeBtn" id="sizeSmall" data-size="small">Small</button>
+          <button class="sizeBtn on" id="sizeMedium" data-size="medium">Medium</button>
+          <button class="sizeBtn" id="sizeLarge" data-size="large">Large</button>
+        </span>
         <label id="soundToggle" title="Sound effects (jump, shots, hits, pickups, victory)" style="display:flex;align-items:center;gap:4px;cursor:pointer">
           <input type="checkbox" id="soundEnabled" checked> 🔊 <span id="soundState" class="dim">on</span>
         </label>
@@ -237,6 +247,7 @@ function render() {
     ? "MOCK (offline)"
     : "LLM (NVIDIA hosted · Nemotron 3 Ultra 550B)";
   $("mode").className = "badge " + state.mode;
+  if (state.level_size) setSizeButtons(state.level_size);
   $("busy").style.display = state.running ? "" : "none";
   if (state.running && state.tokens) {
     const q = state.llm_queue || {};
@@ -913,6 +924,23 @@ $("soundEnabled").addEventListener("change", () => {
   sfx.setEnabled(on);
   $("soundState").textContent = on ? "on" : "off";
 });
+// --- next-level size (Small / Medium / Large) — sets the width of the next generated level ---
+function setSizeButtons(size) {
+  for (const b of document.querySelectorAll(".sizeBtn"))
+    b.classList.toggle("on", b.dataset.size === size);
+}
+for (const b of document.querySelectorAll(".sizeBtn")) {
+  b.addEventListener("click", async () => {
+    const size = b.dataset.size;
+    setSizeButtons(size);
+    try {
+      await fetch("/api/levelsize", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ size }),
+      });
+    } catch (e) { /* server busy; the next poll will resync */ }
+  });
+}
 window.addEventListener("gamepadconnected", updatePadState);
 window.addEventListener("gamepaddisconnected", updatePadState);
 

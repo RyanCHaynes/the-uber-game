@@ -1,84 +1,6 @@
 [
   {
     "id": "OL-001",
-    "lesson": "Select a ladder run only when every cell from top_y through bottom_y in its x column is '.'.",
-    "conditions": [
-      "terrain intersection"
-    ],
-    "outcome": "Prevents ladders from overwriting terrain, entities, spawn, or exit.",
-    "confidence": 0.98,
-    "seen_count": 3,
-    "evidence_rounds": [
-      12
-    ],
-    "role": "object_designer",
-    "category": "validation_failure",
-    "failure_type": "occupied_cells",
-    "last_error": "ladders[0] must cover only '.' empty cells",
-    "last_attempt": 3,
-    "source": "python_validator"
-  },
-  {
-    "id": "OL-002",
-    "lesson": "Choose bottom_y so the cell at (x, bottom_y + 1) is solid X ground.",
-    "conditions": [
-      "ladder grounding"
-    ],
-    "outcome": "Ensures each ladder ends on a mechanically valid lower landing.",
-    "confidence": 0.98,
-    "seen_count": 9,
-    "evidence_rounds": [
-      12,
-      13,
-      14
-    ],
-    "role": "object_designer",
-    "category": "validation_failure",
-    "failure_type": "missing_ground",
-    "last_error": "ladders[0] needs X directly below bottom_y",
-    "last_attempt": 3,
-    "source": "python_validator"
-  },
-  {
-    "id": "OL-003",
-    "lesson": "Use only ladder coordinates inside the supplied grid dimensions; never extrapolate the level width.",
-    "conditions": [
-      "coordinate selection"
-    ],
-    "outcome": "Prevents coordinates that Python cannot map to a grid cell.",
-    "confidence": 0.98,
-    "seen_count": 3,
-    "evidence_rounds": [
-      12
-    ],
-    "role": "object_designer",
-    "category": "validation_failure",
-    "failure_type": "out_of_bounds",
-    "last_error": "ladders[19] needs in-bounds coordinates with top_y < bottom_y",
-    "last_attempt": 3,
-    "source": "python_validator"
-  },
-  {
-    "id": "OL-004",
-    "lesson": "Keep ladder count and total expanded ladder tiles within the limits stated in the prompt.",
-    "conditions": [
-      "large levels"
-    ],
-    "outcome": "Prevents oversized placement batches from invalidating the pass.",
-    "confidence": 0.98,
-    "seen_count": 2,
-    "evidence_rounds": [
-      13
-    ],
-    "role": "object_designer",
-    "category": "validation_failure",
-    "failure_type": "placement_limit",
-    "last_error": "ladders contains 33 runs; maximum is 32",
-    "last_attempt": 2,
-    "source": "python_validator"
-  },
-  {
-    "id": "OL-005",
     "lesson": "Check every proposed ladder against Python's validation feedback before repeating it.",
     "conditions": [
       "validator rejection"
@@ -87,14 +9,19 @@
     "confidence": 0.98,
     "seen_count": 2,
     "evidence_rounds": [
-      26,
-      36
+      6,
+      10
     ],
     "role": "object_designer",
     "category": "validation_failure",
     "failure_type": "other_validation",
     "last_error": "the ladder-free level has prevalidated L candidates; select at least one ladder ID",
     "last_attempt": 1,
-    "source": "python_validator"
+    "source": "python_validator",
+    "successful_corrections": 2,
+    "resolution_rounds": [
+      6,
+      10
+    ]
   }
 ]

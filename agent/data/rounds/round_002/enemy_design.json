@@ -1,25 +1,20 @@
 {
-  "note": "Reduced Iron Moth seeker missile speed and turn rate to ease the dense projectile pressure in the boss corridor where both combat deaths occurred; slightly lowered Mech Moth missile homing to keep its volley readable.",
+  "note": "Reduced turret lob speed and range to lessen unfair pressure in the narrow upper corridor where players died; slightly lowered wasp projectile speed to make dodging easier in tight vertical spaces.",
   "ops": [
     [
       "mul",
-      "iron_moth.entity.seeker.motion.speed",
+      "turret.attack.speed",
+      0.8
+    ],
+    [
+      "mul",
+      "turret.attack.range",
       0.85
     ],
     [
       "mul",
-      "iron_moth.entity.seeker.motion.turnRate",
+      "wasp.attack.speed",
       0.85
-    ],
-    [
-      "mul",
-      "mech_moth.entity.missile.motion.speed",
-      0.9
-    ],
-    [
-      "mul",
-      "mech_moth.entity.missile.motion.turnRate",
-      0.9
     ]
   ]
 }

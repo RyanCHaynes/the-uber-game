@@ -1,7 +1,30 @@
 {
-  "diagnosis": "The level is an extremely long horizontal corridor (over 100 tiles wide) with almost no vertical variation \u2014 the player runs along a flat floor with occasional 3-tile-high platforms and rare 1-tile gaps. The single fall at x=1312 (roughly 41 tiles in) suggests the player misjudged a 3-block jump early on, then continued for nearly two minutes without further deaths but also without meaningful engagement. The comment explicitly requests more 2-block jumps, confirming the jump archetype is repetitive and fatiguing. Completion was false despite low deaths, indicating the player likely quit from boredom rather than difficulty.",
-  "lessons": [],
-  "fun_score": 1,
+  "diagnosis": "The player spent the first 6 seconds stationary at spawn (x=176, y=882) before moving, indicating a lack of immediate engagement. They then traversed a ladder-heavy vertical section with multiple ladders (marked 'L' in CSV) but showed significant backtracking: after reaching x\u22481772 at t=18.8s, they fell to the bottom (x=265) by t=19.6s, then re-climbed the same path. Two combat deaths occurred at x=1817/y=532 and x=2495/y=443 \u2014 both in narrow corridors with enemies on elevated platforms (digits 1-9 in CSV), consistent with lesson_0003. The player stalled for 8+ seconds at x=2294 (t=39\u201342s) near a dense enemy cluster, then fell again, and finally disengaged at spawn (x=73) for the last 6 seconds. Level not completed in 75.5s with 2 deaths and 5 hits taken.",
+  "lessons": [
+    {
+      "lesson": "Multiple visually similar ladders in a vertical corridor without signposting cause players to repeatedly ascend the wrong shaft, fall, and re-climb, wasting time and increasing perceived difficulty.",
+      "category": "traversal",
+      "conditions": [
+        "vertical corridor with 3+ ladders in close horizontal proximity",
+        "no visual differentiation (color, markers, lighting) between ladders",
+        "critical path requires specific ladder sequence"
+      ],
+      "outcome": "player backtracks vertically, stalls at dead ends, re-traverses same segments, and disengages",
+      "confidence": 0.85
+    },
+    {
+      "lesson": "Enemy clusters placed at ladder tops or corridor chokepoints where the player must commit to a jump or climb create unavoidable damage zones that feel unfair, not challenging.",
+      "category": "enemy_placement",
+      "conditions": [
+        "enemies positioned at ladder exits or narrow corridor entries",
+        "player has no invincibility frames or dodge tools during climb/jump commitment",
+        "no safe observation point before engagement"
+      ],
+      "outcome": "repeated combat deaths at same locations, high hits taken, player stalls or quits",
+      "confidence": 0.9
+    }
+  ],
+  "fun_score": 2,
   "save_level": false,
   "save_reason": ""
 }

@@ -1,8 +1,16 @@
 {
-  "diagnosis": "The level consists of a massive, uniform hill of solid blocks with a flat floor and no gaps, platforms, or elevation changes that require jumping. The player simply walks right for 28.8 seconds, takes one hit (likely from the three '1' enemies placed on the slope), and never reaches the exit. The playtester explicitly calls out the lack of terrain variance and over-reliance on 'hills on hills,' confirming the level fails to deliver platforming engagement.",
+  "diagnosis": "The player spawns at (176, 816) inside a fully enclosed 32\u00d732 solid box formed by the bottom two rows of the grid (rows 22-23) and solid tiles at columns 5-7 in row 21. The trace shows the player stationary for ~6.3 s, then moving right only 294 px over the next 12 s while y stays fixed at 818 px \u2014 confirming they never left the spawn cell. Zero deaths, zero falls, and a 1/5 rating with the explicit comment 'spawn inside a box\u2026 cannot get out' make this a hard geometry bug, not a difficulty or pacing issue.",
   "lessons": [
-    "A level composed of a single repeated macro-structure (e.g., one continuous slope) creates mechanical fatigue even if local geometry varies slightly.",
-    "Terrain variance requires distinct spatial contexts \u2014 gaps, platforms at multiple elevations, ceilings, and chokepoints \u2014 not just a continuous height gradient."
+    {
+      "lesson": "Always validate that the spawn tile has at least one orthogonally adjacent empty tile before finalizing a level; a single solid-tile enclosure turns the entire playtest into a hard lock.",
+      "category": "fairness",
+      "conditions": [
+        "procedural or hand-authored level generation",
+        "spawn marker placed without runtime connectivity check"
+      ],
+      "outcome": "player is trapped immediately, cannot move, rates experience 1/5 and quits",
+      "confidence": 1.0
+    }
   ],
   "fun_score": 1,
   "save_level": false,

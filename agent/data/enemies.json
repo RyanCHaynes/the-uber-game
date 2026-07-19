@@ -33,13 +33,13 @@
     ],
     "movement": {
       "type": "patrol",
-      "speed": 54,
+      "speed": 43.47,
       "range": 96
     },
     "attack": {
       "type": "none"
     },
-    "contact_damage": 2
+    "contact_damage": 1
   },
   {
     "id": "turret",
@@ -76,10 +76,10 @@
     },
     "attack": {
       "type": "lob",
-      "cooldown_s": 2.4,
-      "speed": 6.9,
+      "cooldown_s": 2.04,
+      "speed": 5.52,
       "damage": 1,
-      "range": 420,
+      "range": 357,
       "gravity": 0.3,
       "color": "#ffb454"
     },
@@ -120,14 +120,14 @@
     "movement": {
       "type": "flyer",
       "speed": 53.76,
-      "range": 110,
-      "bob": 24.29,
+      "range": 99,
+      "bob": 17.55,
       "bob_hz": 0.9
     },
     "attack": {
       "type": "shoot",
-      "cooldown_s": 1.8,
-      "speed": 4.39,
+      "cooldown_s": 2.29,
+      "speed": 3.91,
       "damage": 1,
       "range": 380,
       "gravity": 0,
@@ -176,8 +176,8 @@
         "motion": {
           "type": "home",
           "target": "player",
-          "speed": 1.73,
-          "turnRate": 43.7
+          "speed": 1.52,
+          "turnRate": 33.41
         },
         "contact": {
           "damage": 1,
@@ -466,8 +466,8 @@
         },
         "motion": {
           "type": "home",
-          "speed": 7.2,
-          "turnRate": 207
+          "speed": 7.45,
+          "turnRate": 214.25
         },
         "contact": {
           "damage": 2,
@@ -742,7 +742,7 @@
         },
         "motion": {
           "type": "velocity",
-          "speed": 10
+          "speed": 11
         },
         "contact": {
           "damage": 1,
@@ -785,7 +785,7 @@
       },
       "motion": {
         "type": "hover",
-        "speed": 2.5,
+        "speed": 2.75,
         "amplitude": 1.2,
         "frequency": 0.8,
         "range": 8
@@ -888,8 +888,8 @@
         },
         "motion": {
           "type": "home",
-          "speed": 4.08,
-          "turnRate": 80.33
+          "speed": 4.69,
+          "turnRate": 70.29
         },
         "contact": {
           "damage": 2,
@@ -1165,8 +1165,8 @@
         },
         "motion": {
           "type": "chase",
-          "speed": 5,
-          "range": 7
+          "speed": 6,
+          "range": 8.75
         },
         "contact": {
           "damage": 1,

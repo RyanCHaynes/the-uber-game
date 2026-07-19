@@ -9,7 +9,12 @@ import json
 from . import csv_level, enemy_designer, llm, object_designer
 
 MAX_ATTEMPTS = 4
-MIN_DESIGN_COLS = 80    # hard floor for designed levels — enforced by validation
+MIN_DESIGN_COLS = 80    # default width floor when no size is selected (Medium)
+
+# UI-selectable level-size presets -> (min width, max width) in columns. The chosen size
+# is threaded from the dashboard through pipeline.run_cycle into design().
+LEVEL_SIZES = {"small": (50, 50), "medium": (80, 120), "large": (150, 250)}
+DEFAULT_LEVEL_SIZE = "medium"
 
 SYSTEM = f"""You are the Designer for a 2D tile platformer that redesigns itself between
 rounds to become more fun. Return ONLY one JSON object describing a level plan. Python
@@ -22,7 +27,7 @@ The player occupies one empty cell. Gravity pulls down. The player can jump at m
 
 Return this exact JSON shape:
 {{
-  "width": <integer {MIN_DESIGN_COLS}-{csv_level.MAX_COLS}>,
+  "width": <integer — match the TARGET LEVEL WIDTH given in the prompt>,
   "height": <integer 12-{csv_level.MAX_ROWS}>,
   "spawn": {{"x": <integer>, "y": <integer>}},
   "exit": {{"x": <integer>, "y": <integer>}},
@@ -95,15 +100,17 @@ def _nearest_cell(grid, desired, occupied, require_ground: bool):
                                         abs(cell[0] - dx), cell[1], cell[0]))
 
 
-def _repair_plan(plan: dict, flying_types: frozenset = frozenset()) -> tuple[dict, list[str]]:
+def _repair_plan(plan: dict, flying_types: frozenset = frozenset(),
+                 min_cols: int = MIN_DESIGN_COLS, max_cols: int | None = None) -> tuple[dict, list[str]]:
     """Deterministically repair mechanical mistakes without redesigning geometry."""
     if not isinstance(plan, dict):
         raise ValueError("level plan must be a JSON object")
+    max_cols = max_cols or csv_level.MAX_COLS
     corrections: list[str] = []
 
     raw_width = _integer(plan.get("width"), "width")
     raw_height = _integer(plan.get("height"), "height")
-    width = min(csv_level.MAX_COLS, max(MIN_DESIGN_COLS, raw_width))
+    width = min(max_cols, max(min_cols, raw_width))
     height = min(csv_level.MAX_ROWS, max(12, raw_height))
     if (width, height) != (raw_width, raw_height):
         corrections.append(
@@ -364,15 +371,16 @@ def _repair_reachability(candidate: str, flying_types: frozenset = frozenset()) 
     ]
 
 
-def _compile_plan(plan: dict) -> str:
+def _compile_plan(plan: dict, min_cols: int = MIN_DESIGN_COLS, max_cols: int | None = None) -> str:
     """Compile a coordinate plan into a compact grid or raise a useful error."""
     if not isinstance(plan, dict):
         raise ValueError("level plan must be a JSON object")
+    max_cols = max_cols or csv_level.MAX_COLS
 
     width = _integer(plan.get("width"), "width")
     height = _integer(plan.get("height"), "height")
-    if not MIN_DESIGN_COLS <= width <= csv_level.MAX_COLS:
-        raise ValueError(f"width must be between {MIN_DESIGN_COLS} and {csv_level.MAX_COLS}")
+    if not min_cols <= width <= max_cols:
+        raise ValueError(f"width must be between {min_cols} and {max_cols}")
     if not 12 <= height <= csv_level.MAX_ROWS:
         raise ValueError(f"height must be between 12 and {csv_level.MAX_ROWS}")
 
@@ -449,13 +457,17 @@ def _compile_plan(plan: dict) -> str:
 
 def design(level_csv: str, analysis: dict, lessons_text: str, library_text: str,
            player_comment: str = "", roster_text: str = "",
-           object_roster_text: str = "", return_plan: bool = False):
+           object_roster_text: str = "", return_plan: bool = False,
+           level_size: str = DEFAULT_LEVEL_SIZE):
     """Return a validated new level as comma-CSV text. Raises RuntimeError on repeated failure."""
     grid, _ = csv_level.parse(level_csv)
     compact_current = csv_level.serialize_compact(grid)
     flying_types = frozenset(enemy_designer.flying_digits())   # roster flyers -> no ground-snap
+    lo, hi = LEVEL_SIZES.get(level_size, LEVEL_SIZES[DEFAULT_LEVEL_SIZE])
+    width_target = (f"exactly {lo} columns wide" if lo == hi else f"{lo}-{hi} columns wide")
     user = (
-        (f"ENEMY ROSTER (digit -> type; draw from the FULL range, not just 1-3):\n"
+        f"TARGET LEVEL WIDTH: make the whole level {width_target}.\n\n"
+        + (f"ENEMY ROSTER (digit -> type; draw from the FULL range, not just 1-3):\n"
          f"{roster_text}\n\n" if roster_text else "")
         + f"CURRENT LEVEL:\n{compact_current}\n"
         f"ANALYST DIAGNOSIS:\n{analysis.get('diagnosis', '(none)')}\n\n"
@@ -485,17 +497,17 @@ def design(level_csv: str, analysis: dict, lessons_text: str, library_text: str,
             label=f"designer (attempt {attempt + 1})" if attempt else "designer",
         )
         try:
-            plan, corrections = _repair_plan(raw_plan, flying_types)
-            candidate = _compile_plan(plan)
+            plan, corrections = _repair_plan(raw_plan, flying_types, min_cols=lo, max_cols=hi)
+            candidate = _compile_plan(plan, min_cols=lo, max_cols=hi)
             validation_errors = csv_level.validate_text(
-                candidate, min_cols=MIN_DESIGN_COLS
+                candidate, min_cols=lo, max_cols=hi
             )
             if any(error.startswith("exit is not reachable from spawn")
                    for error in validation_errors):
                 candidate, connector_corrections = _repair_reachability(candidate, flying_types)
                 corrections.extend(connector_corrections)
                 validation_errors = csv_level.validate_text(
-                    candidate, min_cols=MIN_DESIGN_COLS
+                    candidate, min_cols=lo, max_cols=hi
                 )
             errors = [*corrections, *validation_errors] if validation_errors else []
             if corrections:

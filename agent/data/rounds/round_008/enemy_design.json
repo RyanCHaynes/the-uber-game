@@ -1,0 +1,35 @@
+{
+  "note": "Increased Iron Moth seeker missile speed and turn rate to pressure players who stall; raised Mech Moth missile speed and turn rate for the same reason; slightly increased Sky Sentinel dash speed and feather dart speed to punish stationary play.",
+  "ops": [
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.speed",
+      1.15
+    ],
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.turnRate",
+      1.15
+    ],
+    [
+      "mul",
+      "mech_moth.entity.missile.motion.speed",
+      1.15
+    ],
+    [
+      "mul",
+      "mech_moth.entity.missile.motion.turnRate",
+      1.15
+    ],
+    [
+      "mul",
+      "sky_sentinel.root.motion.speed",
+      1.1
+    ],
+    [
+      "mul",
+      "sky_sentinel.defs.feather_dart.motion.speed",
+      1.1
+    ]
+  ]
+}

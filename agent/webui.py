@@ -30,7 +30,7 @@ ROUNDS_DIR = DATA_DIR / "rounds"
 INDEX_HTML = AGENT_DIR / "web" / "index.html"
 ENTITY_RUNTIME_JS = AGENT_DIR / "web" / "entity_runtime.js"
 
-_state = {"running": False, "log": [], "error": None}
+_state = {"running": False, "log": [], "error": None, "level_size": "medium"}
 _lock = threading.Lock()
 
 
@@ -52,10 +52,10 @@ class _LogWriter:
         pass
 
 
-def _run_agent_cycle(round_number: int, level_path: Path):
+def _run_agent_cycle(round_number: int, level_path: Path, level_size: str = "medium"):
     try:
         with contextlib.redirect_stdout(_LogWriter()):
-            pipeline.run_cycle(round_number, level_path)
+            pipeline.run_cycle(round_number, level_path, level_size)
     except Exception as err:  # surface failures in the UI instead of a dead thread
         with _lock:
             _state["error"] = str(err)
@@ -125,7 +125,10 @@ def _handle_feedback(body: dict) -> tuple[int, dict]:
             f"{p['rating']}/5, {p['deaths']} falls, {p['time_seconds']}s, "
             f"{len(p['player_trace'])} position samples — \"{p['comment']}\""
         )
-    threading.Thread(target=_run_agent_cycle, args=(round_number, level_path), daemon=True).start()
+    with _lock:
+        level_size = _state["level_size"]
+    threading.Thread(target=_run_agent_cycle,
+                     args=(round_number, level_path, level_size), daemon=True).start()
     return 200, {"ok": True, "round": round_number}
 
 
@@ -156,6 +159,7 @@ def _snapshot() -> dict:
             rounds[int(d.name.split("_")[1])] = entry
     with _lock:
         running, log, error = _state["running"], list(_state["log"]), _state["error"]
+        level_size = _state["level_size"]
     from . import object_designer
     return {
         "mode": "mock" if pipeline._use_mock() else "llm",
@@ -164,6 +168,7 @@ def _snapshot() -> dict:
         "llm_queue": llm.queue_status(),
         "running": running,
         "error": error,
+        "level_size": level_size,
         "log": log[-200:],
         "levels": levels,
         "rounds": rounds,
@@ -228,6 +233,14 @@ class Handler(BaseHTTPRequestHandler):
                     return
             _reset()
             self._send(200, {"ok": True})
+        elif self.path == "/api/levelsize":
+            size = self._body().get("size")
+            if size not in ("small", "medium", "large"):
+                self._send(400, {"error": "size must be 'small', 'medium', or 'large'"})
+                return
+            with _lock:
+                _state["level_size"] = size
+            self._send(200, {"ok": True, "level_size": size})
         else:
             self._send(404, {"error": "not found"})
 

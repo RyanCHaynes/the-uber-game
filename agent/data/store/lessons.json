@@ -1,2656 +1,825 @@
 [
   {
     "id": "lesson_0001",
-    "lesson": "Horizontal length without structural variety (elevation changes, vertical traversal mechanics, varied encounter types) creates a one-dimensional grind that causes mechanical fatigue, late-level falls, and disengagement \u2014 even fair individual jumps/enemies cannot prevent this when repetition density is high over hundreds of tiles.",
+    "lesson": "Levels that lack early interaction (enemies, hazards, or meaningful choices) cause player disengagement and low ratings even when the layout is otherwise competent and completable.",
     "category": "pacing",
     "conditions": [
-      "level width exceeds 100 tiles",
-      "platform pattern repeats at fixed spacing",
-      "enemy types and positions repeat per cluster",
-      "no elevation change or structural breaks between clusters",
-      "level width greatly exceeds height",
-      "repeating enemy/platform patterns",
-      "one jump type dominates traversal",
-      "level can be beaten by holding one direction",
-      "zero enemies or hazards present",
-      "exit at same elevation as spawn with no intervening obstacles",
-      "fast completion time with zero deaths/falls",
-      "pit depth exceeds max jump height",
-      "no wall-kick or climb surfaces",
-      "exit located above pit",
-      "level width greatly exceeds height (hundreds of tiles)",
-      "no significant elevation changes over long stretches",
-      "no ladders, climbable walls, or vertical traversal mechanics",
-      "single jump archetype or encounter pattern repeats at high density",
-      "player spawns at bottom with exit at similar elevation",
-      "repetition density is high over hundreds of tiles",
-      "vertical shaft exceeds 10 tiles height",
-      "platform clusters repeat at uniform spacing",
-      "no landmarks, color cues, or structural breaks to mark the critical path",
-      "multiple enemy types placed without spatial hierarchy"
+      "no enemies or hazards in opening segment",
+      "no branching paths or meaningful choices early",
+      "linear traversal dominates first 10+ seconds",
+      "competent platforming layout present",
+      "no enemies present",
+      "no environmental hazards",
+      "linear platforming only",
+      "spawn area has no enemies, hazards, or path choices for 10+ seconds",
+      "linear traversal dominates early level"
     ],
-    "outcome": "player traverses quickly with minimal input variation, backtracks on flat sections, rates level poorly for repetition",
+    "outcome": "player completes level but rates experience as boring/too easy and disengages before gameplay meaningfully begins",
     "confidence": 0.9,
     "source_round": 1,
     "evidence_rounds": [
       1,
-      3,
-      7,
-      8,
-      9,
-      12,
-      24,
-      26,
-      35
+      7
     ],
-    "seen_count": 12,
-    "applied_count": 34,
+    "seen_count": 2,
+    "applied_count": 11,
     "successful_applications": 3,
     "applications": [
       {
-        "design_round": 7,
-        "rating": 3,
+        "design_round": 1,
+        "rating": 1,
         "completed": false,
         "deaths": 2,
         "success": false
       },
       {
-        "design_round": 8,
-        "rating": 2,
+        "design_round": 2,
+        "rating": 1,
         "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 3,
+        "rating": 1,
+        "completed": false,
+        "deaths": 3,
+        "success": false
+      },
+      {
+        "design_round": 4,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 5,
+        "rating": 5,
+        "completed": true,
+        "deaths": 9,
+        "success": true
+      },
+      {
+        "design_round": 6,
+        "rating": 1,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 7,
+        "rating": 5,
+        "completed": true,
         "deaths": 1,
+        "success": true
+      },
+      {
+        "design_round": 8,
+        "rating": 3,
+        "completed": true,
+        "deaths": 0,
         "success": false
       },
       {
         "design_round": 9,
-        "rating": 1,
+        "rating": 3,
         "completed": false,
-        "deaths": 1,
+        "deaths": 2,
         "success": false
       },
       {
         "design_round": 10,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
+        "rating": 3,
+        "completed": true,
+        "deaths": 6,
         "success": false
       },
       {
         "design_round": 11,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 12,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 13,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 14,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 15,
-        "rating": 1,
-        "completed": false,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 16,
-        "rating": 3,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 17,
-        "rating": 3,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 18,
-        "rating": 3,
-        "completed": false,
-        "deaths": 4,
-        "success": false
-      },
-      {
-        "design_round": 19,
-        "rating": 3,
-        "completed": true,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 20,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 21,
-        "rating": 3,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 22,
-        "rating": 2,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 23,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 24,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 25,
-        "rating": 1,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 26,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 27,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 28,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 29,
-        "rating": 3,
-        "completed": true,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 30,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 31,
-        "rating": 4,
+        "rating": 5,
         "completed": true,
         "deaths": 0,
         "success": true
-      },
-      {
-        "design_round": 32,
-        "rating": 4,
-        "completed": true,
-        "deaths": 1,
-        "success": true
-      },
-      {
-        "design_round": 33,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 34,
-        "rating": 3,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 35,
-        "rating": 2,
-        "completed": false,
-        "deaths": 10,
-        "success": false
-      },
-      {
-        "design_round": 36,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 37,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 38,
-        "rating": 4,
-        "completed": true,
-        "deaths": 0,
-        "success": true
-      },
-      {
-        "design_round": 39,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 40
       }
     ],
     "merged_from": [
       {
-        "id": "lesson_0002",
-        "lesson": "Fast completion time with zero deaths/falls signals the level was too easy/under-stimulating rather than well-tuned."
-      },
-      {
-        "id": "lesson_0008",
-        "lesson": "A level that can be beaten by holding one direction with zero player inputs beyond movement provides no engagement and will always rate poorly regardless of polish."
-      },
-      {
         "id": "lesson_0009",
-        "lesson": "Exit placement at the same elevation as spawn with no intervening obstacles turns the level into a walk simulator rather than a platformer."
+        "lesson": "A level that opens with a long safe corridor and no immediate interaction (enemies, hazards, or branching) causes players to disengage before gameplay begins."
+      }
+    ]
+  },
+  {
+    "id": "lesson_0002",
+    "lesson": "When a level contains multiple visually similar vertical connections (ladders, shafts, or gaps) without clear signposting or spatial differentiation, players cannot identify the critical path, leading to extensive backtracking, wrong-route attempts, and eventual abandonment.",
+    "category": "traversal",
+    "conditions": [
+      "multi-tier or vertical layout",
+      "multiple visually similar vertical connections (ladders, shafts, gaps)",
+      "no minimap, signposting, or visual differentiation of the goal path",
+      "objective located behind or above one specific connection",
+      "vertical corridor with 3+ ladders in close horizontal proximity",
+      "critical path requires specific ladder sequence",
+      "multi-tier layout",
+      "sparse vertical connections",
+      "no minimap or signposting",
+      "multiple ladder shafts in a horizontal corridor",
+      "no visual or spatial differentiation of the goal path",
+      "exit/boss located at corridor end behind vertical gate",
+      "no visual differentiation (color, markers, lighting) between ladders"
+    ],
+    "outcome": "player wanders horizontally and vertically, repeatedly attempts wrong routes, stalls at dead ends, and quits without reaching the objective",
+    "confidence": 0.88,
+    "source_round": 2,
+    "evidence_rounds": [
+      2,
+      3,
+      10
+    ],
+    "seen_count": 3,
+    "applied_count": 10,
+    "successful_applications": 3,
+    "applications": [
+      {
+        "design_round": 2,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
       },
       {
-        "id": "lesson_0022",
-        "lesson": "Deep, unclimbable pits at the bottom of a level act as soft locks \u2014 players perceive them as unfair traps rather than skill challenges when no recovery path exists."
+        "design_round": 3,
+        "rating": 1,
+        "completed": false,
+        "deaths": 3,
+        "success": false
       },
       {
-        "id": "lesson_0023",
-        "lesson": "Horizontal length without structural variety (elevation changes, vertical traversal mechanics, varied encounter types) creates a one-dimensional grind that causes mechanical fatigue, late-level falls, and disengagement \u2014 even fair individual jumps/enemies cannot prevent this when repetition density is high over hundreds of tiles."
+        "design_round": 4,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
       },
       {
-        "id": "lesson_0024",
-        "lesson": "When a single jump archetype (e.g., a fixed-height gap or climb) repeats at high density across a long horizontal stretch, it creates mechanical fatigue that manifests as late-level falls and disengagement, even if the jump is fair in isolation."
+        "design_round": 5,
+        "rating": 5,
+        "completed": true,
+        "deaths": 9,
+        "success": true
       },
       {
-        "id": "lesson_0025",
-        "lesson": "A level that spans hundreds of tiles horizontally but offers no way to climb or descend forces the player into a one-dimensional grind; even fair jumps and enemies cannot prevent disengagement when elevation never changes."
+        "design_round": 6,
+        "rating": 1,
+        "completed": true,
+        "deaths": 0,
+        "success": false
       },
       {
-        "id": "lesson_0024",
-        "lesson": "Horizontal length without structural variety (elevation changes, vertical traversal mechanics, varied encounter types) creates a one-dimensional grind that causes mechanical fatigue, late-level falls, and disengagement \u2014 even fair individual jumps/enemies cannot prevent this when repetition density is high over hundreds of tiles."
+        "design_round": 7,
+        "rating": 5,
+        "completed": true,
+        "deaths": 1,
+        "success": true
       },
       {
-        "id": "lesson_0025",
-        "lesson": "Repeating identical platform-enemy clusters at uniform horizontal intervals creates a predictable rhythm that players optimize away, eliminating engagement even when individual jumps or enemies are functional in isolation."
+        "design_round": 8,
+        "rating": 3,
+        "completed": true,
+        "deaths": 0,
+        "success": false
       },
       {
-        "id": "lesson_0022",
-        "lesson": "A repetitive stair-step platform pattern over a long horizontal stretch creates mechanical fatigue even when local jumps are fair, because the player's input rhythm never changes."
+        "design_round": 9,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 10,
+        "rating": 3,
+        "completed": true,
+        "deaths": 6,
+        "success": false
+      },
+      {
+        "design_round": 11,
+        "rating": 5,
+        "completed": true,
+        "deaths": 0,
+        "success": true
+      }
+    ],
+    "merged_from": [
+      {
+        "id": "lesson_0004",
+        "lesson": "When a level's critical path requires ascending through a specific ladder shaft among many visually similar ones, players cannot distinguish the correct route without explicit signposting."
+      },
+      {
+        "id": "lesson_0012",
+        "lesson": "Multiple visually similar ladders in a vertical corridor without signposting cause players to repeatedly ascend the wrong shaft, fall, and re-climb, wasting time and increasing perceived difficulty."
       }
     ]
   },
   {
     "id": "lesson_0003",
-    "lesson": "Enemy variety without terrain variety still yields low engagement \u2014 enemies need diverse spatial contexts (verticality, cover, chokepoints, elevation changes) to create distinct encounters; flat levels cannot provide engaging combat or platforming. Terrain variance requires distinct spatial contexts \u2014 gaps, platforms at multiple elevations, ceilings, and chokepoints \u2014 not just a continuous height gradient or single repeated macro-structure (e.g., stair-step hills, continuous slope), which creates mechanical fatigue even with local geometry variation.",
-    "category": "terrain",
+    "lesson": "Placing ranged enemies on elevated platforms above narrow horizontal corridors creates unavoidable damage zones that feel unfair rather than challenging.",
+    "category": "enemy_placement",
     "conditions": [
-      "level has no vertical traversal (climbing/descending)",
-      "enemies present but placed on flat horizontal plane",
-      "aerial enemies positioned above player's projectile arc",
-      "ladder height exceeds ~8-10 tiles",
-      "ladders are the sole traversal method",
-      "no horizontal ledges, rest platforms, or branching paths along the climb",
-      "no alternative traversal paths (wall-kick, moving platforms, etc.)",
-      "vertical shaft exceeds ~10 tiles height",
-      "no horizontal ledges, platforms, or branching paths along the climb",
-      "ladder height > 8 tiles",
-      "no horizontal ledges or rest platforms on climb",
-      "fall locations cluster at same ladder x-position",
-      "level composed of single repeated macro-structure",
-      "no distinct spatial contexts (gaps, multi-elevation platforms, ceilings, chokepoints)",
-      "continuous height gradient without traversal variety",
-      "level width > 200 tiles",
-      "no mid-level checkpoints or safe zones",
-      "falls occur in second half of level",
-      "respawn returns player to start",
-      "enemy dies but its projectile/hazard remains active",
-      "player can be damaged by remnant hazard after kill",
-      "no visual cue that hazard persists"
+      "ranged enemies on high platforms",
+      "narrow corridor below",
+      "limited dodge space"
     ],
-    "outcome": "players rate level poorly (1-3/5); combat feels unfair or trivial, platforming feels absent; fun and verticality judged as separate axes. Mechanical fatigue, disengagement, poor ratings despite functional local geometry.",
-    "confidence": 0.9,
-    "source_round": 2,
-    "evidence_rounds": [
-      2,
-      5,
-      17,
-      19,
-      23
-    ],
-    "seen_count": 11,
-    "applied_count": 34,
-    "successful_applications": 3,
-    "applications": [
-      {
-        "design_round": 7,
-        "rating": 3,
-        "completed": false,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 8,
-        "rating": 2,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 9,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 10,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 11,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 12,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 13,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 14,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 15,
-        "rating": 1,
-        "completed": false,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 16,
-        "rating": 3,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 17,
-        "rating": 3,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 18,
-        "rating": 3,
-        "completed": false,
-        "deaths": 4,
-        "success": false
-      },
-      {
-        "design_round": 19,
-        "rating": 3,
-        "completed": true,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 20,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 21,
-        "rating": 3,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 22,
-        "rating": 2,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 23,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 24,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 25,
-        "rating": 1,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 26,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 27,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 28,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 29,
-        "rating": 3,
-        "completed": true,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 30,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 31,
-        "rating": 4,
-        "completed": true,
-        "deaths": 0,
-        "success": true
-      },
-      {
-        "design_round": 32,
-        "rating": 4,
-        "completed": true,
-        "deaths": 1,
-        "success": true
-      },
-      {
-        "design_round": 33,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 34,
-        "rating": 3,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 35,
-        "rating": 2,
-        "completed": false,
-        "deaths": 10,
-        "success": false
-      },
-      {
-        "design_round": 36,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 37,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 38,
-        "rating": 4,
-        "completed": true,
-        "deaths": 0,
-        "success": true
-      },
-      {
-        "design_round": 39,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 40
-      }
-    ],
-    "merged_from": [
-      {
-        "id": "lesson_0007",
-        "lesson": "Flat levels with no vertical traversal (climbing/descending) and poorly positioned aerial enemies fail to deliver engaging platforming or combat."
-      },
-      {
-        "id": "lesson_0017",
-        "lesson": "Enemy variety without terrain variety still yields low engagement \u2014 enemies need diverse spatial contexts (verticality, cover, chokepoints) to create distinct encounters."
-      },
-      {
-        "id": "lesson_0017",
-        "lesson": "Long uninterrupted ladder climbs exceeding ~8-10 tiles without rest platforms, horizontal ledges, or alternative traversal paths cause player fatigue and repeated falls at the same height, turning vertical traversal into a punishment loop rather than a skill challenge."
-      },
-      {
-        "id": "lesson_0019",
-        "lesson": "Ladder climbs that exceed 8 tiles in height and lack horizontal ledges, rest platforms, or alternative paths become fatigue traps \u2014 players fall repeatedly at the same height, lose all progress, and perceive the climb as unfair rather than skillful."
-      },
-      {
-        "id": "lesson_0015",
-        "lesson": "Terrain variance requires distinct spatial contexts \u2014 gaps, platforms at multiple elevations, ceilings, and chokepoints \u2014 not just a continuous height gradient or single repeated macro-structure (e.g., stair-step hills, continuous slope), which creates mechanical fatigue even with local geometry variation."
-      },
-      {
-        "id": "lesson_0018",
-        "lesson": "A level composed of a single repeated macro-structure (e.g., one continuous slope) creates mechanical fatigue even if local geometry varies slightly."
-      },
-      {
-        "id": "lesson_0019",
-        "lesson": "Terrain variance requires distinct spatial contexts \u2014 gaps, platforms at multiple elevations, ceilings, and chokepoints \u2014 not just a continuous height gradient."
-      },
-      {
-        "id": "lesson_0018",
-        "lesson": "When a level's horizontal span exceeds 200 tiles without mid-level checkpoints or safe zones, any fall in the latter half forces players to re-traverse 5+ minutes of content, converting challenge into tedium and causing disengagement."
-      },
-      {
-        "id": "lesson_0019",
-        "lesson": "Persistent projectiles or hazards from dead enemies (e.g., stingers, bullets) that remain active after the enemy is killed create perceived unfairness, as players expect threat removal on kill."
-      },
-      {
-        "id": "lesson_0019",
-        "lesson": "When a level's horizontal span exceeds 200 tiles without mid-level checkpoints, any fall in the latter half forces players to re-traverse 5+ minutes of content, converting challenge into tedium and causing disengagement."
-      }
-    ]
-  },
-  {
-    "id": "lesson_0004",
-    "lesson": "Horizontal floor gaps/pits are not perceived as verticality by players even if platforms sit at different heights \u2014 true verticality needs traversal that changes the player's elevation (climbing/descending), not just gaps at one baseline.",
-    "category": "traversal",
-    "conditions": [],
-    "outcome": "",
-    "confidence": 0.6,
+    "outcome": "repeated combat deaths in same corridor, frustration",
+    "confidence": 0.8,
     "source_round": 2,
     "evidence_rounds": [
       2
     ],
     "seen_count": 1,
-    "applied_count": 30,
+    "applied_count": 10,
     "successful_applications": 3,
     "applications": [
       {
-        "design_round": 7,
-        "rating": 3,
+        "design_round": 2,
+        "rating": 1,
         "completed": false,
-        "deaths": 2,
+        "deaths": 0,
         "success": false
       },
       {
-        "design_round": 8,
-        "rating": 2,
+        "design_round": 3,
+        "rating": 1,
         "completed": false,
+        "deaths": 3,
+        "success": false
+      },
+      {
+        "design_round": 4,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 5,
+        "rating": 5,
+        "completed": true,
+        "deaths": 9,
+        "success": true
+      },
+      {
+        "design_round": 6,
+        "rating": 1,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 7,
+        "rating": 5,
+        "completed": true,
         "deaths": 1,
+        "success": true
+      },
+      {
+        "design_round": 8,
+        "rating": 3,
+        "completed": true,
+        "deaths": 0,
         "success": false
       },
       {
         "design_round": 9,
-        "rating": 1,
+        "rating": 3,
         "completed": false,
-        "deaths": 1,
+        "deaths": 2,
         "success": false
       },
       {
         "design_round": 10,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
+        "rating": 3,
+        "completed": true,
+        "deaths": 6,
         "success": false
       },
       {
         "design_round": 11,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 12,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 13,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 14,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 15,
-        "rating": 1,
-        "completed": false,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 16,
-        "rating": 3,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 17,
-        "rating": 3,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 18,
-        "rating": 3,
-        "completed": false,
-        "deaths": 4,
-        "success": false
-      },
-      {
-        "design_round": 19,
-        "rating": 3,
-        "completed": true,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 20,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 22,
-        "rating": 2,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 23,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 24,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 25,
-        "rating": 1,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 26,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 27,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 28,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 29,
-        "rating": 3,
-        "completed": true,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 30,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 31,
-        "rating": 4,
+        "rating": 5,
         "completed": true,
         "deaths": 0,
         "success": true
-      },
-      {
-        "design_round": 32,
-        "rating": 4,
-        "completed": true,
-        "deaths": 1,
-        "success": true
-      },
-      {
-        "design_round": 33,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 34,
-        "rating": 3,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 35,
-        "rating": 2,
-        "completed": false,
-        "deaths": 10,
-        "success": false
-      },
-      {
-        "design_round": 38,
-        "rating": 4,
-        "completed": true,
-        "deaths": 0,
-        "success": true
-      },
-      {
-        "design_round": 39,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
       }
     ],
     "merged_from": []
   },
   {
     "id": "lesson_0005",
-    "lesson": "Flying enemies placed above the player's maximum projectile arc create unfair, uncounterable threats that frustrate rather than challenge.",
-    "category": "enemy_placement",
-    "conditions": [],
-    "outcome": "",
-    "confidence": 0.6,
-    "source_round": 2,
+    "lesson": "Deep pits at the bottom of a level without any climb-out mechanic (ladders, ledges, or wall-jump surfaces) act as permanent fail states that trap players and force a restart.",
+    "category": "fairness",
+    "conditions": [
+      "pit depth exceeds maximum jump height",
+      "no vertical escape routes inside the pit",
+      "pit located on critical path or near exit"
+    ],
+    "outcome": "player falls in, cannot escape, loops at bottom until quitting or timing out",
+    "confidence": 0.95,
+    "source_round": 4,
     "evidence_rounds": [
-      2
+      4
     ],
     "seen_count": 1,
-    "applied_count": 23,
-    "successful_applications": 1,
+    "applied_count": 8,
+    "successful_applications": 3,
     "applications": [
       {
+        "design_round": 4,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 5,
+        "rating": 5,
+        "completed": true,
+        "deaths": 9,
+        "success": true
+      },
+      {
+        "design_round": 6,
+        "rating": 1,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
         "design_round": 7,
-        "rating": 3,
-        "completed": false,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 12,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 13,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 14,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 15,
-        "rating": 1,
-        "completed": false,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 16,
-        "rating": 3,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 17,
-        "rating": 3,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 19,
-        "rating": 3,
-        "completed": true,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 21,
-        "rating": 3,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 22,
-        "rating": 2,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 23,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 25,
-        "rating": 1,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 26,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 27,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 28,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 29,
-        "rating": 3,
-        "completed": true,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 30,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 32,
-        "rating": 4,
+        "rating": 5,
         "completed": true,
         "deaths": 1,
         "success": true
       },
       {
-        "design_round": 34,
+        "design_round": 8,
         "rating": 3,
         "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 35,
-        "rating": 2,
-        "completed": false,
-        "deaths": 10,
-        "success": false
-      },
-      {
-        "design_round": 36,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 37,
-        "rating": 1,
-        "completed": false,
         "deaths": 0,
         "success": false
       },
       {
-        "design_round": 40
+        "design_round": 9,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 10,
+        "rating": 3,
+        "completed": true,
+        "deaths": 6,
+        "success": false
+      },
+      {
+        "design_round": 11,
+        "rating": 5,
+        "completed": true,
+        "deaths": 0,
+        "success": true
       }
     ],
     "merged_from": []
   },
   {
     "id": "lesson_0006",
-    "lesson": "An exit placed on a high platform without climbable paths or vertical traversal options renders the goal unreachable, turning exploration into guesswork.",
-    "category": "fairness",
-    "conditions": [],
-    "outcome": "",
-    "confidence": 0.6,
-    "source_round": 2,
+    "lesson": "When a level opens with a dense cluster of enemies right at the spawn corridor, players who lack offensive upgrades or clear dodge space take repeated unavoidable damage before they can even orient themselves.",
+    "category": "enemy_placement",
+    "conditions": [
+      "multiple enemies placed in the first horizontal corridor",
+      "narrow corridor limits dodge movement",
+      "player starts with minimal combat tools"
+    ],
+    "outcome": "early deaths, frustration, long stall at spawn before first meaningful movement",
+    "confidence": 0.88,
+    "source_round": 4,
     "evidence_rounds": [
-      2
+      4
     ],
     "seen_count": 1,
-    "applied_count": 15,
-    "successful_applications": 1,
+    "applied_count": 8,
+    "successful_applications": 3,
     "applications": [
       {
-        "design_round": 11,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 12,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 14,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 15,
+        "design_round": 4,
         "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 5,
+        "rating": 5,
+        "completed": true,
+        "deaths": 9,
+        "success": true
+      },
+      {
+        "design_round": 6,
+        "rating": 1,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 7,
+        "rating": 5,
+        "completed": true,
+        "deaths": 1,
+        "success": true
+      },
+      {
+        "design_round": 8,
+        "rating": 3,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 9,
+        "rating": 3,
         "completed": false,
         "deaths": 2,
         "success": false
       },
       {
-        "design_round": 16,
+        "design_round": 10,
         "rating": 3,
-        "completed": false,
-        "deaths": 1,
+        "completed": true,
+        "deaths": 6,
         "success": false
       },
       {
-        "design_round": 17,
-        "rating": 3,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 18,
-        "rating": 3,
-        "completed": false,
-        "deaths": 4,
-        "success": false
-      },
-      {
-        "design_round": 21,
-        "rating": 3,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 24,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 26,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 27,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 28,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 31,
-        "rating": 4,
+        "design_round": 11,
+        "rating": 5,
         "completed": true,
         "deaths": 0,
         "success": true
+      }
+    ],
+    "merged_from": []
+  },
+  {
+    "id": "lesson_0007",
+    "lesson": "Always validate that the spawn tile has at least one orthogonally adjacent empty tile before finalizing a level; a single solid-tile enclosure turns the entire playtest into a hard lock.",
+    "category": "fairness",
+    "conditions": [
+      "procedural or hand-authored level generation",
+      "spawn marker placed without runtime connectivity check"
+    ],
+    "outcome": "player is trapped immediately, cannot move, rates experience 1/5 and quits",
+    "confidence": 1.0,
+    "source_round": 5,
+    "evidence_rounds": [
+      5
+    ],
+    "seen_count": 1,
+    "applied_count": 7,
+    "successful_applications": 3,
+    "applications": [
+      {
+        "design_round": 5,
+        "rating": 5,
+        "completed": true,
+        "deaths": 9,
+        "success": true
       },
       {
-        "design_round": 33,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 37,
+        "design_round": 6,
         "rating": 1,
-        "completed": false,
+        "completed": true,
         "deaths": 0,
         "success": false
+      },
+      {
+        "design_round": 7,
+        "rating": 5,
+        "completed": true,
+        "deaths": 1,
+        "success": true
+      },
+      {
+        "design_round": 8,
+        "rating": 3,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 9,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 10,
+        "rating": 3,
+        "completed": true,
+        "deaths": 6,
+        "success": false
+      },
+      {
+        "design_round": 11,
+        "rating": 5,
+        "completed": true,
+        "deaths": 0,
+        "success": true
+      }
+    ],
+    "merged_from": []
+  },
+  {
+    "id": "lesson_0008",
+    "lesson": "Vertical level layouts with overlapping sightlines between tiers allow players to trivialize combat by attacking enemies from safe elevations outside intended engagement zones.",
+    "category": "combat",
+    "conditions": [
+      "multi-tier vertical layout",
+      "ladders or platforms connecting tiers",
+      "enemies placed on platforms with clear vertical sightlines to other tiers",
+      "no line-of-sight blockers or engagement range limits"
+    ],
+    "outcome": "player kills enemies from different level tiers without risk, bypassing intended combat challenge",
+    "confidence": 0.92,
+    "source_round": 6,
+    "evidence_rounds": [
+      6
+    ],
+    "seen_count": 1,
+    "applied_count": 6,
+    "successful_applications": 2,
+    "applications": [
+      {
+        "design_round": 6,
+        "rating": 1,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 7,
+        "rating": 5,
+        "completed": true,
+        "deaths": 1,
+        "success": true
+      },
+      {
+        "design_round": 8,
+        "rating": 3,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 9,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 10,
+        "rating": 3,
+        "completed": true,
+        "deaths": 6,
+        "success": false
+      },
+      {
+        "design_round": 11,
+        "rating": 5,
+        "completed": true,
+        "deaths": 0,
+        "success": true
       }
     ],
     "merged_from": []
   },
   {
     "id": "lesson_0010",
-    "lesson": "Stationary shooters placed on the same horizontal plane as the player's movement path become harmless if the player can pass beneath their firing arc \u2014 vertical offset or elevation change is required to make them threatening.",
-    "category": "enemy_placement",
-    "conditions": [],
-    "outcome": "",
-    "confidence": 0.6,
-    "source_round": 4,
-    "evidence_rounds": [
-      4
+    "lesson": "Repetitive staircase traversal without vertical variation (drops, shafts, multi-tier platforms) creates a flat difficulty curve that feels like a hallway, not a vertical level.",
+    "category": "variety",
+    "conditions": [
+      "primary path is a uniform ascending stair pattern",
+      "no vertical branches, pits, or layered platforms",
+      "enemies placed on same plane as traversal"
     ],
-    "seen_count": 3,
-    "applied_count": 30,
-    "successful_applications": 3,
+    "outcome": "player completes level quickly with low challenge and explicitly criticizes lack of vertical diversity",
+    "confidence": 0.85,
+    "source_round": 7,
+    "evidence_rounds": [
+      7
+    ],
+    "seen_count": 1,
+    "applied_count": 5,
+    "successful_applications": 2,
     "applications": [
       {
         "design_round": 7,
-        "rating": 3,
-        "completed": false,
-        "deaths": 2,
-        "success": false
+        "rating": 5,
+        "completed": true,
+        "deaths": 1,
+        "success": true
       },
       {
         "design_round": 8,
-        "rating": 2,
+        "rating": 3,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 9,
+        "rating": 3,
         "completed": false,
-        "deaths": 1,
+        "deaths": 2,
         "success": false
       },
       {
         "design_round": 10,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
+        "rating": 3,
+        "completed": true,
+        "deaths": 6,
         "success": false
       },
       {
         "design_round": 11,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 12,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 13,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 14,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 15,
-        "rating": 1,
-        "completed": false,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 16,
-        "rating": 3,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 18,
-        "rating": 3,
-        "completed": false,
-        "deaths": 4,
-        "success": false
-      },
-      {
-        "design_round": 19,
-        "rating": 3,
-        "completed": true,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 20,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 21,
-        "rating": 3,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 22,
-        "rating": 2,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 23,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 25,
-        "rating": 1,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 26,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 27,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 28,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 29,
-        "rating": 3,
-        "completed": true,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 30,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 31,
-        "rating": 4,
+        "rating": 5,
         "completed": true,
         "deaths": 0,
         "success": true
-      },
-      {
-        "design_round": 32,
-        "rating": 4,
-        "completed": true,
-        "deaths": 1,
-        "success": true
-      },
-      {
-        "design_round": 33,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 34,
-        "rating": 3,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 35,
-        "rating": 2,
-        "completed": false,
-        "deaths": 10,
-        "success": false
-      },
-      {
-        "design_round": 36,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 37,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 38,
-        "rating": 4,
-        "completed": true,
-        "deaths": 0,
-        "success": true
-      },
-      {
-        "design_round": 40
       }
     ],
-    "merged_from": [
+    "merged_from": []
+  },
+  {
+    "id": "lesson_0009",
+    "lesson": "Extended horizontal corridors with sparse verticality and minimal enemy pressure create a 'hallway' feel that players complete but rate as trivial, even with a high fun score, because the challenge never escalates.",
+    "category": "pacing",
+    "conditions": [
+      "long horizontal spans >2000px",
+      "enemy density <0.01 per tile",
+      "vertical variation limited to isolated platforms",
+      "completion time >240s with <5 deaths"
+    ],
+    "outcome": "player completes quickly, backtracks extensively, rates experience as too easy despite length",
+    "confidence": 0.85,
+    "source_round": 8,
+    "evidence_rounds": [
+      8
+    ],
+    "seen_count": 1,
+    "applied_count": 4,
+    "successful_applications": 1,
+    "applications": [
       {
-        "id": "lesson_0012",
-        "lesson": "Turrets or stationary shooters placed on wide horizontal platforms become harmless if the player can pass beneath their firing arc \u2014 elevation or vertical offset is required for threat relevance."
+        "design_round": 8,
+        "rating": 3,
+        "completed": true,
+        "deaths": 0,
+        "success": false
       },
       {
-        "id": "lesson_0013",
-        "lesson": "Stationary shooters placed on the same elevation as the player's movement path become irrelevant if the player can pass beneath their firing line \u2014 vertical offset or elevation change is required to make them threatening."
+        "design_round": 9,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 10,
+        "rating": 3,
+        "completed": true,
+        "deaths": 6,
+        "success": false
+      },
+      {
+        "design_round": 11,
+        "rating": 5,
+        "completed": true,
+        "deaths": 0,
+        "success": true
       }
-    ]
+    ],
+    "merged_from": []
   },
   {
     "id": "lesson_0011",
-    "lesson": "Repeating identical enemy-and-platform patterns without variation in spacing, height, or timing creates predictable, low-engagement encounters that players optimize away.",
-    "category": "enemy_placement",
+    "lesson": "A boss that does not actively seek, attack, or react to the player at a meaningful distance turns the level's climax into a non-event, negating all prior traversal effort.",
+    "category": "combat",
     "conditions": [
-      "identical platform-enemy clusters repeat at fixed spacing",
-      "no variation in spacing, height, or timing",
-      "no elevation change or structural breaks between clusters",
-      "long horizontal traversal precedes final vertical section",
-      "no mid-level checkpoints or safe zones before finale",
-      "final section requires repeated precise climbs"
+      "boss entity present at level end",
+      "boss has no aggro range or pursuit behavior",
+      "player can approach boss without triggering engagement",
+      "flat or open arena allows safe approach"
     ],
-    "outcome": "player traverses quickly with minimal input variation, backtracks on flat sections, rates level poorly for repetition",
-    "confidence": 0.78,
-    "source_round": 4,
+    "outcome": "player reaches boss, waits or attacks freely, defeats it without risk, rates experience as incomplete or broken",
+    "confidence": 0.95,
+    "source_round": 9,
     "evidence_rounds": [
-      4,
-      17
+      9
     ],
-    "seen_count": 3,
-    "applied_count": 30,
-    "successful_applications": 3,
+    "seen_count": 1,
+    "applied_count": 3,
+    "successful_applications": 1,
     "applications": [
       {
-        "design_round": 7,
+        "design_round": 9,
         "rating": 3,
         "completed": false,
         "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 8,
-        "rating": 2,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 9,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
         "success": false
       },
       {
         "design_round": 10,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 13,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 14,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 15,
-        "rating": 1,
-        "completed": false,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 21,
-        "rating": 3,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 24,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 17,
-        "rating": 3,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 18,
-        "rating": 3,
-        "completed": false,
-        "deaths": 4,
-        "success": false
-      },
-      {
-        "design_round": 19,
         "rating": 3,
         "completed": true,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 20,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 22,
-        "rating": 2,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 23,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 25,
-        "rating": 1,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 26,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 27,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 28,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 29,
-        "rating": 3,
-        "completed": true,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 30,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 31,
-        "rating": 4,
-        "completed": true,
-        "deaths": 0,
-        "success": true
-      },
-      {
-        "design_round": 32,
-        "rating": 4,
-        "completed": true,
-        "deaths": 1,
-        "success": true
-      },
-      {
-        "design_round": 33,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 34,
-        "rating": 3,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 35,
-        "rating": 2,
-        "completed": false,
-        "deaths": 10,
-        "success": false
-      },
-      {
-        "design_round": 36,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 37,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 38,
-        "rating": 4,
-        "completed": true,
-        "deaths": 0,
-        "success": true
-      },
-      {
-        "design_round": 39,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      }
-    ],
-    "merged_from": [
-      {
-        "id": "lesson_0014",
-        "lesson": "Repeating identical platform-and-turret patterns without variation in spacing, height, or timing create predictable, low-engagement encounters that players optimize away."
-      },
-      {
-        "id": "lesson_0014",
-        "lesson": "Vertical challenge clusters near the level end amplify perceived difficulty spikes \u2014 players who traverse long horizontal stretches expect the finale to test mastery, not introduce new traversal demands without checkpoints."
-      }
-    ]
-  },
-  {
-    "id": "lesson_0016",
-    "lesson": "Collision transitions between sloped ramps and flat ceilings produce unexpected falls that feel unfair rather than challenging.",
-    "category": "fairness",
-    "conditions": [],
-    "outcome": "",
-    "confidence": 0.6,
-    "source_round": 5,
-    "evidence_rounds": [
-      5
-    ],
-    "seen_count": 1,
-    "applied_count": 9,
-    "successful_applications": 0,
-    "applications": [
-      {
-        "design_round": 7,
-        "rating": 3,
-        "completed": false,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 8,
-        "rating": 2,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 9,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 12,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 13,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 16,
-        "rating": 3,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 20,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 29,
-        "rating": 3,
-        "completed": true,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 30,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      }
-    ],
-    "merged_from": []
-  },
-  {
-    "id": "lesson_0020",
-    "lesson": "Spawn points must be validated for clear vertical and horizontal clearance \u2014 at minimum one empty tile above and to each side \u2014 before a level is considered playable.",
-    "category": "other",
-    "conditions": [],
-    "outcome": "",
-    "confidence": 0.6,
-    "source_round": 6,
-    "evidence_rounds": [
-      6
-    ],
-    "seen_count": 1,
-    "applied_count": 21,
-    "successful_applications": 2,
-    "applications": [
-      {
-        "design_round": 10,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
+        "deaths": 6,
         "success": false
       },
       {
         "design_round": 11,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 12,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 13,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 14,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 15,
-        "rating": 1,
-        "completed": false,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 16,
-        "rating": 3,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 17,
-        "rating": 3,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 18,
-        "rating": 3,
-        "completed": false,
-        "deaths": 4,
-        "success": false
-      },
-      {
-        "design_round": 20,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 22,
-        "rating": 2,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 23,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 26,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 27,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 28,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 29,
-        "rating": 3,
-        "completed": true,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 31,
-        "rating": 4,
+        "rating": 5,
         "completed": true,
         "deaths": 0,
         "success": true
-      },
-      {
-        "design_round": 32,
-        "rating": 4,
-        "completed": true,
-        "deaths": 1,
-        "success": true
-      },
-      {
-        "design_round": 33,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 34,
-        "rating": 3,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 37,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
       }
     ],
     "merged_from": []
   },
   {
-    "id": "lesson_0021",
-    "lesson": "A level that prevents the first player input (movement/jump) fails before any design intent can be evaluated; structural validity is a prerequisite for fun, not a result of it.",
-    "category": "traversal",
-    "conditions": [],
-    "outcome": "",
-    "confidence": 0.6,
-    "source_round": 6,
-    "evidence_rounds": [
-      6
-    ],
-    "seen_count": 1,
-    "applied_count": 25,
-    "successful_applications": 2,
-    "applications": [
-      {
-        "design_round": 7,
-        "rating": 3,
-        "completed": false,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 8,
-        "rating": 2,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 9,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 12,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 13,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 14,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 15,
-        "rating": 1,
-        "completed": false,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 16,
-        "rating": 3,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 17,
-        "rating": 3,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 18,
-        "rating": 3,
-        "completed": false,
-        "deaths": 4,
-        "success": false
-      },
-      {
-        "design_round": 19,
-        "rating": 3,
-        "completed": true,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 23,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 25,
-        "rating": 1,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 26,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 27,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 28,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 29,
-        "rating": 3,
-        "completed": true,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 30,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 31,
-        "rating": 4,
-        "completed": true,
-        "deaths": 0,
-        "success": true
-      },
-      {
-        "design_round": 33,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 34,
-        "rating": 3,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 35,
-        "rating": 2,
-        "completed": false,
-        "deaths": 10,
-        "success": false
-      },
-      {
-        "design_round": 36,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 38,
-        "rating": 4,
-        "completed": true,
-        "deaths": 0,
-        "success": true
-      },
-      {
-        "design_round": 39,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      }
-    ],
-    "merged_from": []
-  },
-  {
-    "id": "lesson_0014",
-    "lesson": "The first jump from spawn must be comfortably within the player's maximum horizontal jump distance; an impassable opening jump hard-blocks the entire level regardless of later design quality.",
-    "category": "fairness",
-    "conditions": [
-      "spawn on ground floor with immediate gap",
-      "gap width exceeds max jump range",
-      "no alternative path or lower route",
-      "player trace shows zero vertical movement and early stall"
-    ],
-    "outcome": "player cannot make first input meaningful, quits within seconds, rates 2/5",
-    "confidence": 0.95,
-    "source_round": 29,
-    "evidence_rounds": [
-      29
-    ],
-    "seen_count": 1,
-    "applied_count": 11,
-    "successful_applications": 3,
-    "applications": [
-      {
-        "design_round": 29,
-        "rating": 3,
-        "completed": true,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 30,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 31,
-        "rating": 4,
-        "completed": true,
-        "deaths": 0,
-        "success": true
-      },
-      {
-        "design_round": 32,
-        "rating": 4,
-        "completed": true,
-        "deaths": 1,
-        "success": true
-      },
-      {
-        "design_round": 33,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 34,
-        "rating": 3,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 36,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 37,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 38,
-        "rating": 4,
-        "completed": true,
-        "deaths": 0,
-        "success": true
-      },
-      {
-        "design_round": 39,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 40
-      }
-    ],
-    "merged_from": []
-  },
-  {
-    "id": "lesson_0017",
-    "lesson": "Enemies placed outside the player's mandatory movement path \u2014 even if visually present \u2014 do not create engagement; they must intersect the critical path or guard meaningful alternatives to function as threats.",
+    "id": "lesson_0012",
+    "lesson": "Enemy clusters at ladder exits or corridor chokepoints where the player must commit to a climb or jump create unavoidable damage zones that feel unfair rather than challenging.",
     "category": "enemy_placement",
     "conditions": [
-      "enemies placed on non-traversed tiles (e.g., under platforms, off critical path)",
-      "player completes level without killing enemies or taking damage",
-      "player trace shows no deviation toward enemy positions",
-      "enemies do not project threat into traversal space (no projectiles, no patrol into path)"
+      "enemies positioned at ladder tops or narrow corridor entries",
+      "player has no invincibility frames or dodge tools during climb/jump commitment",
+      "no safe observation point before engagement",
+      "enemies positioned at ladder exits or narrow corridor entries"
     ],
-    "outcome": "player ignores enemies entirely, completes level quickly with zero interaction, rates experience as lacking challenge despite functional platforming",
-    "confidence": 0.92,
-    "source_round": 30,
+    "outcome": "repeated combat deaths at same locations, high hits taken, player stalls or quits",
+    "confidence": 0.9,
+    "source_round": 11,
     "evidence_rounds": [
-      30
-    ],
-    "seen_count": 1,
-    "applied_count": 11,
-    "successful_applications": 3,
-    "applications": [
-      {
-        "design_round": 30,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 31,
-        "rating": 4,
-        "completed": true,
-        "deaths": 0,
-        "success": true
-      },
-      {
-        "design_round": 32,
-        "rating": 4,
-        "completed": true,
-        "deaths": 1,
-        "success": true
-      },
-      {
-        "design_round": 33,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 34,
-        "rating": 3,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 35,
-        "rating": 2,
-        "completed": false,
-        "deaths": 10,
-        "success": false
-      },
-      {
-        "design_round": 36,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 37,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 38,
-        "rating": 4,
-        "completed": true,
-        "deaths": 0,
-        "success": true
-      },
-      {
-        "design_round": 39,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 40
-      }
-    ],
-    "merged_from": []
-  },
-  {
-    "id": "lesson_0018",
-    "lesson": "Enemy density and type variety must scale with level length and platforming complexity \u2014 sparse or homogeneous enemy placement on a long horizontal traversal creates a combat vacuum that undermines engagement even when platforming is solid.",
-    "category": "enemy_placement",
-    "conditions": [
-      "level width exceeds 100 tiles",
-      "platforming provides consistent engagement",
-      "enemy count is low relative to traversal time",
-      "enemy types lack diversity (e.g., only ground-based or single archetype)",
-      "player completes level with minimal hits and zero deaths"
-    ],
-    "outcome": "player rates level highly for platforming but explicitly calls out combat as too easy, requesting more and varied enemies",
-    "confidence": 0.85,
-    "source_round": 32,
-    "evidence_rounds": [
-      32
-    ],
-    "seen_count": 1,
-    "applied_count": 9,
-    "successful_applications": 2,
-    "applications": [
-      {
-        "design_round": 32,
-        "rating": 4,
-        "completed": true,
-        "deaths": 1,
-        "success": true
-      },
-      {
-        "design_round": 33,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 34,
-        "rating": 3,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 35,
-        "rating": 2,
-        "completed": false,
-        "deaths": 10,
-        "success": false
-      },
-      {
-        "design_round": 36,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 37,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 38,
-        "rating": 4,
-        "completed": true,
-        "deaths": 0,
-        "success": true
-      },
-      {
-        "design_round": 39,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 40
-      }
-    ],
-    "merged_from": []
-  },
-  {
-    "id": "lesson_0019",
-    "lesson": "A memorable boss or set-piece encounter at the level's end can elevate the overall rating despite repetitive mid-level structure, as players weight peak moments heavily in retrospective judgment.",
-    "category": "pacing",
-    "conditions": [
-      "level has a distinct, challenging final encounter (boss or unique enemy placement)",
-      "mid-level structure is repetitive or grindy",
-      "player completes the level and experiences the finale"
-    ],
-    "outcome": "player rates level highly (4/5) and explicitly praises the ending, overlooking mid-level fatigue",
-    "confidence": 0.85,
-    "source_round": 33,
-    "evidence_rounds": [
-      33,
-      35
+      10,
+      11
     ],
     "seen_count": 2,
-    "applied_count": 3,
-    "successful_applications": 0,
-    "applications": [
-      {
-        "design_round": 33,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 35,
-        "rating": 2,
-        "completed": false,
-        "deaths": 10,
-        "success": false
-      },
-      {
-        "design_round": 39,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      }
-    ],
-    "merged_from": []
-  },
-  {
-    "id": "lesson_0015",
-    "lesson": "A pit deeper than the player's maximum jump height with no climbable walls, ladders, or alternative escape routes creates an inescapable trap that halts progress entirely, regardless of surrounding design quality.",
-    "category": "fairness",
-    "conditions": [
-      "pit depth exceeds max jump height",
-      "no wall-kick or climb surfaces",
-      "exit located above pit",
-      "no alternative path or mid-level checkpoint before pit"
-    ],
-    "outcome": "player falls repeatedly, cannot recover, spends 2+ minutes trapped, fails to complete level, rates 2/5 despite enjoying enemy placement",
-    "confidence": 0.95,
-    "source_round": 34,
-    "evidence_rounds": [
-      34
-    ],
-    "seen_count": 1,
-    "applied_count": 4,
-    "successful_applications": 0,
-    "applications": [
-      {
-        "design_round": 34,
-        "rating": 3,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 35,
-        "rating": 2,
-        "completed": false,
-        "deaths": 10,
-        "success": false
-      },
-      {
-        "design_round": 36,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 40
-      }
-    ],
-    "merged_from": []
-  },
-  {
-    "id": "lesson_0023",
-    "lesson": "When ladders are the sole vertical traversal method, enemies placed on or directly adjacent to ladder tiles create unavoidable damage because the player cannot dodge while climbing.",
-    "category": "enemy_placement",
-    "conditions": [
-      "ladders are the only way to change elevation",
-      "enemies occupy ladder-adjacent tiles or fire into ladder shafts",
-      "no horizontal ledges or rest platforms exist on the climb"
-    ],
-    "outcome": "player takes repeated unavoidable hits, falls off ladders, and perceives the challenge as unfair rather than skill-based",
-    "confidence": 0.92,
-    "source_round": 36,
-    "evidence_rounds": [
-      36
-    ],
-    "seen_count": 1,
-    "applied_count": 4,
-    "successful_applications": 0,
-    "applications": [
-      {
-        "design_round": 36,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 37,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 39,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 40
-      }
-    ],
-    "merged_from": []
-  },
-  {
-    "id": "lesson_0024",
-    "lesson": "A spawn on a featureless floor with no visible exit, platform, or directional cue causes extended idle time before the first meaningful input, even when the level is technically traversable.",
-    "category": "fairness",
-    "conditions": [
-      "spawn on flat floor with no adjacent platforms or gaps",
-      "exit far away and not visible from spawn",
-      "no arrows, lighting, or terrain hints toward critical path",
-      "spawn sits on a flat floor with no nearby platforms or cues",
-      "exit is far away and not visible from spawn",
-      "no arrows, lighting, or terrain hints guide the first move"
-    ],
-    "outcome": "player idles for 39-55 seconds at start, engagement drops before gameplay begins",
-    "confidence": 0.92,
-    "source_round": 36,
-    "evidence_rounds": [
-      36,
-      38,
-      39
-    ],
-    "seen_count": 3,
-    "applied_count": 3,
+    "applied_count": 2,
     "successful_applications": 1,
     "applications": [
       {
-        "design_round": 36,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
+        "design_round": 10,
+        "rating": 3,
+        "completed": true,
+        "deaths": 6,
         "success": false
       },
       {
-        "design_round": 38,
-        "rating": 4,
+        "design_round": 11,
+        "rating": 5,
         "completed": true,
         "deaths": 0,
         "success": true
-      },
-      {
-        "design_round": 39,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
       }
     ],
     "merged_from": [
       {
-        "id": "lesson_0025",
-        "lesson": "A spawn on a featureless floor with no visible exit, platform, or directional cue causes extended idle time before the first meaningful input, even when the level is technically traversable."
-      },
-      {
-        "id": "lesson_0026",
-        "lesson": "Extended idle time at spawn occurs when the critical path isn't visually telegraphed from the starting position, even if the level is technically traversable."
+        "id": "lesson_0013",
+        "lesson": "Enemy clusters placed at ladder tops or corridor chokepoints where the player must commit to a jump or climb create unavoidable damage zones that feel unfair, not challenging."
       }
     ]
   },
   {
-    "id": "lesson_0022",
-    "lesson": "Long horizontal corridors without checkpoints amplify enemy density into a difficulty spike; each death resets the entire traversal, turning a manageable challenge into a war of attrition.",
-    "category": "pacing",
-    "conditions": [
-      "level width exceeds 100 tiles",
-      "no mid-level checkpoints or safe zones",
-      "enemy density is high on the critical path"
-    ],
-    "outcome": "player dies repeatedly, loses all progress on each death, and quits before reaching the exit",
-    "confidence": 0.88,
-    "source_round": 37,
-    "evidence_rounds": [
-      37
-    ],
-    "seen_count": 1,
-    "applied_count": 4,
-    "successful_applications": 1,
-    "applications": [
-      {
-        "design_round": 37,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 38,
-        "rating": 4,
-        "completed": true,
-        "deaths": 0,
-        "success": true
-      },
-      {
-        "design_round": 39,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 40
-      }
-    ],
-    "merged_from": []
-  },
-  {
-    "id": "lesson_0025",
-    "lesson": "Use the full enemy roster, not just the basic ground types. Vary enemy types across each level \u2014 draw from every digit available in the roster, and use flying enemies, ranged units, and bosses (higher digits) as deliberate mid- and late-level set-pieces. Levels that reuse only the first two or three enemy types feel monotonous even when the platforming is good.",
+    "id": "lesson_0013",
+    "lesson": "In tall, fortress-style levels with extended vertical shafts, ground-only enemies fail to contest the player's climb, creating a difficulty vacuum that flying or projectile enemies would fill.",
     "category": "enemy_placement",
     "conditions": [
-      "designing any combat level",
-      "roster contains more than three enemy types"
+      "vertical level with long ladder shafts or climbable structures",
+      "enemies limited to ground-based types",
+      "player has ranged or upward attack capability"
     ],
-    "outcome": "more varied, memorable combat",
-    "confidence": 0.9,
-    "source_round": 40,
+    "outcome": "player ascends unchallenged, combat feels trivial despite imposing architecture",
+    "confidence": 0.85,
+    "source_round": 12,
     "evidence_rounds": [
-      40
+      12
     ],
-    "seen_count": 1,
-    "applied_count": 1,
+    "seen_count": 2,
+    "applied_count": 0,
     "successful_applications": 0,
-    "applications": [
-      {
-        "design_round": 40
-      }
-    ],
-    "merged_from": []
-  },
-  {
-    "id": "lesson_0026",
-    "lesson": "When a level exceeds ~100 tiles in width, enemy variety must scale with length \u2014 introducing new enemy types (flying, ranged, bosses) at deliberate intervals \u2014 to prevent combat from becoming a repetitive background texture that players ignore.",
-    "category": "enemy_placement",
-    "conditions": [
-      "level width > 100 tiles",
-      "enemy roster contains >3 types",
-      "current level uses only first 2-3 enemy types",
-      "player completes or attempts long horizontal traversal"
-    ],
-    "outcome": "player kills zero enemies, takes minimal damage, rates level 1/5 and explicitly requests more enemy variety",
-    "confidence": 0.95,
-    "source_round": 40,
-    "evidence_rounds": [
-      40
-    ],
-    "seen_count": 1,
-    "applied_count": 1,
-    "successful_applications": 0,
-    "applications": [
-      {
-        "design_round": 40
-      }
-    ],
+    "applications": [],
     "merged_from": []
   }
 ]
