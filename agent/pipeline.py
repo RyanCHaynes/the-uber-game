@@ -38,12 +38,9 @@ def latest_level() -> Path:
 
 
 def roster_summary() -> str:
-    """One line per enemy type, for the designer's prompt: '1: Grub — ...'"""
-    path = DATA_DIR / "enemies.json"
-    if not path.exists():
-        return ""
-    roster = json.loads(path.read_text())
-    return "\n".join(f"{i + 1}: {e['name']} — {e.get('desc', '')}" for i, e in enumerate(roster))
+    """One line per enemy type from the Enemy Designer's canonical roster."""
+    from . import enemy_designer
+    return enemy_designer.roster_summary()
 
 
 def run_cycle(round_number: int, level_path: Path) -> Path:
@@ -126,10 +123,14 @@ def run_cycle(round_number: int, level_path: Path) -> Path:
     if brain == "llm":
         print("  evaluating enemy roster (enemy designer)...")
         try:
-            enemy_designer.adapt_and_write(
+            enemy_patch = enemy_designer.adapt_and_write(
                 analysis, feedback, round_number,
                 store.format_lessons(selected_memory),
             )
+            if enemy_patch:
+                (feedback_path.parent / "enemy_design.json").write_text(
+                    json.dumps(enemy_patch, indent=2)
+                )
         except Exception as err:
             # Enemy adaptation is optional; it must never block the next level.
             print(f"  enemy designer skipped after error: {err}")

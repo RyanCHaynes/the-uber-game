@@ -148,7 +148,7 @@ def _snapshot() -> dict:
     if ROUNDS_DIR.exists():
         for d in sorted(ROUNDS_DIR.glob("round_*")):
             entry = {}
-            for name in ("feedback", "analysis", "object_design"):
+            for name in ("feedback", "analysis", "object_design", "enemy_design"):
                 p = d / f"{name}.json"
                 if p.exists():
                     entry[name] = json.loads(p.read_text())
