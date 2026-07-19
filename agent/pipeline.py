@@ -138,7 +138,7 @@ def run_cycle(round_number: int, level_path: Path) -> Path:
             )
             print(
                 f"  object designer applied {len(object_patch.get('placements', []))} "
-                "prevalidated ladder placement(s)"
+                "prevalidated object placement(s)"
             )
             (feedback_path.parent / "object_design.json").write_text(
                 json.dumps(object_patch, indent=2)

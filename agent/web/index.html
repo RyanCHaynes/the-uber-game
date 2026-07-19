@@ -532,7 +532,7 @@ let ptLoopStarted = false, chosenRating = 0, runCompleted = false;
 let fps = 0, fpsFrames = 0, fpsWindowStart = performance.now();
 
 // combat state
-const MAX_HP = 3, SHOT_COOLDOWN = 320, SHOT_SPEED = 10, SHOT_G = 0.35, SHOT_LOFT = 1.5;
+const MAX_HP = 3, SHOT_COOLDOWN = 320, SHOT_SPEED = 15, SHOT_G = 0.35, SHOT_LOFT = 1.5;
 let roster = [], enemySpawns = [], enemies = [], playerShots = [], enemyShots = [];
 let objectCatalog = [], objectBySymbol = {}, collectedObjects = new Set(), objectsCollected = 0;
 let mouse = { x: 0, y: 0 };
@@ -580,7 +580,7 @@ function damagePlayer(dmg, now) {
   invulnUntil = now + 1000;
   if (hp <= 0) {
     falls++;
-    fallLocations.push({ x: Math.round(player.x), y: Math.round(player.y) });
+    fallLocations.push({ x: Math.round(player.x), y: Math.round(player.y), cause: "combat" });
     player.x = world.spawn.c * TILE + 6; player.y = world.spawn.r * TILE + 2;
     player.vx = player.vy = 0;
     hp = MAX_HP;
@@ -768,7 +768,9 @@ cv2.addEventListener("mousedown", e => {
 
 function ptStep() {
   if (!player || phase !== "playing") return;
-  const SPEED = 3.2, JUMP = 9.6, GRAVITY = 0.5, MAX_FALL = 12;
+  // 11.76 is sqrt(1.5) times the old 9.6 impulse, producing 50% more
+  // jump height under the unchanged gravity rather than 125% more height.
+  const SPEED = 3.2, JUMP = 11.76, GRAVITY = 0.5, MAX_FALL = 12;
   player.vx = (keys.ArrowLeft || keys.KeyA ? -SPEED : 0) + (keys.ArrowRight || keys.KeyD ? SPEED : 0);
   const onLadder = touchingObjects().find(hit => hit.def.behavior === "ladder");
   if (onLadder && !keys.Space) {
@@ -812,7 +814,7 @@ function ptStep() {
   // fell out of the world -> record it, respawn
   if (player.y > world.rows * TILE + 100) {
     falls++;
-    fallLocations.push({ x: Math.round(player.x), y: Math.round(world.rows * TILE - 16) });
+    fallLocations.push({ x: Math.round(player.x), y: Math.round(world.rows * TILE - 16), cause: "fall" });
     player.x = world.spawn.c * TILE + 6; player.y = world.spawn.r * TILE + 2;
     player.vx = player.vy = 0;
   }
@@ -834,6 +836,8 @@ function ptStep() {
       player.vy = -(+params.launch_speed || 11.5); player.grounded = false;
     } else if (hit.def.behavior === "hazard") {
       damagePlayer(+params.damage || 1, now);
+    } else if (hit.def.behavior === "heal" && hp < MAX_HP && !collectedObjects.has(hit.key)) {
+      hp = MAX_HP; collectedObjects.add(hit.key); objectsCollected++;
     } else if (hit.def.behavior === "collectible" && !collectedObjects.has(hit.key)) {
       collectedObjects.add(hit.key); objectsCollected++;
     }
@@ -946,7 +950,8 @@ function ptDraw() {
       ctx2.fillRect(c * TILE, r * TILE, TILE, 4);
     } else if (objectBySymbol[symbol]) {
       const def = objectBySymbol[symbol], x = c * TILE, y = r * TILE;
-      if (def.behavior === "collectible" && collectedObjects.has(`${c},${r}`)) continue;
+      if ((def.behavior === "collectible" || def.behavior === "heal")
+          && collectedObjects.has(`${c},${r}`)) continue;
       ctx2.fillStyle = def.color || "#6fc3ff";
       if (def.behavior === "ladder") {
         ctx2.fillRect(x + 7, y, 4, TILE); ctx2.fillRect(x + 21, y, 4, TILE);
@@ -960,6 +965,9 @@ function ptDraw() {
           ctx2.beginPath(); ctx2.moveTo(x + sx, y + 30); ctx2.lineTo(x + sx + 4, y + 10);
           ctx2.lineTo(x + sx + 8, y + 30); ctx2.closePath(); ctx2.fill();
         }
+      } else if (def.behavior === "heal") {
+        ctx2.font = "bold 27px system-ui"; ctx2.textAlign = "center";
+        ctx2.fillText("♥", x + 16, y + 26);
       } else {
         ctx2.beginPath(); ctx2.arc(x + 16, y + 16, 8, 0, Math.PI * 2); ctx2.fill();
       }

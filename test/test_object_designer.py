@@ -8,6 +8,12 @@ from agent import object_designer
 
 
 class ObjectDesignerTests(unittest.TestCase):
+    def flat_level(self):
+        grid = [list("." * 15) for _ in range(12)]
+        grid[9][2] = "S"; grid[9][12] = "E"
+        grid[10] = list("X" * 15); grid[11] = list("X" * 15)
+        return "\n".join(",".join(row) for row in grid)
+
     def base_level(self):
         grid = [list("." * 15) for _ in range(12)]
         grid[9][2] = "S"
@@ -79,10 +85,8 @@ class ObjectDesignerTests(unittest.TestCase):
         self.assertGreaterEqual(candidate["upper_platform_width"], 3)
 
     def test_tiny_decorative_platform_is_not_a_ladder_candidate(self):
-        grid = [list("." * 15) for _ in range(12)]
-        grid[9][2] = "S"; grid[9][12] = "E"
+        grid = [row.split(",") for row in self.flat_level().splitlines()]
         grid[8][7] = "X"  # one unsupported-looking decorative block
-        grid[10] = list("X" * 15); grid[11] = list("X" * 15)
         level = "\n".join(",".join(row) for row in grid)
         candidates, errors = object_designer.ladder_candidates(level)
         self.assertEqual(errors, [])
@@ -107,6 +111,40 @@ class ObjectDesignerTests(unittest.TestCase):
         self.assertGreater(candidate["inaccessible_coverage"], 0)
         self.assertNotEqual(candidate["unlocked_region_id"], "none")
 
+    def test_heart_candidate_maps_prior_combat_death_to_reachable_ground(self):
+        with tempfile.TemporaryDirectory() as directory:
+            data_dir = Path(directory)
+            levels_dir = data_dir / "levels"
+            levels_dir.mkdir()
+            (levels_dir / "level_004.csv").write_text(self.base_level())
+            feedback = {
+                "level": "level_004",
+                "players": [{
+                    "deaths": 2, "hits_taken": 7,
+                    "fall_locations": [
+                        {"x": 320, "y": 200, "cause": "combat"},
+                        {"x": 326, "y": 205, "cause": "combat"},
+                    ],
+                }],
+            }
+            with mock.patch.object(object_designer, "DATA_DIR", data_dir):
+                candidates, errors = object_designer.heart_candidates(
+                    self.base_level(), feedback
+                )
+
+        self.assertEqual(errors, [])
+        self.assertEqual(len(candidates), 1)
+        candidate = candidates[0]
+        self.assertEqual(candidate["id"], "H001")
+        self.assertEqual(candidate["combat_deaths"], 2)
+        self.assertEqual(candidate["priority"], "critical_recovery")
+        edited, errors = object_designer._apply_placement_patch(
+            self.base_level(), {"placements": ["H001"]}, candidates
+        )
+        self.assertEqual(errors, [])
+        rows = [row.split(",") for row in edited.strip().splitlines()]
+        self.assertEqual(rows[candidate["y"]][candidate["x"]], "H")
+
     def test_rejects_isolated_or_destructive_object_placement(self):
         candidates, _ = object_designer.ladder_candidates(self.base_level())
         malformed = {"placements": [123]}
@@ -117,6 +155,13 @@ class ObjectDesignerTests(unittest.TestCase):
             self.base_level(), invented, candidates
         )
         self.assertIn("unknown candidate IDs", " ".join(errors))
+
+    def test_ladder_free_level_must_select_an_available_candidate(self):
+        candidates, _ = object_designer.ladder_candidates(self.base_level())
+        _, errors = object_designer._apply_placement_patch(
+            self.base_level(), {"placements": []}, candidates
+        )
+        self.assertIn("select at least one ladder", " ".join(errors))
 
     def test_validation_failures_become_deduplicated_resolvable_lessons(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -157,23 +202,24 @@ class ObjectDesignerTests(unittest.TestCase):
                 },
             ]))
             with mock.patch.object(object_designer, "LESSONS_PATH", lessons_path):
+                level = self.flat_level()
                 edited, result = object_designer.place_objects(
-                    self.base_level(), {"width": 15, "height": 12,
+                    level, {"width": 15, "height": 12,
                                         "solids": [{"x": 0, "y": 10, "width": 15, "height": 2}]},
                     {"diagnosis": "route needs clarity"},
                     {"players": [{"comment": "I got lost"}]}, 4,
                 )
                 lessons = object_designer.load_lessons()
-        self.assertEqual(edited.strip(), self.base_level().strip())
+        self.assertEqual(edited.strip(), level.strip())
         self.assertEqual(result, {"placements": []})
         self.assertEqual(lessons[0]["role"], "object_designer")
         prompt = complete_json.call_args.args[1]
         system = complete_json.call_args.args[0]
         self.assertNotIn("GENERATED GAME FILE", prompt)
-        self.assertNotIn(self.base_level(), prompt)
+        self.assertNotIn(level, prompt)
         self.assertIn("GENERATED JSON LEVEL PLAN", prompt)
         self.assertIn('"width":15', prompt)
-        self.assertIn("POTENTIAL PREVALIDATED LADDER AREAS", prompt)
+        self.assertIn("PREVALIDATED OBJECT PLACEMENT CANDIDATES", prompt)
         self.assertIn("Use ladders to clarify", system)
         self.assertIn("Avoid evenly spaced decorative ladders", system)
         self.assertIn("COMPLETE PERSISTENT", system)

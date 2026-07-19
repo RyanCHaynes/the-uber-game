@@ -17,7 +17,7 @@
       3
     ],
     "seen_count": 5,
-    "applied_count": 12,
+    "applied_count": 15,
     "successful_applications": 0,
     "applications": [
       {
@@ -98,7 +98,28 @@
         "success": false
       },
       {
-        "design_round": 18
+        "design_round": 18,
+        "rating": 3,
+        "completed": false,
+        "deaths": 4,
+        "success": false
+      },
+      {
+        "design_round": 19,
+        "rating": 3,
+        "completed": true,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 20,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 21
       }
     ],
     "merged_from": [
@@ -133,7 +154,7 @@
       5
     ],
     "seen_count": 3,
-    "applied_count": 12,
+    "applied_count": 15,
     "successful_applications": 0,
     "applications": [
       {
@@ -214,7 +235,28 @@
         "success": false
       },
       {
-        "design_round": 18
+        "design_round": 18,
+        "rating": 3,
+        "completed": false,
+        "deaths": 4,
+        "success": false
+      },
+      {
+        "design_round": 19,
+        "rating": 3,
+        "completed": true,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 20,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 21
       }
     ],
     "merged_from": [
@@ -240,7 +282,7 @@
       2
     ],
     "seen_count": 1,
-    "applied_count": 12,
+    "applied_count": 14,
     "successful_applications": 0,
     "applications": [
       {
@@ -321,7 +363,25 @@
         "success": false
       },
       {
-        "design_round": 18
+        "design_round": 18,
+        "rating": 3,
+        "completed": false,
+        "deaths": 4,
+        "success": false
+      },
+      {
+        "design_round": 19,
+        "rating": 3,
+        "completed": true,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 20,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
       }
     ],
     "merged_from": []
@@ -338,7 +398,7 @@
       2
     ],
     "seen_count": 1,
-    "applied_count": 7,
+    "applied_count": 9,
     "successful_applications": 0,
     "applications": [
       {
@@ -389,6 +449,16 @@
         "completed": false,
         "deaths": 0,
         "success": false
+      },
+      {
+        "design_round": 19,
+        "rating": 3,
+        "completed": true,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 21
       }
     ],
     "merged_from": []
@@ -405,7 +475,7 @@
       2
     ],
     "seen_count": 1,
-    "applied_count": 7,
+    "applied_count": 8,
     "successful_applications": 0,
     "applications": [
       {
@@ -451,7 +521,14 @@
         "success": false
       },
       {
-        "design_round": 18
+        "design_round": 18,
+        "rating": 3,
+        "completed": false,
+        "deaths": 4,
+        "success": false
+      },
+      {
+        "design_round": 21
       }
     ],
     "merged_from": []
@@ -468,7 +545,7 @@
       4
     ],
     "seen_count": 3,
-    "applied_count": 10,
+    "applied_count": 13,
     "successful_applications": 0,
     "applications": [
       {
@@ -535,7 +612,28 @@
         "success": false
       },
       {
-        "design_round": 18
+        "design_round": 18,
+        "rating": 3,
+        "completed": false,
+        "deaths": 4,
+        "success": false
+      },
+      {
+        "design_round": 19,
+        "rating": 3,
+        "completed": true,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 20,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 21
       }
     ],
     "merged_from": [
@@ -561,7 +659,7 @@
       4
     ],
     "seen_count": 2,
-    "applied_count": 7,
+    "applied_count": 8,
     "successful_applications": 0,
     "applications": [
       {
@@ -612,6 +710,9 @@
         "completed": false,
         "deaths": 2,
         "success": false
+      },
+      {
+        "design_round": 21
       }
     ],
     "merged_from": [
@@ -637,7 +738,7 @@
       5
     ],
     "seen_count": 3,
-    "applied_count": 8,
+    "applied_count": 11,
     "successful_applications": 0,
     "applications": [
       {
@@ -690,7 +791,28 @@
         "success": false
       },
       {
-        "design_round": 18
+        "design_round": 18,
+        "rating": 3,
+        "completed": false,
+        "deaths": 4,
+        "success": false
+      },
+      {
+        "design_round": 19,
+        "rating": 3,
+        "completed": true,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 20,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 21
       }
     ],
     "merged_from": [
@@ -716,7 +838,7 @@
       5
     ],
     "seen_count": 1,
-    "applied_count": 6,
+    "applied_count": 7,
     "successful_applications": 0,
     "applications": [
       {
@@ -760,6 +882,13 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 20,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
       }
     ],
     "merged_from": []
@@ -776,7 +905,7 @@
       6
     ],
     "seen_count": 1,
-    "applied_count": 9,
+    "applied_count": 10,
     "successful_applications": 0,
     "applications": [
       {
@@ -836,7 +965,18 @@
         "success": false
       },
       {
-        "design_round": 18
+        "design_round": 18,
+        "rating": 3,
+        "completed": false,
+        "deaths": 4,
+        "success": false
+      },
+      {
+        "design_round": 20,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
       }
     ],
     "merged_from": []
@@ -851,94 +991,6 @@
     "source_round": 6,
     "evidence_rounds": [
       6
-    ],
-    "seen_count": 1,
-    "applied_count": 10,
-    "successful_applications": 0,
-    "applications": [
-      {
-        "design_round": 7,
-        "rating": 3,
-        "completed": false,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 8,
-        "rating": 2,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 9,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 12,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 13,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 14,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 15,
-        "rating": 1,
-        "completed": false,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 16,
-        "rating": 3,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 17,
-        "rating": 3,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 18
-      }
-    ],
-    "merged_from": []
-  },
-  {
-    "id": "lesson_0022",
-    "lesson": "Deep, unclimbable pits at the bottom of a level act as soft locks \u2014 players perceive them as unfair traps rather than skill challenges when no recovery path exists.",
-    "category": "fairness",
-    "conditions": [
-      "pit depth exceeds max jump height",
-      "no wall-kick or climb surfaces",
-      "exit located above pit"
-    ],
-    "outcome": "player falls, cannot recover, rates level poorly despite earlier engagement",
-    "confidence": 0.85,
-    "source_round": 7,
-    "evidence_rounds": [
-      7
     ],
     "seen_count": 1,
     "applied_count": 11,
@@ -966,6 +1018,105 @@
         "success": false
       },
       {
+        "design_round": 12,
+        "rating": 2,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 13,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 14,
+        "rating": 2,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 15,
+        "rating": 1,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 16,
+        "rating": 3,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 18,
+        "rating": 3,
+        "completed": false,
+        "deaths": 4,
+        "success": false
+      },
+      {
+        "design_round": 19,
+        "rating": 3,
+        "completed": true,
+        "deaths": 2,
+        "success": false
+      }
+    ],
+    "merged_from": []
+  },
+  {
+    "id": "lesson_0022",
+    "lesson": "Deep, unclimbable pits at the bottom of a level act as soft locks \u2014 players perceive them as unfair traps rather than skill challenges when no recovery path exists.",
+    "category": "fairness",
+    "conditions": [
+      "pit depth exceeds max jump height",
+      "no wall-kick or climb surfaces",
+      "exit located above pit"
+    ],
+    "outcome": "player falls, cannot recover, rates level poorly despite earlier engagement",
+    "confidence": 0.85,
+    "source_round": 7,
+    "evidence_rounds": [
+      7
+    ],
+    "seen_count": 1,
+    "applied_count": 14,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 7,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 8,
+        "rating": 2,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 9,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
         "design_round": 10,
         "rating": 2,
         "completed": false,
@@ -1015,7 +1166,28 @@
         "success": false
       },
       {
-        "design_round": 18
+        "design_round": 18,
+        "rating": 3,
+        "completed": false,
+        "deaths": 4,
+        "success": false
+      },
+      {
+        "design_round": 19,
+        "rating": 3,
+        "completed": true,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 20,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 21
       }
     ],
     "merged_from": []
@@ -1044,7 +1216,7 @@
       12
     ],
     "seen_count": 3,
-    "applied_count": 11,
+    "applied_count": 14,
     "successful_applications": 0,
     "applications": [
       {
@@ -1118,7 +1290,28 @@
         "success": false
       },
       {
-        "design_round": 18
+        "design_round": 18,
+        "rating": 3,
+        "completed": false,
+        "deaths": 4,
+        "success": false
+      },
+      {
+        "design_round": 19,
+        "rating": 3,
+        "completed": true,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 20,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 21
       }
     ],
     "merged_from": [
@@ -1148,7 +1341,7 @@
       17
     ],
     "seen_count": 1,
-    "applied_count": 2,
+    "applied_count": 5,
     "successful_applications": 0,
     "applications": [
       {
@@ -1159,28 +1352,56 @@
         "success": false
       },
       {
-        "design_round": 18
+        "design_round": 18,
+        "rating": 3,
+        "completed": false,
+        "deaths": 4,
+        "success": false
+      },
+      {
+        "design_round": 19,
+        "rating": 3,
+        "completed": true,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 20,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 21
       }
     ],
     "merged_from": []
   },
   {
     "id": "lesson_0017",
-    "lesson": "Long uninterrupted ladder climbs without rest platforms or horizontal traversal options cause player fatigue and falls, turning vertical traversal into a punishment loop rather than a challenge.",
+    "lesson": "Long uninterrupted ladder climbs exceeding ~8-10 tiles without rest platforms, horizontal ledges, or alternative traversal paths cause player fatigue and repeated falls at the same height, turning vertical traversal into a punishment loop rather than a skill challenge.",
     "category": "traversal",
     "conditions": [
-      "vertical shaft exceeds ~10 tiles height",
+      "ladder height exceeds ~8-10 tiles",
       "ladders are the sole traversal method",
-      "no horizontal ledges, platforms, or branching paths along the climb"
+      "no horizontal ledges, rest platforms, or branching paths along the climb",
+      "no alternative traversal paths (wall-kick, moving platforms, etc.)",
+      "vertical shaft exceeds ~10 tiles height",
+      "no horizontal ledges, platforms, or branching paths along the climb",
+      "ladder height > 8 tiles",
+      "no horizontal ledges or rest platforms on climb",
+      "fall locations cluster at same ladder x-position"
     ],
-    "outcome": "player falls mid-climb, loses significant progress, disengages from vertical section",
+    "outcome": "player falls repeatedly at same ladder height, loses significant progress, disengages from vertical section, perceives climb as unfair rather than skillful",
     "confidence": 0.85,
     "source_round": 17,
     "evidence_rounds": [
-      17
+      17,
+      19
     ],
-    "seen_count": 1,
-    "applied_count": 2,
+    "seen_count": 2,
+    "applied_count": 5,
     "successful_applications": 0,
     "applications": [
       {
@@ -1191,9 +1412,80 @@
         "success": false
       },
       {
-        "design_round": 18
+        "design_round": 18,
+        "rating": 3,
+        "completed": false,
+        "deaths": 4,
+        "success": false
+      },
+      {
+        "design_round": 19,
+        "rating": 3,
+        "completed": true,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 20,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 21
       }
     ],
-    "merged_from": []
+    "merged_from": [
+      {
+        "id": "lesson_0019",
+        "lesson": "Ladder climbs that exceed 8 tiles in height and lack horizontal ledges, rest platforms, or alternative paths become fatigue traps \u2014 players fall repeatedly at the same height, lose all progress, and perceive the climb as unfair rather than skillful."
+      }
+    ]
+  },
+  {
+    "id": "lesson_0018",
+    "lesson": "When a level's horizontal span exceeds 200 tiles without mid-level checkpoints or safe zones, any fall in the latter half forces players to re-traverse 5+ minutes of content, converting challenge into tedium and causing disengagement.",
+    "category": "pacing",
+    "conditions": [
+      "level width > 200 tiles",
+      "no mid-level checkpoints or safe zones",
+      "falls occur in second half of level",
+      "respawn returns player to start"
+    ],
+    "outcome": "player repeats 100+ seconds of traversal after each late fall, eventually quitting without completing",
+    "confidence": 0.88,
+    "source_round": 19,
+    "evidence_rounds": [
+      19
+    ],
+    "seen_count": 2,
+    "applied_count": 3,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 19,
+        "rating": 3,
+        "completed": true,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 20,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 21
+      }
+    ],
+    "merged_from": [
+      {
+        "id": "lesson_0019",
+        "lesson": "When a level's horizontal span exceeds 200 tiles without mid-level checkpoints, any fall in the latter half forces players to re-traverse 5+ minutes of content, converting challenge into tedium and causing disengagement."
+      }
+    ]
   }
 ]

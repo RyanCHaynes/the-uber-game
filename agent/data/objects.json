@@ -37,5 +37,16 @@
     },
     "source_round": 17,
     "design_reason": "Addresses lesson_0014: the player fell at the final vertical climb (x=8479,y=36) after 145s, then respawned at the start and repeated 100+ seconds of content. A mid-level checkpoint before the finale would preserve progress and reduce perceived difficulty spikes without changing traversal mechanics."
+  },
+  {
+    "id": "heart",
+    "symbol": "H",
+    "name": "Heart",
+    "description": "A single-use recovery pickup that restores the player to full health.",
+    "behavior": "heal",
+    "color": "#ff5c7a",
+    "params": {},
+    "source_round": 0,
+    "design_reason": "Supports recovery shortly before historical combat-death hotspots."
   }
 ]

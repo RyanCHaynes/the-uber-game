@@ -14,6 +14,8 @@ LESSONS_PATH = DATA_DIR / "store" / "object_lessons.json"
 MAX_OBJECT_TYPES = 12
 MAX_PLACEMENTS = 128
 MAX_LADDERS = 32
+MAX_HEARTS = 8
+MIN_LADDER_LENGTH = 3
 MAX_PLACEMENT_ATTEMPTS = 3
 
 BEHAVIORS = {
@@ -29,8 +31,13 @@ BEHAVIORS = {
     },
     "hazard": {
         "description": "a non-solid damaging scene tile",
-        "default_symbol": "H",
+        "default_symbol": "D",
         "params": {"damage": (1.0, 2.0, 1.0)},
+    },
+    "heal": {
+        "description": "a single-use heart that restores the player to full health",
+        "default_symbol": "H",
+        "params": {},
     },
     "collectible": {
         "description": "a pickup that rewards exploration",
@@ -48,6 +55,7 @@ The engine supports exactly these behavior templates:
 - bounce: floor spring launching the player upward; parameter launch_speed 8.0-16.0
 - hazard: non-solid damaging tile; parameter damage 1-2
 - collectible: optional pickup rewarding exploration; parameter value 1-100
+- heal: single-use heart restoring the player to full health; no parameters
 
 Return ONLY this JSON shape:
 {
@@ -55,7 +63,7 @@ Return ONLY this JSON shape:
     {
       "name": "short unique display name",
       "description": "what it adds to level design and when it should be used",
-      "behavior": "ladder | bounce | hazard | collectible",
+      "behavior": "ladder | bounce | hazard | collectible | heal",
       "color": "#RRGGBB",
       "params": {"the behavior's supported parameter": <number>},
       "design_reason": "the feedback or lesson this object addresses"
@@ -67,11 +75,22 @@ Add at most one object per round. Return an empty array when the existing catalo
 already address the feedback. Never propose executable code, scripts, physics formulas,
 or behavior names outside the supported templates."""
 
-PLACEMENT_SYSTEM = """You are an expert ladder placement designer. Study the generated
-JSON level plan together with potential ladder areas, then choose the candidates that create
-intentional vertical routes, alternate paths, recoveries, and pacing changes. Python derived
-the potential areas from the private grid and proved each one mechanically valid by rebuilding
-the player's navigation graph with that ladder present.
+PLACEMENT_SYSTEM = """You are an expert scene-object placement designer. Study the generated
+JSON level plan together with prevalidated object candidates, then choose a small intentional
+set. Python derived every candidate from the private grid and historical playtest telemetry.
+
+L IDs are ladders. Use them for vertical routes, alternate paths, recoveries, and pacing.
+Python proves ladder candidates mechanically valid by rebuilding the player's navigation graph
+with that ladder present.
+
+H IDs are single-use hearts that restore full health. Prefer hearts shortly before progression
+regions where the player previously died, especially combat deaths or locations backed by many
+hits. Do not place several hearts around one hotspot, and do not select a heart with no death
+evidence merely as decoration.
+
+If the level contains no ladder yet and any L candidates are supplied, select at least one.
+Critical-access ladders are mandatory. For alternate-route ladders, prefer a small number at
+distinct progression points rather than leaving a ladder-free level or filling every short step.
 
 Use the JSON plan's solid rectangles, spawn, exit, enemies, dimensions, and progression to
 understand the whole scene. Avoid repetitive evenly spaced ladders; choose a small set whose
@@ -81,7 +100,7 @@ critical prospects by inaccessible_coverage and unlocked_standable_cells. Candid
 serve the same inaccessible region, so select at most one of them. Treat alternate_route
 prospects as optional shortcuts, not mandatory decoration. Do not add a ladder merely because
 a platform exists; every selection should add useful reachability or a deliberate alternate route.
-Return ONLY: {"placements":["L001","L014"]}
+Return ONLY: {"placements":["L001","H002"]}
 
 Return at most 32 unique candidate IDs exactly as provided. Never invent or modify an ID.
 Never include coordinates, reasons, analysis, lessons, prose, markdown, or the game grid.
@@ -345,7 +364,7 @@ def _jump_landings(grid: list[list[str]], start_col: int,
                    start_row: int) -> set[tuple[int, int]]:
     """Simulate representative browser-physics jumps from one standable cell."""
     tile, player_w, player_h = csv_level.TILE, 20, 28
-    speed, jump, gravity, max_fall = 3.2, 9.6, 0.5, 12
+    speed, jump, gravity, max_fall = 3.2, 11.76, 0.5, 12
     rows, cols = len(grid), len(grid[0])
 
     def solid(col, row):
@@ -483,8 +502,8 @@ def ladder_candidates(level_csv: str, max_candidates: int = 160) -> tuple[list[d
                 continue  # a ladder the player cannot approach is not useful
             for top_y in range(max(0, bottom_y - 13), bottom_y):
                 length = bottom_y - top_y + 1
-                if length < csv_level.MAX_JUMP_UP + 2:
-                    continue  # exclude tiny rises the player can already jump
+                if length < MIN_LADDER_LENGTH:
+                    continue  # two-cell runs do not create a readable climb
                 if any(grid[y][x] != "." for y in range(top_y, bottom_y + 1)):
                     continue
                 for neighbor in (x - 1, x + 1):
@@ -512,7 +531,8 @@ def ladder_candidates(level_csv: str, max_candidates: int = 160) -> tuple[list[d
                     unlocked = (with_ladder - reachable) & standable_cells
                     unlocked_count = len(unlocked)
                     is_long_wall = wall_depth >= 3
-                    if unlocked_count < 3 and not is_long_wall:
+                    is_substantial_step = wall_depth >= 2 and platform_width >= 5
+                    if unlocked_count < 3 and not (is_long_wall or is_substantial_step):
                         continue
                     inaccessible = upper_landing not in reachable
                     unlocked_columns = sorted({col for col, _ in unlocked})
@@ -529,7 +549,11 @@ def ladder_candidates(level_csv: str, max_candidates: int = 160) -> tuple[list[d
                         "upper_landing": {"x": neighbor, "y": top_y},
                         "upper_platform_width": platform_width,
                         "access_without_ladder": "unreachable" if inaccessible else "reachable_by_alternate_route",
-                        "candidate_type": "long_wall_climb" if is_long_wall else "elevated_platform_access",
+                        "candidate_type": (
+                            "long_wall_climb" if is_long_wall else
+                            "elevated_platform_access" if unlocked_count >= 3 else
+                            "step_route"
+                        ),
                         "unlocked_standable_cells": unlocked_count,
                         "inaccessible_coverage": round(
                             unlocked_count / len(inaccessible_cells), 3
@@ -579,6 +603,119 @@ def ladder_candidates(level_csv: str, max_candidates: int = 160) -> tuple[list[d
     return candidates, []
 
 
+def heart_candidates(level_csv: str, feedback: dict,
+                     max_candidates: int = MAX_HEARTS) -> tuple[list[dict], list[str]]:
+    """Map historical death progress to reachable recovery points in the new level."""
+    grid, errors = csv_level.parse(level_csv)
+    if errors:
+        return [], errors
+    rows, cols = len(grid), len(grid[0])
+    players = feedback.get("players", []) if isinstance(feedback, dict) else []
+    deaths = []
+    hits_taken = 0
+    for player in players if isinstance(players, list) else []:
+        if not isinstance(player, dict):
+            continue
+        try:
+            hits_taken += max(0, int(player.get("hits_taken", 0)))
+        except (TypeError, ValueError):
+            pass
+        locations = player.get("fall_locations", [])
+        for location in locations if isinstance(locations, list) else []:
+            if not isinstance(location, dict):
+                continue
+            try:
+                deaths.append({
+                    "x": float(location["x"]),
+                    "cause": str(location.get("cause") or "unknown"),
+                })
+            except (KeyError, TypeError, ValueError):
+                continue
+    if not deaths:
+        return [], []
+
+    # Feedback coordinates belong to the previously played level. Preserve
+    # progression rather than raw x so a death at 70% maps sensibly into a
+    # newly generated level with a different width.
+    old_cols = 0
+    level_name = Path(str(feedback.get("level") or "")).stem
+    old_path = DATA_DIR / "levels" / f"{level_name}.csv"
+    if level_name and old_path.exists():
+        old_grid, old_errors = csv_level.parse(old_path.read_text())
+        if not old_errors:
+            old_cols = len(old_grid[0])
+    if not old_cols:
+        old_cols = max(cols, int(max(item["x"] for item in deaths) / csv_level.TILE) + 1)
+    for item in deaths:
+        item["progress"] = min(1.0, max(0.0, item["x"] / (old_cols * csv_level.TILE)))
+
+    # Nearby deaths are one hotspot. Each cluster should yield at most one
+    # heart, preventing a repeated failure from flooding the area with healing.
+    clusters = []
+    for item in sorted(deaths, key=lambda entry: entry["progress"]):
+        if clusters and item["progress"] - clusters[-1][-1]["progress"] <= 0.04:
+            clusters[-1].append(item)
+        else:
+            clusters.append([item])
+
+    reachable = _reachable_cells(grid)
+    spawn = csv_level.find_one(grid, "S")
+    exit_cell = csv_level.find_one(grid, "E")
+    def legal_cells(spawn_buffer: int, exit_buffer: int):
+        return [
+            (col, row) for col, row in reachable
+            if grid[row][col] == "."
+            and (spawn is None or abs(col - spawn[0]) >= spawn_buffer)
+            and (exit_cell is None or abs(col - exit_cell[0]) >= exit_buffer)
+        ]
+
+    legal = legal_cells(6, 3) or legal_cells(2, 1)
+    candidates = []
+    used_columns = []
+    for cluster in sorted(clusters, key=len, reverse=True):
+        progress = sum(item["progress"] for item in cluster) / len(cluster)
+        # Place recovery shortly before the historical danger point so it can
+        # help, rather than after the player has already died.
+        target_col = max(0, round(progress * (cols - 1)) - 5)
+        choices = [cell for cell in legal if all(abs(cell[0] - used) >= 10 for used in used_columns)]
+        if not choices:
+            continue
+        col, row = min(choices, key=lambda cell: (
+            abs(cell[0] - target_col), abs(cell[1] - rows // 2), cell[0], cell[1]
+        ))
+        used_columns.append(col)
+        combat_deaths = sum(item["cause"] == "combat" for item in cluster)
+        candidates.append({
+            "id": f"H{len(candidates) + 1:03d}",
+            "kind": "heart", "symbol": "H", "x": col, "y": row, "length": 1,
+            "historical_deaths": len(cluster), "combat_deaths": combat_deaths,
+            "hits_taken_in_playtest": hits_taken,
+            "prior_progress": round(progress, 3),
+            "placement_relation": "shortly_before_historical_death_hotspot",
+            "priority": "critical_recovery" if combat_deaths or len(cluster) > 1 else "recovery",
+        })
+        if len(candidates) >= max_candidates:
+            break
+    return candidates, []
+
+
+def placement_candidates(level_csv: str, feedback: dict) -> tuple[list[dict], list[str]]:
+    ladders, errors = ladder_candidates(level_csv)
+    if errors:
+        return [], errors
+    hearts, errors = heart_candidates(level_csv, feedback)
+    if errors:
+        return [], errors
+    return ladders + hearts, []
+
+
+def _candidate_cells(candidate: dict) -> set[tuple[int, int]]:
+    if candidate.get("kind") == "heart":
+        return {(candidate["x"], candidate["y"])}
+    return {(candidate["x"], y)
+            for y in range(candidate["top_y"], candidate["bottom_y"] + 1)}
+
+
 def _apply_placement_patch(level_csv: str, patch: dict,
                            candidates: list[dict] | None = None) -> tuple[str, list[str]]:
     """Resolve prevalidated candidate IDs without exposing coordinate work to the model."""
@@ -603,11 +740,21 @@ def _apply_placement_patch(level_csv: str, patch: dict,
     if len(set(placements)) != len(placements):
         errors.append("placement candidate IDs must be unique")
     selected = [by_id[candidate_id] for candidate_id in placements if candidate_id in by_id]
+    available_ladders = [item for item in candidates if item.get("id", "").startswith("L")]
+    selected_ladders = [item for item in selected if item.get("id", "").startswith("L")]
+    level_has_ladder = any("L" in row for row in grid)
+    if available_ladders and not selected_ladders and not level_has_ladder:
+        errors.append(
+            "the ladder-free level has prevalidated L candidates; select at least one ladder ID"
+        )
+    selected_hearts = sum(item.get("kind") == "heart" for item in selected)
+    if selected_hearts > MAX_HEARTS:
+        errors.append(f"selected hearts exceed the {MAX_HEARTS}-heart maximum")
     if sum(item["length"] for item in selected) > MAX_PLACEMENTS:
         errors.append(f"selected ladders exceed the {MAX_PLACEMENTS}-tile maximum")
     occupied = set()
     for item in selected:
-        cells = {(item["x"], y) for y in range(item["top_y"], item["bottom_y"] + 1)}
+        cells = _candidate_cells(item)
         if cells & occupied:
             errors.append("selected ladder runs overlap another ladder run")
         occupied.update(cells)
@@ -615,8 +762,9 @@ def _apply_placement_patch(level_csv: str, patch: dict,
         return level_csv, errors
 
     for candidate in selected:
-        for y in range(candidate["top_y"], candidate["bottom_y"] + 1):
-            grid[y][candidate["x"]] = "L"
+        symbol = candidate.get("symbol", "L")
+        for x, y in _candidate_cells(candidate):
+            grid[y][x] = symbol
     validation_errors = csv_level.validate(grid)
     if validation_errors:
         return level_csv, validation_errors
@@ -630,9 +778,9 @@ def place_objects(level_csv: str, level_plan: dict | None, analysis: dict,
     # deduplicates repeated validator failures so the system prompt grows with
     # distinct knowledge rather than raw retry noise.
     known_lessons = load_lessons()
-    candidates, candidate_errors = ladder_candidates(level_csv)
+    candidates, candidate_errors = placement_candidates(level_csv, feedback)
     if candidate_errors:
-        raise RuntimeError(f"cannot derive ladder candidates: {candidate_errors}")
+        raise RuntimeError(f"cannot derive object candidates: {candidate_errors}")
     placement_system = (
         PLACEMENT_SYSTEM
         + "\n\nCOMPLETE PERSISTENT OBJECT-PLACEMENT LESSON HISTORY "
@@ -643,7 +791,7 @@ def place_objects(level_csv: str, level_plan: dict | None, analysis: dict,
         f"PLAYER FEEDBACK:\n{json.dumps(feedback, indent=2)}\n\n"
         f"ANALYST DIAGNOSIS:\n{analysis.get('diagnosis', '(none)')}\n\n"
         f"GENERATED JSON LEVEL PLAN:\n{json.dumps(level_plan or {}, separators=(',', ':'))}\n\n"
-        f"POTENTIAL PREVALIDATED LADDER AREAS:\n{json.dumps(candidates, separators=(',', ':'))}\n\n"
+        f"PREVALIDATED OBJECT PLACEMENT CANDIDATES:\n{json.dumps(candidates, separators=(',', ':'))}\n\n"
         "Return only selected candidate IDs in the required JSON shape."
     )
     errors = []

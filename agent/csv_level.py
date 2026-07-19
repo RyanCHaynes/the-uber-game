@@ -17,10 +17,10 @@ ALLOWED = {".", "X", "S", "E"} | ENEMY_DIGITS | OBJECT_SYMBOLS
 MAX_ENEMIES = 24
 
 # Player jump reach in tiles — must stay in sync with the physics constants in
-# web/index.html (SPEED/JUMP/GRAVITY). Current tuning clears ~3.8 tiles
-# horizontally and ~2.9 tiles up; keep a safety margin.
-MAX_JUMP_DX = 3
-MAX_JUMP_UP = 2
+# web/index.html (SPEED/JUMP/GRAVITY). Current tuning clears ~4.7 tiles
+# horizontally and ~4.3 tiles up; keep a safety margin.
+MAX_JUMP_DX = 4
+MAX_JUMP_UP = 4
 
 MIN_ROWS, MAX_ROWS = 8, 40
 MIN_COLS, MAX_COLS = 15, 400
