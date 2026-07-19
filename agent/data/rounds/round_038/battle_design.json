@@ -1,0 +1,19 @@
+{
+  "round": 38,
+  "mode": "battle",
+  "difficulty": 6.5,
+  "picks": [
+    "turret"
+  ],
+  "note": "Single turret provides a stationary ranged threat that forces the player to approach carefully, matching the target difficulty.",
+  "buffed": null,
+  "created": null,
+  "scores": {
+    "grub": 3.95,
+    "turret": 7.31,
+    "wasp": 8.35,
+    "iron_moth": 27.4,
+    "mech_moth": 11.7,
+    "crystal_sentinel": 9.95
+  }
+}

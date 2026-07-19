@@ -1,0 +1,23 @@
+{
+  "round": 48,
+  "mode": "battle",
+  "difficulty": 12.75,
+  "picks": [
+    "mech_moth",
+    "grub"
+  ],
+  "note": "Fielding a single Mechanical Moth boss (11.7) plus one Grub (3.95) for a combined 15.65 threat \u2014 slightly above target but the closest achievable mix without overshooting into the 20+ range.",
+  "buffed": null,
+  "created": null,
+  "scores": {
+    "grub": 3.95,
+    "turret": 7.31,
+    "wasp": 8.35,
+    "iron_moth": 27.4,
+    "mech_moth": 11.7,
+    "crystal_sentinel": 9.95,
+    "phase_striker": 7.15,
+    "sky_striker": 8.0,
+    "blink_striker": 8.15
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "round": 46,
+  "mode": "battle",
+  "difficulty": 12.0,
+  "picks": [
+    "grub",
+    "grub",
+    "grub"
+  ],
+  "note": "Three Grubs provide a low-threat ground swarm to let the player practice movement and shooting without overwhelming pressure.",
+  "buffed": null,
+  "created": null,
+  "scores": {
+    "grub": 3.95,
+    "turret": 7.31,
+    "wasp": 8.35,
+    "iron_moth": 27.4,
+    "mech_moth": 11.7,
+    "crystal_sentinel": 9.95,
+    "phase_striker": 7.15,
+    "sky_striker": 8.0
+  }
+}

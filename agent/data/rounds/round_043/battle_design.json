@@ -1,0 +1,22 @@
+{
+  "round": 43,
+  "mode": "battle",
+  "difficulty": 10.0,
+  "picks": [
+    "wasp",
+    "sky_striker"
+  ],
+  "note": "Two flying shooters (Wasp + Sky Striker) for a bullet-hell feel that totals ~16.35 threat, a step up from the single turret.",
+  "buffed": null,
+  "created": "sky_striker",
+  "scores": {
+    "grub": 3.95,
+    "turret": 7.31,
+    "wasp": 8.35,
+    "iron_moth": 27.4,
+    "mech_moth": 11.7,
+    "crystal_sentinel": 9.95,
+    "phase_striker": 7.15,
+    "sky_striker": 8.0
+  }
+}

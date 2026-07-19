@@ -1,0 +1,18 @@
+{
+  "round": 33,
+  "mode": "battle",
+  "difficulty": 3.0,
+  "picks": [
+    "grub"
+  ],
+  "note": "",
+  "buffed": null,
+  "created": null,
+  "scores": {
+    "grub": 3.95,
+    "turret": 7.31,
+    "wasp": 8.35,
+    "iron_moth": 27.4,
+    "mech_moth": 11.7
+  }
+}

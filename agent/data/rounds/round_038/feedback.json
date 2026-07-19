@@ -1,0 +1,55 @@
+{
+  "round": 38,
+  "level": "level_037",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 1,
+      "completed": true,
+      "deaths": 0,
+      "fall_locations": [],
+      "time_seconds": 13.3,
+      "enemies_killed": 1,
+      "hits_taken": 0,
+      "objects_collected": 0,
+      "player_trace": [
+        {
+          "x": 80.0,
+          "y": 432.0,
+          "t_ms": 0
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 315
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 1065
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 1814
+        },
+        {
+          "x": 121.6,
+          "y": 434.0,
+          "t_ms": 2564
+        },
+        {
+          "x": 249.6,
+          "y": 434.0,
+          "t_ms": 3314
+        },
+        {
+          "x": 249.6,
+          "y": 434.0,
+          "t_ms": 4064
+        }
+      ],
+      "comment": "tooo easy, needs harder enemies."
+    }
+  ]
+}

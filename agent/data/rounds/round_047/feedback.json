@@ -1,0 +1,85 @@
+{
+  "round": 47,
+  "level": "level_046",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 1,
+      "completed": true,
+      "deaths": 0,
+      "fall_locations": [],
+      "time_seconds": 114.2,
+      "enemies_killed": 3,
+      "hits_taken": 0,
+      "objects_collected": 0,
+      "player_trace": [
+        {
+          "x": 80.0,
+          "y": 432.0,
+          "t_ms": 0
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 337
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 1085
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 1835
+        },
+        {
+          "x": 134.4,
+          "y": 400.2,
+          "t_ms": 2584
+        },
+        {
+          "x": 198.4,
+          "y": 338.0,
+          "t_ms": 3338
+        },
+        {
+          "x": 198.4,
+          "y": 338.0,
+          "t_ms": 4089
+        },
+        {
+          "x": 288.0,
+          "y": 338.0,
+          "t_ms": 4838
+        },
+        {
+          "x": 256.0,
+          "y": 338.0,
+          "t_ms": 5588
+        },
+        {
+          "x": 256.0,
+          "y": 338.0,
+          "t_ms": 6338
+        },
+        {
+          "x": 371.2,
+          "y": 338.0,
+          "t_ms": 7088
+        },
+        {
+          "x": 412.8,
+          "y": 338.0,
+          "t_ms": 7835
+        },
+        {
+          "x": 412.8,
+          "y": 338.0,
+          "t_ms": 8583
+        }
+      ],
+      "comment": "That was a regression. Those little slow-moving patrollers are NO THREAT."
+    }
+  ]
+}

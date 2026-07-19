@@ -1,0 +1,7 @@
+{
+  "diagnosis": "The player spawned at (176, 880) on the solid floor (row 23) and remained completely stationary for the entire 16-second playtest, never moving horizontally or jumping. The level CSV shows the bottom two rows (22-23) are entirely solid 'X' tiles spanning the full width, with the exit 'E' located at row 3 near the right edge. No ladders ('L'), enemies, or traversal elements connect the spawn floor to the upper platforms where the exit resides. The player likely realized immediately that no path exists upward, leading to instant disengagement.",
+  "lessons": [],
+  "fun_score": 1,
+  "save_level": false,
+  "save_reason": ""
+}

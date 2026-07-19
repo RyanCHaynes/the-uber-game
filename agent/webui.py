@@ -30,7 +30,7 @@ ROUNDS_DIR = DATA_DIR / "rounds"
 INDEX_HTML = AGENT_DIR / "web" / "index.html"
 ENTITY_RUNTIME_JS = AGENT_DIR / "web" / "entity_runtime.js"
 
-_state = {"running": False, "log": [], "error": None}
+_state = {"running": False, "log": [], "error": None, "mode": "adventure"}
 _lock = threading.Lock()
 
 
@@ -52,10 +52,15 @@ class _LogWriter:
         pass
 
 
-def _run_agent_cycle(round_number: int, level_path: Path):
+def _run_agent_cycle(round_number: int, level_path: Path,
+                     mode: str = "adventure", feedback: dict | None = None):
     try:
         with contextlib.redirect_stdout(_LogWriter()):
-            pipeline.run_cycle(round_number, level_path)
+            if mode == "battle":
+                from . import battle
+                battle.run_battle_cycle(round_number, feedback)
+            else:
+                pipeline.run_cycle(round_number, level_path)
     except Exception as err:  # surface failures in the UI instead of a dead thread
         with _lock:
             _state["error"] = str(err)
@@ -125,8 +130,33 @@ def _handle_feedback(body: dict) -> tuple[int, dict]:
             f"{p['rating']}/5, {p['deaths']} falls, {p['time_seconds']}s, "
             f"{len(p['player_trace'])} position samples — \"{p['comment']}\""
         )
-    threading.Thread(target=_run_agent_cycle, args=(round_number, level_path), daemon=True).start()
-    return 200, {"ok": True, "round": round_number}
+    with _lock:
+        mode = _state.get("mode", "adventure")
+    threading.Thread(target=_run_agent_cycle,
+                     args=(round_number, level_path, mode, feedback), daemon=True).start()
+    return 200, {"ok": True, "round": round_number, "mode": mode}
+
+
+def _handle_mode(body: dict) -> tuple[int, dict]:
+    """Switch game mode. Entering battle generates an initial arena immediately so
+    the player can start fighting without first rating an adventure level."""
+    mode = body.get("mode")
+    if mode not in ("adventure", "battle"):
+        return 400, {"error": "mode must be 'adventure' or 'battle'"}
+    with _lock:
+        _state["mode"] = mode
+    if mode != "battle":
+        return 200, {"ok": True, "mode": mode}
+    with _lock:
+        if _state["running"]:
+            return 200, {"ok": True, "mode": mode, "note": "agent busy; arena will follow"}
+        _state["running"] = True
+        _state["error"] = None
+    level_path = pipeline.latest_level()
+    round_number = int(level_path.stem.split("_")[1]) + 1
+    threading.Thread(target=_run_agent_cycle,
+                     args=(round_number, level_path, "battle", None), daemon=True).start()
+    return 200, {"ok": True, "mode": mode, "round": round_number}
 
 
 def _reset():
@@ -134,6 +164,7 @@ def _reset():
         if f.stem != "level_000" or f.suffix != ".csv":
             f.unlink()
     (LEVELS_DIR / "next_level.ready").unlink(missing_ok=True)
+    (DATA_DIR / "battle_state.json").unlink(missing_ok=True)  # difficulty back to base
     shutil.rmtree(ROUNDS_DIR, ignore_errors=True)
     shutil.rmtree(DATA_DIR / "store", ignore_errors=True)
     shutil.rmtree(DATA_DIR / "library", ignore_errors=True)
@@ -149,16 +180,18 @@ def _snapshot() -> dict:
     if ROUNDS_DIR.exists():
         for d in sorted(ROUNDS_DIR.glob("round_*")):
             entry = {}
-            for name in ("feedback", "analysis", "object_design", "enemy_design"):
+            for name in ("feedback", "analysis", "object_design", "enemy_design", "battle_design"):
                 p = d / f"{name}.json"
                 if p.exists():
                     entry[name] = json.loads(p.read_text())
             rounds[int(d.name.split("_")[1])] = entry
     with _lock:
         running, log, error = _state["running"], list(_state["log"]), _state["error"]
+        game_mode = _state.get("mode", "adventure")
     from . import object_designer
     return {
         "mode": "mock" if pipeline._use_mock() else "llm",
+        "game_mode": game_mode,
         "backend": llm.backend(),
         "tokens": llm.cycle_usage(),
         "llm_queue": llm.queue_status(),
@@ -220,6 +253,9 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path == "/api/feedback":
             code, resp = _handle_feedback(self._body())
+            self._send(code, resp)
+        elif self.path == "/api/mode":
+            code, resp = _handle_mode(self._body())
             self._send(code, resp)
         elif self.path == "/api/reset":
             with _lock:

@@ -1,0 +1,20 @@
+{
+  "round": 42,
+  "mode": "battle",
+  "difficulty": 9.5,
+  "picks": [
+    "crystal_sentinel"
+  ],
+  "note": "Fielding a Crystal Sentinel (9.95) for a solo elite encounter that slightly exceeds the target, matching the player's request for harder content.",
+  "buffed": null,
+  "created": null,
+  "scores": {
+    "grub": 3.95,
+    "turret": 7.31,
+    "wasp": 8.35,
+    "iron_moth": 27.4,
+    "mech_moth": 11.7,
+    "crystal_sentinel": 9.95,
+    "phase_striker": 7.15
+  }
+}

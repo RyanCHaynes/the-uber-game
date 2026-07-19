@@ -1,0 +1,105 @@
+{
+  "round": 45,
+  "level": "level_044",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 2,
+      "completed": true,
+      "deaths": 0,
+      "fall_locations": [],
+      "time_seconds": 42.0,
+      "enemies_killed": 2,
+      "hits_taken": 0,
+      "objects_collected": 0,
+      "player_trace": [
+        {
+          "x": 80.0,
+          "y": 432.0,
+          "t_ms": 0
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 461
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 1211
+        },
+        {
+          "x": 25.6,
+          "y": 296.1,
+          "t_ms": 1962
+        },
+        {
+          "x": 25.6,
+          "y": 353.9,
+          "t_ms": 2711
+        },
+        {
+          "x": 25.6,
+          "y": 434.0,
+          "t_ms": 3463
+        },
+        {
+          "x": 118.4,
+          "y": 434.0,
+          "t_ms": 4209
+        },
+        {
+          "x": 10.0,
+          "y": 434.0,
+          "t_ms": 4961
+        },
+        {
+          "x": 35.6,
+          "y": 290.0,
+          "t_ms": 5706
+        },
+        {
+          "x": 141.2,
+          "y": 434.0,
+          "t_ms": 6461
+        },
+        {
+          "x": 285.2,
+          "y": 434.0,
+          "t_ms": 7210
+        },
+        {
+          "x": 333.2,
+          "y": 434.0,
+          "t_ms": 7960
+        },
+        {
+          "x": 403.6,
+          "y": 434.0,
+          "t_ms": 8710
+        },
+        {
+          "x": 547.6,
+          "y": 290.7,
+          "t_ms": 9461
+        },
+        {
+          "x": 650.0,
+          "y": 338.0,
+          "t_ms": 10210
+        },
+        {
+          "x": 624.4,
+          "y": 338.0,
+          "t_ms": 10956
+        },
+        {
+          "x": 624.4,
+          "y": 338.0,
+          "t_ms": 11708
+        }
+      ],
+      "comment": "too easy. the projectiles those enemies fired move too slowly. Make more flying enemies that shoot more bullets, fast bullets."
+    }
+  ]
+}

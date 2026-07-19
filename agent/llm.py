@@ -18,7 +18,7 @@ LOG_PATH = Path(__file__).parent / "data" / "llm_log.jsonl"
 # Hard token budget per agent cycle (analyst + designer + retries, all backends).
 # Counts input + cache-creation + output. Once exhausted, further LLM calls in
 # the cycle raise instead of running — the round fails cleanly and cheaply.
-CYCLE_BUDGET = 60000
+CYCLE_BUDGET = 100000
 _cycle = {"used": 0, "calls": 0}
 
 

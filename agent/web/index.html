@@ -118,6 +118,9 @@
         <h2 style="margin:0">Playtest</h2>
         <span id="ptName" class="dim"></span>
         <span class="spacer"></span>
+        <label id="modeToggle" title="Battle mode: fight in a fixed arena — kill every enemy to win. Each round ramps up." style="display:flex;align-items:center;gap:4px;cursor:pointer">
+          <input type="checkbox" id="battleEnabled"> ⚔ <span id="modeState" class="dim">Adventure</span>
+        </label>
         <label id="padToggle" title="Use a connected gamepad — D-pad move, LT jump, right stick aim, RT fire" style="display:flex;align-items:center;gap:4px;cursor:pointer">
           <input type="checkbox" id="padEnabled"> 🎮 <span id="padState" class="dim">off</span>
         </label>
@@ -234,6 +237,11 @@ function render() {
     ? "MOCK (offline)"
     : "LLM (NVIDIA hosted · Nemotron 3 Ultra 550B)";
   $("mode").className = "badge " + state.mode;
+  if (state.game_mode) {
+    const isBattle = state.game_mode === "battle";
+    $("modeState").textContent = isBattle ? "Battle" : "Adventure";
+    if ($("battleEnabled").checked !== isBattle) $("battleEnabled").checked = isBattle;
+  }
   $("busy").style.display = state.running ? "" : "none";
   if (state.running && state.tokens) {
     const q = state.llm_queue || {};
@@ -544,6 +552,7 @@ let mouse = { x: 0, y: 0 };
 let hp = MAX_HP, kills = 0, hitsTaken = 0, invulnUntil = 0, lastShotAt = 0;
 let cam = { x: 0, y: 0 };
 let padEnabled = false, aimVec = { x: 1, y: 0 };   // gamepad opt-in + last aim direction
+let levelIsBattle = false;   // frozen at load: battle arenas win by kill-all, not the exit
 
 function spawnEnemies() {
   entityRootCount = 0;
@@ -715,6 +724,7 @@ async function loadPlayLevel() {
     if (cell >= "1" && cell <= "9") enemySpawns.push({ type: +cell - 1, c, r });
   }));
   if (!world.spawn) world.spawn = { c: 1, r: 1 };
+  levelIsBattle = !!(state && state.game_mode === "battle");
   $("ptName").textContent = d.name + ".csv";
   restartRun();
   if (!ptLoopStarted) { ptLoopStarted = true; ptFrame(); }
@@ -837,6 +847,23 @@ $("padEnabled").addEventListener("change", () => {
 window.addEventListener("gamepadconnected", updatePadState);
 window.addEventListener("gamepaddisconnected", updatePadState);
 
+// --- game mode toggle (Adventure / Battle) ---
+$("battleEnabled").addEventListener("change", async () => {
+  const mode = $("battleEnabled").checked ? "battle" : "adventure";
+  $("modeState").textContent = mode === "battle" ? "Battle" : "Adventure";
+  try {
+    await fetch("/api/mode", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode }),
+    });
+  } catch (e) { /* server restarting; the poll will resync */ }
+  if (mode === "battle") {
+    // The server is generating the first arena; wait for it like a normal cycle.
+    waitingForNext = true;
+    $("fbWaiting").style.display = "block";
+  }
+});
+
 function ptStep() {
   if (!player || phase !== "playing") return;
   // 11.76 is sqrt(1.5) times the old 9.6 impulse, producing 50% more
@@ -894,8 +921,8 @@ function ptStep() {
     player.vx = player.vy = 0;
   }
 
-  // reached the exit?
-  if (world.exit) {
+  // reached the exit? (Adventure only — Battle mode wins by clearing the arena.)
+  if (world.exit && !levelIsBattle) {
     const ex = world.exit.c * TILE, ey = world.exit.r * TILE;
     if (player.x < ex + TILE && player.x + player.w > ex &&
         player.y < ey + TILE && player.y + player.h > ey &&
@@ -903,6 +930,13 @@ function ptStep() {
       runCompleted = true;
       showRatingForm();
     }
+  }
+
+  // Battle mode: win once every enemy (legacy + EntitySpec roots) is dead.
+  if (levelIsBattle && phase === "playing" && enemySpawns.length > 0 &&
+      enemies.every(e => e.dead) && (!entityHost || entityHost.stats().roots === 0)) {
+    runCompleted = true;
+    showRatingForm();
   }
 
   const now = performance.now();

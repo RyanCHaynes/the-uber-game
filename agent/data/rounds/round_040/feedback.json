@@ -1,0 +1,50 @@
+{
+  "round": 40,
+  "level": "level_039",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 1,
+      "completed": true,
+      "deaths": 0,
+      "fall_locations": [],
+      "time_seconds": 13.6,
+      "enemies_killed": 1,
+      "hits_taken": 0,
+      "objects_collected": 0,
+      "player_trace": [
+        {
+          "x": 80.0,
+          "y": 432.0,
+          "t_ms": 0
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 445
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 1194
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 1945
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 2695
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 3445
+        }
+      ],
+      "comment": "too easy, the enemy was not dangerous."
+    }
+  ]
+}

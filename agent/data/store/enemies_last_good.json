@@ -427,5 +427,832 @@
         }
       }
     }
+  },
+  {
+    "v": 1,
+    "id": "mech_moth",
+    "name": "Mechanical Moth",
+    "kind": "boss",
+    "limits": {
+      "maxAlive": 1,
+      "maxSpawnsPerSecond": 8,
+      "maxSpawnDepth": 2
+    },
+    "vars": {
+      "wingsAlive": 2
+    },
+    "defs": {
+      "missile": {
+        "id": "missile",
+        "tags": [
+          "projectile",
+          "enemy"
+        ],
+        "visual": {
+          "shape": "capsule",
+          "size": [
+            0.5,
+            0.2
+          ],
+          "tint": "#ff4444"
+        },
+        "body": {
+          "shape": "capsule",
+          "size": [
+            0.5,
+            0.2
+          ],
+          "gravity": 0
+        },
+        "motion": {
+          "type": "home",
+          "speed": 6,
+          "turnRate": 180
+        },
+        "contact": {
+          "damage": 2,
+          "destroySelf": true,
+          "knockback": 3
+        },
+        "life": {
+          "ttl": 5
+        }
+      }
+    },
+    "root": {
+      "id": "moth_body",
+      "tags": [
+        "boss",
+        "enemy"
+      ],
+      "visual": {
+        "shape": "ellipse",
+        "size": [
+          2,
+          1.2
+        ],
+        "tint": "#8888aa"
+      },
+      "body": {
+        "shape": "ellipse",
+        "size": [
+          1.8,
+          1
+        ],
+        "gravity": 0
+      },
+      "health": {
+        "max": 120
+      },
+      "contact": {
+        "damage": 3,
+        "knockback": 5
+      },
+      "motion": {
+        "type": "hover",
+        "speed": 2
+      },
+      "emitters": {
+        "left_wing": {
+          "at": [
+            -1.2,
+            0
+          ],
+          "ref": "missile",
+          "pattern": "aimed"
+        },
+        "right_wing": {
+          "at": [
+            1.2,
+            0
+          ],
+          "ref": "missile",
+          "pattern": "aimed"
+        }
+      },
+      "children": [
+        {
+          "id": "left_wing",
+          "tags": [
+            "part",
+            "wing"
+          ],
+          "at": [
+            -1.2,
+            0
+          ],
+          "visual": {
+            "shape": "triangle",
+            "size": [
+              1,
+              1.5
+            ],
+            "tint": "#6666cc"
+          },
+          "body": {
+            "shape": "triangle",
+            "size": [
+              1,
+              1.5
+            ],
+            "gravity": 0
+          },
+          "health": {
+            "max": 30
+          },
+          "link": {
+            "parent": "moth_body",
+            "onParentDeath": "destroy"
+          }
+        },
+        {
+          "id": "right_wing",
+          "tags": [
+            "part",
+            "wing"
+          ],
+          "at": [
+            1.2,
+            0
+          ],
+          "visual": {
+            "shape": "triangle",
+            "size": [
+              1,
+              1.5
+            ],
+            "tint": "#6666cc"
+          },
+          "body": {
+            "shape": "triangle",
+            "size": [
+              1,
+              1.5
+            ],
+            "gravity": 0
+          },
+          "health": {
+            "max": 30
+          },
+          "link": {
+            "parent": "moth_body",
+            "onParentDeath": "destroy"
+          }
+        }
+      ],
+      "on": {
+        "partDestroyed": [
+          {
+            "add": {
+              "var": "wingsAlive",
+              "value": -1
+            }
+          },
+          {
+            "signal": {
+              "name": "wing_destroyed"
+            }
+          }
+        ]
+      }
+    },
+    "brain": {
+      "start": "flight",
+      "states": {
+        "flight": {
+          "tracks": [
+            {
+              "id": "missile_volley",
+              "loop": true,
+              "steps": [
+                {
+                  "telegraph": {
+                    "part": "moth_body",
+                    "time": 0.5
+                  }
+                },
+                {
+                  "fire": {
+                    "emitter": "left_wing",
+                    "count": 2,
+                    "spread": 15
+                  }
+                },
+                {
+                  "fire": {
+                    "emitter": "right_wing",
+                    "count": 2,
+                    "spread": 15
+                  }
+                },
+                {
+                  "wait": 2
+                }
+              ]
+            }
+          ],
+          "transitions": [
+            {
+              "when": "self.vars.wingsAlive <= 0",
+              "to": "crash"
+            }
+          ]
+        },
+        "crash": {
+          "enter": [
+            {
+              "setMotion": {
+                "type": "dash",
+                "speed": 15,
+                "duration": 0.8
+              }
+            },
+            {
+              "wait": 1
+            },
+            {
+              "setMotion": {
+                "type": "chase",
+                "speed": 5
+              }
+            }
+          ],
+          "tracks": [
+            {
+              "id": "rage_attack",
+              "loop": true,
+              "steps": [
+                {
+                  "telegraph": {
+                    "part": "moth_body",
+                    "time": 0.3
+                  }
+                },
+                {
+                  "fire": {
+                    "emitter": "left_wing",
+                    "count": 4,
+                    "spread": 45
+                  }
+                },
+                {
+                  "fire": {
+                    "emitter": "right_wing",
+                    "count": 4,
+                    "spread": 45
+                  }
+                },
+                {
+                  "wait": 1
+                }
+              ]
+            }
+          ],
+          "transitions": []
+        }
+      }
+    },
+    "desc": "EntitySpec boss saved from workshop"
+  },
+  {
+    "v": 1,
+    "id": "crystal_sentinel",
+    "name": "Crystal Sentinel",
+    "kind": "enemy",
+    "limits": {
+      "maxAlive": 3,
+      "maxSpawnsPerSecond": 1,
+      "maxSpawnDepth": 1
+    },
+    "defs": {
+      "crystal_shard": {
+        "id": "crystal_shard",
+        "tags": [
+          "projectile",
+          "enemy"
+        ],
+        "visual": {
+          "shape": "diamond",
+          "size": [
+            0.3,
+            0.3
+          ],
+          "tint": "#88ccff"
+        },
+        "body": {
+          "shape": "circle",
+          "radius": 0.15,
+          "gravity": 0
+        },
+        "motion": {
+          "type": "velocity",
+          "speed": 10
+        },
+        "contact": {
+          "damage": 2,
+          "destroySelf": true,
+          "knockback": 2
+        },
+        "life": {
+          "ttl": 2.5
+        }
+      }
+    },
+    "root": {
+      "id": "crystal_sentinel",
+      "tags": [
+        "enemy",
+        "ground"
+      ],
+      "visual": {
+        "shape": "capsule",
+        "size": [
+          1.0,
+          1.4
+        ],
+        "tint": "#66aaff"
+      },
+      "body": {
+        "shape": "box",
+        "size": [
+          0.8,
+          1.3
+        ],
+        "gravity": 1
+      },
+      "health": {
+        "max": 18
+      },
+      "contact": {
+        "damage": 3,
+        "knockback": 4
+      },
+      "motion": {
+        "type": "patrol",
+        "speed": 2,
+        "distance": 4
+      },
+      "emitters": {
+        "front": {
+          "at": [
+            0.6,
+            -0.2
+          ],
+          "ref": "crystal_shard",
+          "pattern": "aimed"
+        },
+        "up": {
+          "at": [
+            0,
+            -0.6
+          ],
+          "ref": "crystal_shard",
+          "pattern": "fan"
+        }
+      }
+    },
+    "brain": {
+      "start": "patrol",
+      "states": {
+        "patrol": {
+          "tracks": [
+            {
+              "id": "shoot_cycle",
+              "loop": true,
+              "steps": [
+                {
+                  "telegraph": {
+                    "part": "crystal_sentinel",
+                    "time": 0.6
+                  }
+                },
+                {
+                  "fire": {
+                    "emitter": "front",
+                    "count": 2,
+                    "spread": 10
+                  }
+                },
+                {
+                  "wait": 0.3
+                },
+                {
+                  "fire": {
+                    "emitter": "up",
+                    "count": 3,
+                    "spread": 45
+                  }
+                },
+                {
+                  "wait": 2.0
+                }
+              ]
+            }
+          ],
+          "transitions": [
+            {
+              "when": "distance(self, player) < 2.5",
+              "to": "aggro"
+            }
+          ]
+        },
+        "aggro": {
+          "tracks": [
+            {
+              "id": "rapid_fire",
+              "loop": true,
+              "steps": [
+                {
+                  "telegraph": {
+                    "part": "crystal_sentinel",
+                    "time": 0.3
+                  }
+                },
+                {
+                  "fire": {
+                    "emitter": "front",
+                    "count": 1,
+                    "spread": 5
+                  }
+                },
+                {
+                  "wait": 0.6
+                }
+              ]
+            }
+          ],
+          "transitions": [
+            {
+              "when": "distance(self, player) > 5",
+              "to": "patrol"
+            }
+          ]
+        }
+      }
+    },
+    "desc": "EntitySpec enemy generated from round 35"
+  },
+  {
+    "v": 1,
+    "id": "phase_striker",
+    "name": "Phase Striker",
+    "kind": "enemy",
+    "limits": {
+      "maxAlive": 3,
+      "maxSpawnsPerSecond": 1,
+      "maxSpawnDepth": 1
+    },
+    "vars": {
+      "phaseCooldown": 2.5,
+      "dashSpeed": 14,
+      "dashDuration": 0.35
+    },
+    "defs": {
+      "phase_slash": {
+        "id": "phase_slash",
+        "tags": [
+          "projectile",
+          "enemy",
+          "melee"
+        ],
+        "visual": {
+          "shape": "diamond",
+          "size": [
+            0.5,
+            0.5
+          ],
+          "tint": "#ff6ec7"
+        },
+        "body": {
+          "shape": "diamond",
+          "size": [
+            0.4,
+            0.4
+          ],
+          "gravity": 0
+        },
+        "motion": {
+          "type": "velocity",
+          "speed": 0
+        },
+        "contact": {
+          "damage": 2,
+          "destroySelf": true,
+          "knockback": 6
+        },
+        "life": {
+          "ttl": 0.4
+        }
+      }
+    },
+    "root": {
+      "id": "phase_striker",
+      "tags": [
+        "enemy",
+        "elite"
+      ],
+      "visual": {
+        "shape": "capsule",
+        "size": [
+          1.0,
+          1.4
+        ],
+        "tint": "#c840a0"
+      },
+      "body": {
+        "shape": "box",
+        "size": [
+          0.8,
+          1.2
+        ],
+        "gravity": 1
+      },
+      "health": {
+        "max": 18
+      },
+      "contact": {
+        "damage": 1,
+        "knockback": 4
+      },
+      "motion": {
+        "type": "patrol",
+        "speed": 2.5,
+        "turnAtEdges": true,
+        "turnAtWalls": true
+      },
+      "emitters": {
+        "slash": {
+          "at": [
+            0.6,
+            0
+          ],
+          "ref": "phase_slash",
+          "pattern": "aimed"
+        }
+      }
+    },
+    "brain": {
+      "start": "hunt",
+      "states": {
+        "hunt": {
+          "tracks": [
+            {
+              "id": "close_gap",
+              "loop": true,
+              "steps": [
+                {
+                  "wait": 0.1
+                }
+              ]
+            }
+          ],
+          "transitions": [
+            {
+              "when": "distance(self, player) < 6 && playerNear",
+              "to": "telegraph_dash"
+            }
+          ]
+        },
+        "telegraph_dash": {
+          "tracks": [
+            {
+              "id": "telegraph",
+              "loop": false,
+              "steps": [
+                {
+                  "telegraph": {
+                    "part": "phase_striker",
+                    "time": 0.5
+                  }
+                },
+                {
+                  "setMotion": {
+                    "type": "dash",
+                    "speed": 14,
+                    "duration": 0.35,
+                    "target": "player"
+                  }
+                },
+                {
+                  "wait": 0.1
+                },
+                {
+                  "fire": {
+                    "emitter": "slash",
+                    "count": 1
+                  }
+                },
+                {
+                  "wait": 0.35
+                },
+                {
+                  "setMotion": {
+                    "type": "patrol",
+                    "speed": 2.5,
+                    "turnAtEdges": true,
+                    "turnAtWalls": true
+                  }
+                },
+                {
+                  "wait": 2.5
+                }
+              ]
+            }
+          ],
+          "transitions": [
+            {
+              "when": "timer > 3.5",
+              "to": "hunt"
+            }
+          ]
+        }
+      }
+    },
+    "desc": "EntitySpec enemy generated from round 39"
+  },
+  {
+    "v": 1,
+    "id": "sky_striker",
+    "name": "Sky Striker",
+    "kind": "enemy",
+    "limits": {
+      "maxAlive": 4,
+      "maxSpawnsPerSecond": 1,
+      "maxSpawnDepth": 1
+    },
+    "defs": {
+      "striker_bullet": {
+        "id": "striker_bullet",
+        "tags": [
+          "projectile",
+          "enemy"
+        ],
+        "visual": {
+          "shape": "diamond",
+          "size": [
+            0.25,
+            0.25
+          ],
+          "tint": "#ff6b35"
+        },
+        "body": {
+          "shape": "circle",
+          "radius": 0.12,
+          "gravity": 0
+        },
+        "motion": {
+          "type": "velocity",
+          "speed": 10
+        },
+        "contact": {
+          "damage": 1,
+          "destroySelf": true
+        },
+        "life": {
+          "ttl": 3
+        }
+      }
+    },
+    "root": {
+      "id": "sky_striker",
+      "tags": [
+        "enemy",
+        "flying"
+      ],
+      "visual": {
+        "shape": "ellipse",
+        "size": [
+          1.2,
+          0.8
+        ],
+        "tint": "#4a90d9"
+      },
+      "body": {
+        "shape": "box",
+        "size": [
+          1.0,
+          0.6
+        ],
+        "gravity": 0
+      },
+      "health": {
+        "max": 12
+      },
+      "contact": {
+        "damage": 1
+      },
+      "motion": {
+        "type": "hover",
+        "speed": 4,
+        "amplitude": 2,
+        "frequency": 0.8
+      },
+      "emitters": {
+        "front": {
+          "at": [
+            0.7,
+            0
+          ],
+          "ref": "striker_bullet",
+          "pattern": "aimed"
+        },
+        "upper": {
+          "at": [
+            0.5,
+            -0.3
+          ],
+          "ref": "striker_bullet",
+          "pattern": "aimed"
+        },
+        "lower": {
+          "at": [
+            0.5,
+            0.3
+          ],
+          "ref": "striker_bullet",
+          "pattern": "aimed"
+        }
+      }
+    },
+    "brain": {
+      "start": "strafe",
+      "states": {
+        "strafe": {
+          "tracks": [
+            {
+              "id": "attack_cycle",
+              "loop": true,
+              "steps": [
+                {
+                  "telegraph": {
+                    "part": "sky_striker",
+                    "time": 0.3
+                  }
+                },
+                {
+                  "fire": {
+                    "emitter": "front",
+                    "count": 1
+                  }
+                },
+                {
+                  "wait": 0.15
+                },
+                {
+                  "fire": {
+                    "emitter": "upper",
+                    "count": 1
+                  }
+                },
+                {
+                  "wait": 0.15
+                },
+                {
+                  "fire": {
+                    "emitter": "lower",
+                    "count": 1
+                  }
+                },
+                {
+                  "wait": 1.2
+                }
+              ]
+            }
+          ],
+          "transitions": [
+            {
+              "when": "distance(self, player) > 12",
+              "to": "approach"
+            }
+          ]
+        },
+        "approach": {
+          "tracks": [
+            {
+              "id": "close_gap",
+              "loop": true,
+              "steps": [
+                {
+                  "setMotion": {
+                    "type": "chase",
+                    "speed": 5
+                  }
+                },
+                {
+                  "wait": 2
+                }
+              ]
+            }
+          ],
+          "transitions": [
+            {
+              "when": "distance(self, player) < 8",
+              "to": "strafe"
+            }
+          ]
+        }
+      }
+    },
+    "desc": "EntitySpec enemy generated from round 43"
   }
 ]

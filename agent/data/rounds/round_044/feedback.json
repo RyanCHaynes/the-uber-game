@@ -1,0 +1,90 @@
+{
+  "round": 44,
+  "level": "level_043",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 3,
+      "completed": true,
+      "deaths": 0,
+      "fall_locations": [],
+      "time_seconds": 28.4,
+      "enemies_killed": 2,
+      "hits_taken": 0,
+      "objects_collected": 0,
+      "player_trace": [
+        {
+          "x": 80.0,
+          "y": 432.0,
+          "t_ms": 0
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 161
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 911
+        },
+        {
+          "x": 144.0,
+          "y": 434.0,
+          "t_ms": 1661
+        },
+        {
+          "x": 288.0,
+          "y": 434.0,
+          "t_ms": 2410
+        },
+        {
+          "x": 252.8,
+          "y": 434.0,
+          "t_ms": 3161
+        },
+        {
+          "x": 252.8,
+          "y": 434.0,
+          "t_ms": 3911
+        },
+        {
+          "x": 358.4,
+          "y": 434.0,
+          "t_ms": 4661
+        },
+        {
+          "x": 502.4,
+          "y": 411.0,
+          "t_ms": 5411
+        },
+        {
+          "x": 646.4,
+          "y": 338.0,
+          "t_ms": 6161
+        },
+        {
+          "x": 636.8,
+          "y": 338.0,
+          "t_ms": 6911
+        },
+        {
+          "x": 492.8,
+          "y": 390.0,
+          "t_ms": 7660
+        },
+        {
+          "x": 448.0,
+          "y": 434.0,
+          "t_ms": 8410
+        },
+        {
+          "x": 438.4,
+          "y": 434.0,
+          "t_ms": 9157
+        }
+      ],
+      "comment": "Okay that was better, but the enemies died too easy. They need more health."
+    }
+  ]
+}

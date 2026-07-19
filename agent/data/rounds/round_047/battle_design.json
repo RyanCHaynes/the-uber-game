@@ -1,0 +1,22 @@
+{
+  "round": 47,
+  "mode": "battle",
+  "difficulty": 12.5,
+  "picks": [
+    "mech_moth"
+  ],
+  "note": "A single Mechanical Moth boss provides a focused, high-threat encounter near the target difficulty.",
+  "buffed": null,
+  "created": "blink_striker",
+  "scores": {
+    "grub": 3.95,
+    "turret": 7.31,
+    "wasp": 8.35,
+    "iron_moth": 27.4,
+    "mech_moth": 11.7,
+    "crystal_sentinel": 9.95,
+    "phase_striker": 7.15,
+    "sky_striker": 8.0,
+    "blink_striker": 8.15
+  }
+}

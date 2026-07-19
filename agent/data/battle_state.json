@@ -1,0 +1,193 @@
+{
+  "D": 12.75,
+  "round": 48,
+  "last_create_round": 47,
+  "history": [
+    {
+      "round": 31,
+      "D": 1.0,
+      "picks": [
+        "grub"
+      ],
+      "buffed": null,
+      "created": null,
+      "ts": "2026-07-19T01:00:51"
+    },
+    {
+      "round": 32,
+      "D": 2.0,
+      "picks": [
+        "grub"
+      ],
+      "buffed": null,
+      "created": null,
+      "ts": "2026-07-19T01:01:04"
+    },
+    {
+      "round": 33,
+      "D": 3.0,
+      "picks": [
+        "grub"
+      ],
+      "buffed": null,
+      "created": null,
+      "ts": "2026-07-19T01:01:15"
+    },
+    {
+      "round": 34,
+      "D": 4.0,
+      "picks": [
+        "grub"
+      ],
+      "buffed": null,
+      "created": null,
+      "ts": "2026-07-19T01:01:32"
+    },
+    {
+      "round": 35,
+      "D": 4.0,
+      "picks": [
+        "grub"
+      ],
+      "buffed": null,
+      "created": "crystal_sentinel",
+      "ts": "2026-07-19T01:04:14"
+    },
+    {
+      "round": 36,
+      "D": 4.5,
+      "picks": [
+        "grub"
+      ],
+      "buffed": null,
+      "created": null,
+      "ts": "2026-07-19T01:04:42"
+    },
+    {
+      "round": 37,
+      "D": 5.5,
+      "picks": [
+        "grub"
+      ],
+      "buffed": null,
+      "created": null,
+      "ts": "2026-07-19T01:05:00"
+    },
+    {
+      "round": 38,
+      "D": 6.5,
+      "picks": [
+        "turret"
+      ],
+      "buffed": null,
+      "created": null,
+      "ts": "2026-07-19T01:05:16"
+    },
+    {
+      "round": 39,
+      "D": 7.0,
+      "picks": [
+        "phase_striker"
+      ],
+      "buffed": null,
+      "created": "phase_striker",
+      "ts": "2026-07-19T01:05:45"
+    },
+    {
+      "round": 40,
+      "D": 8.0,
+      "picks": [
+        "wasp"
+      ],
+      "buffed": null,
+      "created": null,
+      "ts": "2026-07-19T01:06:02"
+    },
+    {
+      "round": 41,
+      "D": 8.5,
+      "picks": [
+        "wasp"
+      ],
+      "buffed": null,
+      "created": null,
+      "ts": "2026-07-19T01:06:26"
+    },
+    {
+      "round": 42,
+      "D": 9.5,
+      "picks": [
+        "crystal_sentinel"
+      ],
+      "buffed": null,
+      "created": null,
+      "ts": "2026-07-19T01:07:29"
+    },
+    {
+      "round": 43,
+      "D": 10.0,
+      "picks": [
+        "wasp",
+        "sky_striker"
+      ],
+      "buffed": null,
+      "created": "sky_striker",
+      "ts": "2026-07-19T01:08:27"
+    },
+    {
+      "round": 44,
+      "D": 10.5,
+      "picks": [
+        "crystal_sentinel",
+        "crystal_sentinel"
+      ],
+      "buffed": null,
+      "created": null,
+      "ts": "2026-07-19T01:09:23"
+    },
+    {
+      "round": 45,
+      "D": 11.0,
+      "picks": [
+        "sky_striker",
+        "sky_striker"
+      ],
+      "buffed": null,
+      "created": null,
+      "ts": "2026-07-19T01:10:08"
+    },
+    {
+      "round": 46,
+      "D": 12.0,
+      "picks": [
+        "grub",
+        "grub",
+        "grub"
+      ],
+      "buffed": null,
+      "created": null,
+      "ts": "2026-07-19T01:10:30"
+    },
+    {
+      "round": 47,
+      "D": 12.5,
+      "picks": [
+        "mech_moth"
+      ],
+      "buffed": null,
+      "created": "blink_striker",
+      "ts": "2026-07-19T01:13:05"
+    },
+    {
+      "round": 48,
+      "D": 12.75,
+      "picks": [
+        "mech_moth",
+        "grub"
+      ],
+      "buffed": null,
+      "created": null,
+      "ts": "2026-07-19T01:13:52"
+    }
+  ]
+}

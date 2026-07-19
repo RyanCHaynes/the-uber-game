@@ -1,0 +1,20 @@
+{
+  "round": 41,
+  "mode": "battle",
+  "difficulty": 8.5,
+  "picks": [
+    "wasp"
+  ],
+  "note": "Single Wasp provides a challenging aerial threat with ranged attacks, matching the difficulty target closely.",
+  "buffed": null,
+  "created": null,
+  "scores": {
+    "grub": 3.95,
+    "turret": 7.31,
+    "wasp": 8.35,
+    "iron_moth": 27.4,
+    "mech_moth": 11.7,
+    "crystal_sentinel": 9.95,
+    "phase_striker": 7.15
+  }
+}

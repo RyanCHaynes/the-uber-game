@@ -1,0 +1,22 @@
+{
+  "round": 45,
+  "mode": "battle",
+  "difficulty": 11.0,
+  "picks": [
+    "sky_striker",
+    "sky_striker"
+  ],
+  "note": "Two fast-flying Sky Strikers (8.0 each) give ~16 threat \u2014 a bit above D=11 but they shoot rapid projectiles, matching the player's request for more flying enemies with faster bullets.",
+  "buffed": null,
+  "created": null,
+  "scores": {
+    "grub": 3.95,
+    "turret": 7.31,
+    "wasp": 8.35,
+    "iron_moth": 27.4,
+    "mech_moth": 11.7,
+    "crystal_sentinel": 9.95,
+    "phase_striker": 7.15,
+    "sky_striker": 8.0
+  }
+}

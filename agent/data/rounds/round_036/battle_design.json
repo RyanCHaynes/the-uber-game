@@ -1,0 +1,19 @@
+{
+  "round": 36,
+  "mode": "battle",
+  "difficulty": 4.5,
+  "picks": [
+    "grub"
+  ],
+  "note": "Single Grub provides a gentle warm-up near the target difficulty after the previous round was too easy.",
+  "buffed": null,
+  "created": null,
+  "scores": {
+    "grub": 3.95,
+    "turret": 7.31,
+    "wasp": 8.35,
+    "iron_moth": 27.4,
+    "mech_moth": 11.7,
+    "crystal_sentinel": 9.95
+  }
+}

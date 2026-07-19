@@ -597,3 +597,95 @@ def adapt_and_write(analysis: dict, feedback: dict, source_round: int,
     print(f"  enemy designer patch rejected after {MAX_ADAPT_ATTEMPTS} attempts; "
           f"roster unchanged: {errors}")
     return None
+
+
+SYSTEM_HARDEN = """You are the Enemy Designer for a self-improving 2D platformer, working
+for Battle mode. The player is beating a specific enemy too easily, so your job is to make
+THAT ONE enemy meaningfully harder while keeping it fair and still killable. You never place
+enemies and you never write code.
+
+Emit a small PATCH of numeric tweaks against stable ids. Return ONLY this JSON shape:
+{
+  "note": "one sentence: what you made harder and why",
+  "ops": [ ["set" | "add" | "mul", "<enemyId>.<dot.path>", <number>] ]
+}
+
+Path rules (identical to normal adaptation):
+- Target the enemy and its parts by stable "id", never by array index.
+- A part field is "<enemyId>.parts.<partId>.<field>", e.g. "wasp.parts.body.hp".
+- EntitySpec nodes use "<specId>.entity.<entityId>.<field>", e.g. "iron_moth.entity.core.health.max".
+- Only edit numeric fields that already exist. Legacy tunable fields:
+  movement.speed, movement.range, movement.bob, movement.bob_hz,
+  attack.cooldown_s, attack.speed, attack.damage, attack.range, attack.gravity,
+  contact_damage, and per-part hp / w / h / r / offset.x / offset.y.
+- EntitySpec tunable fields include health.max, motion numeric parameters, contact.damage,
+  life.ttl, and boss limits.
+- "set" replaces, "add" adds a delta, "mul" multiplies. Values are numbers only.
+
+To make an enemy harder, favour: MORE hp, MORE attack.damage / contact_damage, LOWER
+attack.cooldown_s (fires more often), FASTER attack.speed / movement.speed, LONGER attack.range.
+
+Rules:
+- Only touch the requested enemy id. Do NOT add or remove enemies or parts, rename ids, or
+  change any movement/attack "type".
+- Keep it surgical: small deltas, few ops. Each numeric change is capped at ~50% per round, so
+  ramp difficulty gradually rather than spiking it. Keep at least one vulnerable part killable."""
+
+
+def _harden(enemy: dict, feedback: dict, lessons_text: str,
+            previous: dict | None = None, errors: list[str] | None = None) -> dict:
+    """One Nemotron call: propose a patch that makes a single enemy harder."""
+    player = (feedback.get("players") or [{}])[0]
+    user = (
+        f"ENEMY TO HARDEN (id '{enemy.get('id')}'):\n{json.dumps(enemy, indent=2)}\n\n"
+        f"LAST BATTLE RESULT: killed {player.get('enemies_killed', 0)}, "
+        f"hits taken {player.get('hits_taken', 0)}, deaths {player.get('deaths', 0)}, "
+        f"time {player.get('time_seconds', '?')}s, completed {player.get('completed', False)}.\n\n"
+        f"RELEVANT LESSONS:\n{lessons_text or '(none)'}\n\n"
+        f"The player is clearing this enemy too easily. Emit a patch that makes ONLY enemy "
+        f"'{enemy.get('id')}' meaningfully harder while staying fair and killable."
+    )
+    if errors:
+        user += (
+            "\n\nPREVIOUS INVALID PATCH:\n" + json.dumps(previous, separators=(",", ":"))
+            + "\n\nPython rejected it for these reasons; fix all of them:\n"
+            + "\n".join(f"- {error}" for error in errors)
+        )
+    result = llm.complete_json(
+        SYSTEM_HARDEN, user, model=llm.DESIGNER_MODEL, max_tokens=1500,
+        label="enemy hardener",
+    )
+    return result if isinstance(result, dict) else {"ops": []}
+
+
+def harden_and_write(enemy_id: str, feedback: dict, source_round: int,
+                     lessons_text: str = "") -> dict | None:
+    """Battle-mode lever: make one existing enemy harder, rollback-safe. Reuses the
+    same patch/validation/clamp machinery as adaptation, so escalation stays capped
+    (~50%/round) and can never ship an invalid or unkillable enemy."""
+    roster = load_roster()
+    enemy = next((e for e in roster if isinstance(e, dict) and e.get("id") == enemy_id), None)
+    if enemy is None:
+        print(f"  enemy hardener: no enemy with id '{enemy_id}'")
+        return None
+
+    errors, previous = [], None
+    for attempt in range(MAX_ADAPT_ATTEMPTS):
+        patch = _harden(enemy, feedback, lessons_text, previous, errors)
+        ops = patch.get("ops") if isinstance(patch, dict) else None
+        if not ops:
+            print(f"  enemy hardener proposed no changes for '{enemy_id}'")
+            return None
+        new_roster, errors = apply_patch(roster, patch)
+        previous = patch
+        if not errors:
+            _backup_last_good()
+            _write_roster(new_roster)
+            _log_design(source_round, {"harden": enemy_id, **patch})
+            print(f"  enemy designer hardened '{enemy_id}' with {len(ops)} op(s): "
+                  f"{str(patch.get('note', '')).strip()[:80]}")
+            return patch
+
+    print(f"  enemy hardener patch rejected after {MAX_ADAPT_ATTEMPTS} attempts; "
+          f"'{enemy_id}' unchanged: {errors}")
+    return None

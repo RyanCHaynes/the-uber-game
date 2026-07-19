@@ -1,0 +1,20 @@
+{
+  "round": 39,
+  "mode": "battle",
+  "difficulty": 7.0,
+  "picks": [
+    "phase_striker"
+  ],
+  "note": "Single Phase Striker provides a mobile, phasing threat that closely matches the difficulty target while differing from the previous Grub encounter.",
+  "buffed": null,
+  "created": "phase_striker",
+  "scores": {
+    "grub": 3.95,
+    "turret": 7.31,
+    "wasp": 8.35,
+    "iron_moth": 27.4,
+    "mech_moth": 11.7,
+    "crystal_sentinel": 9.95,
+    "phase_striker": 7.15
+  }
+}

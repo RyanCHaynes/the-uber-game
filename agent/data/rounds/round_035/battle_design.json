@@ -1,0 +1,19 @@
+{
+  "round": 35,
+  "mode": "battle",
+  "difficulty": 4.0,
+  "picks": [
+    "grub"
+  ],
+  "note": "Single Grub provides a gentle introduction matching the low difficulty target.",
+  "buffed": null,
+  "created": "crystal_sentinel",
+  "scores": {
+    "grub": 3.95,
+    "turret": 7.31,
+    "wasp": 8.35,
+    "iron_moth": 27.4,
+    "mech_moth": 11.7,
+    "crystal_sentinel": 9.95
+  }
+}
