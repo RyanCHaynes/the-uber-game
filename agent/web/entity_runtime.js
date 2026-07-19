@@ -323,6 +323,7 @@
     function damageEntity(instance, entity, damage, now) {
       if (entity.hpMax == null || !entity.alive) return false;
       entity.hp -= damage; runEvent(instance, entity, "damage", now);
+      if (entity.hp > 0 && options.onHit) options.onHit(instance, entity);   // non-fatal hit (sfx hook)
       if (entity.hpMax && entity.hp / entity.hpMax <= .5 && !entity.healthBelowSent) { entity.healthBelowSent = true; runEvent(instance, entity, "healthBelow", now); }
       if (entity.hp <= 0) killEntity(instance, entity, now);
       return true;

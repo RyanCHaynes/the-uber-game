@@ -118,6 +118,9 @@
         <h2 style="margin:0">Playtest</h2>
         <span id="ptName" class="dim"></span>
         <span class="spacer"></span>
+        <label id="soundToggle" title="Sound effects (jump, shots, hits, pickups, victory)" style="display:flex;align-items:center;gap:4px;cursor:pointer">
+          <input type="checkbox" id="soundEnabled" checked> 🔊 <span id="soundState" class="dim">on</span>
+        </label>
         <label id="padToggle" title="Use a connected gamepad — D-pad move, LT jump, right stick aim, RT fire" style="display:flex;align-items:center;gap:4px;cursor:pointer">
           <input type="checkbox" id="padEnabled"> 🎮 <span id="padState" class="dim">off</span>
         </label>
@@ -545,6 +548,73 @@ let hp = MAX_HP, kills = 0, hitsTaken = 0, invulnUntil = 0, lastShotAt = 0;
 let cam = { x: 0, y: 0 };
 let padEnabled = false, aimVec = { x: 1, y: 0 };   // gamepad opt-in + last aim direction
 
+// --- procedural sound effects (Web Audio API — synthesized live, no asset files) ---
+const sfx = (() => {
+  let ctx = null, master = null, enabled = true;
+  function ensure() {
+    if (!ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) { console.warn("[sfx] no Web Audio API in this browser"); return null; }
+      ctx = new AC();
+      master = ctx.createGain();
+      master.gain.value = 0.25;                     // gentle overall level
+      master.connect(ctx.destination);
+    }
+    if (ctx.state === "suspended") ctx.resume();     // browsers require a user gesture
+    return ctx;
+  }
+  // one oscillator with an amp envelope + optional pitch glide
+  function tone({ type = "square", f0, f1 = f0, dur = 0.12, vol = 0.6, delay = 0 }) {
+    if (!enabled) return;
+    const c = ensure(); if (!c) return;
+    const t = c.currentTime + delay;
+    const osc = c.createOscillator(), g = c.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(f0, t);
+    if (f1 !== f0) osc.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(g).connect(master);
+    osc.start(t); osc.stop(t + dur + 0.02);
+  }
+  // filtered white-noise burst (hits, explosions)
+  function noise({ dur = 0.2, vol = 0.5, freq = 1200, sweepTo = null }) {
+    if (!enabled) return;
+    const c = ensure(); if (!c) return;
+    const t = c.currentTime;
+    const frames = Math.max(1, Math.floor(c.sampleRate * dur));
+    const buf = c.createBuffer(1, frames, c.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < frames; i++) data[i] = Math.random() * 2 - 1;
+    const src = c.createBufferSource(); src.buffer = buf;
+    const filt = c.createBiquadFilter(); filt.type = "lowpass";
+    filt.frequency.setValueAtTime(freq, t);
+    if (sweepTo) filt.frequency.exponentialRampToValueAtTime(Math.max(1, sweepTo), t + dur);
+    const g = c.createGain();
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(filt).connect(g).connect(master);
+    src.start(t); src.stop(t + dur);
+  }
+  return {
+    resume: () => { if (enabled) ensure(); },
+    setEnabled: v => { enabled = v; if (v) ensure(); },
+    jump:   () => tone({ type: "square",   f0: 320, f1: 760, dur: 0.14, vol: 0.5 }),
+    shoot:  () => tone({ type: "square",   f0: 900, f1: 320, dur: 0.10, vol: 0.32 }),
+    hit:    () => noise({ dur: 0.07, vol: 0.3, freq: 2600, sweepTo: 900 }),
+    kill:   () => { tone({ type: "sawtooth", f0: 420, f1: 60, dur: 0.28, vol: 0.5 });
+                    noise({ dur: 0.3, vol: 0.4, freq: 1800, sweepTo: 200 }); },
+    hurt:   () => tone({ type: "sawtooth", f0: 260, f1: 90, dur: 0.28, vol: 0.55 }),
+    pickup: () => { tone({ type: "triangle", f0: 660, dur: 0.08, vol: 0.45 });
+                    tone({ type: "triangle", f0: 990, dur: 0.10, vol: 0.45, delay: 0.08 }); },
+    bounce: () => tone({ type: "sine",     f0: 300, f1: 900, dur: 0.16, vol: 0.5 }),
+    win:    () => [523, 659, 784, 1047].forEach((f, i) =>
+                    tone({ type: "square", f0: f, dur: 0.16, vol: 0.45, delay: i * 0.13 })),
+  };
+})();
+window.sfx = sfx;   // exposed for the console, e.g. sfx.jump() or sfx.setEnabled(false)
+
 function spawnEnemies() {
   entityRootCount = 0;
   entityHost = EntityRuntime.create({
@@ -554,7 +624,8 @@ function spawnEnemies() {
     getPlayer: () => player,
     damagePlayer,
     playerShotDamage: 15,
-    onRootKilled: () => { kills++; },
+    onRootKilled: () => { kills++; sfx.kill(); },
+    onHit: () => { sfx.hit(); },
   });
   const spawnedBossTypes = new Set();
   enemies = enemySpawns.map(sp => {
@@ -603,7 +674,7 @@ function partHit(en, part, px, py, pr) {
 
 function damagePlayer(dmg, now) {
   if (now < invulnUntil || phase !== "playing") return;
-  hp -= dmg; hitsTaken++;
+  hp -= dmg; hitsTaken++; sfx.hurt();
   invulnUntil = now + 1000;
   if (hp <= 0) {
     falls++;
@@ -670,7 +741,8 @@ function updateShots(now) {
         if (part.vulnerable) {
           part.hp -= 15;
           if (part.hp <= 0) part.dead = true;
-          if (!en.parts.some(p => p.vulnerable && !p.dead)) { en.dead = true; kills++; }
+          if (!en.parts.some(p => p.vulnerable && !p.dead)) { en.dead = true; kills++; sfx.kill(); }
+          else sfx.hit();
         }
         break outer;
       }
@@ -793,9 +865,11 @@ function firePlayerShot(dirX, dirY) {
   const d = Math.hypot(dirX, dirY) || 1;
   playerShots.push({ x: px, y: py,
                      vx: dirX / d * SHOT_SPEED, vy: dirY / d * SHOT_SPEED - SHOT_LOFT });
+  sfx.shoot();
 }
 cv2.addEventListener("mousedown", e => {
   cv2.focus();
+  sfx.resume();                       // unlock/resume the audio context on user gesture
   if (e.button !== 0 || phase !== "playing" || !player) return;
   const px = player.x + player.w / 2, py = player.y + player.h / 2;
   firePlayerShot(mouse.x + cam.x - px, mouse.y + cam.y - py);
@@ -834,6 +908,11 @@ $("padEnabled").addEventListener("change", () => {
   cv2.focus();
   updatePadState();
 });
+$("soundEnabled").addEventListener("change", () => {
+  const on = $("soundEnabled").checked;
+  sfx.setEnabled(on);
+  $("soundState").textContent = on ? "on" : "off";
+});
 window.addEventListener("gamepadconnected", updatePadState);
 window.addEventListener("gamepaddisconnected", updatePadState);
 
@@ -853,7 +932,7 @@ function ptStep() {
               + (keys.ArrowDown || keys.KeyS || pad.down ? climbSpeed : 0);
     player.grounded = true;
   } else if ((keys.ArrowUp || keys.Space || keys.KeyW || pad.jump) && player.grounded) {
-    player.vy = -JUMP; player.grounded = false;
+    player.vy = -JUMP; player.grounded = false; sfx.jump();
   } else {
     player.vy = Math.min(player.vy + GRAVITY, MAX_FALL);
   }
@@ -909,13 +988,13 @@ function ptStep() {
   for (const hit of touchingObjects()) {
     const params = hit.def.params || {};
     if (hit.def.behavior === "bounce" && player.vy >= 0) {
-      player.vy = -(+params.launch_speed || 11.5); player.grounded = false;
+      player.vy = -(+params.launch_speed || 11.5); player.grounded = false; sfx.bounce();
     } else if (hit.def.behavior === "hazard") {
       damagePlayer(+params.damage || 1, now);
     } else if (hit.def.behavior === "heal" && hp < MAX_HP && !collectedObjects.has(hit.key)) {
-      hp = MAX_HP; collectedObjects.add(hit.key); objectsCollected++;
+      hp = MAX_HP; collectedObjects.add(hit.key); objectsCollected++; sfx.pickup();
     } else if (hit.def.behavior === "collectible" && !collectedObjects.has(hit.key)) {
-      collectedObjects.add(hit.key); objectsCollected++;
+      collectedObjects.add(hit.key); objectsCollected++; sfx.pickup();
     }
   }
   updateEnemies(now);
@@ -924,6 +1003,7 @@ function ptStep() {
 
 function showRatingForm() {
   phase = "rating";
+  if (runCompleted) sfx.win();
   $("fbTitle").style.color = "";
   $("fbTitle").textContent = runCompleted
     ? `🏁 Finished in ${((performance.now() - startedAt) / 1000).toFixed(1)}s with ${falls} falls — rate it:`
