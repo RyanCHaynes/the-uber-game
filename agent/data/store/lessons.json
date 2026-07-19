@@ -21,7 +21,7 @@
       7
     ],
     "seen_count": 6,
-    "applied_count": 21,
+    "applied_count": 22,
     "successful_applications": 0,
     "applications": [
       {
@@ -165,7 +165,14 @@
         "success": false
       },
       {
-        "design_round": 27
+        "design_round": 27,
+        "rating": 2,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 28
       }
     ],
     "merged_from": [
@@ -215,6 +222,191 @@
       19
     ],
     "seen_count": 5,
+    "applied_count": 22,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 7,
+        "rating": 3,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 8,
+        "rating": 2,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 9,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 10,
+        "rating": 2,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 11,
+        "rating": 2,
+        "completed": false,
+        "deaths": 3,
+        "success": false
+      },
+      {
+        "design_round": 12,
+        "rating": 2,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 13,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 14,
+        "rating": 2,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 15,
+        "rating": 1,
+        "completed": false,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 16,
+        "rating": 3,
+        "completed": false,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 18,
+        "rating": 3,
+        "completed": false,
+        "deaths": 4,
+        "success": false
+      },
+      {
+        "design_round": 19,
+        "rating": 3,
+        "completed": true,
+        "deaths": 2,
+        "success": false
+      },
+      {
+        "design_round": 20,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 21,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 22,
+        "rating": 2,
+        "completed": true,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 23,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 24,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 25,
+        "rating": 1,
+        "completed": true,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 26,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 27,
+        "rating": 2,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 28
+      }
+    ],
+    "merged_from": [
+      {
+        "id": "lesson_0007",
+        "lesson": "Flat levels with no vertical traversal (climbing/descending) and poorly positioned aerial enemies fail to deliver engaging platforming or combat."
+      },
+      {
+        "id": "lesson_0017",
+        "lesson": "Enemy variety without terrain variety still yields low engagement \u2014 enemies need diverse spatial contexts (verticality, cover, chokepoints) to create distinct encounters."
+      },
+      {
+        "id": "lesson_0017",
+        "lesson": "Long uninterrupted ladder climbs exceeding ~8-10 tiles without rest platforms, horizontal ledges, or alternative traversal paths cause player fatigue and repeated falls at the same height, turning vertical traversal into a punishment loop rather than a skill challenge."
+      },
+      {
+        "id": "lesson_0019",
+        "lesson": "Ladder climbs that exceed 8 tiles in height and lack horizontal ledges, rest platforms, or alternative paths become fatigue traps \u2014 players fall repeatedly at the same height, lose all progress, and perceive the climb as unfair rather than skillful."
+      }
+    ]
+  },
+  {
+    "id": "lesson_0004",
+    "lesson": "Horizontal floor gaps/pits are not perceived as verticality by players even if platforms sit at different heights \u2014 true verticality needs traversal that changes the player's elevation (climbing/descending), not just gaps at one baseline.",
+    "category": "traversal",
+    "conditions": [],
+    "outcome": "",
+    "confidence": 0.6,
+    "source_round": 2,
+    "evidence_rounds": [
+      2
+    ],
+    "seen_count": 1,
     "applied_count": 21,
     "successful_applications": 0,
     "applications": [
@@ -317,13 +509,6 @@
         "success": false
       },
       {
-        "design_round": 21,
-        "rating": 3,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
         "design_round": 22,
         "rating": 2,
         "completed": true,
@@ -359,178 +544,14 @@
         "success": false
       },
       {
-        "design_round": 27
-      }
-    ],
-    "merged_from": [
-      {
-        "id": "lesson_0007",
-        "lesson": "Flat levels with no vertical traversal (climbing/descending) and poorly positioned aerial enemies fail to deliver engaging platforming or combat."
-      },
-      {
-        "id": "lesson_0017",
-        "lesson": "Enemy variety without terrain variety still yields low engagement \u2014 enemies need diverse spatial contexts (verticality, cover, chokepoints) to create distinct encounters."
-      },
-      {
-        "id": "lesson_0017",
-        "lesson": "Long uninterrupted ladder climbs exceeding ~8-10 tiles without rest platforms, horizontal ledges, or alternative traversal paths cause player fatigue and repeated falls at the same height, turning vertical traversal into a punishment loop rather than a skill challenge."
-      },
-      {
-        "id": "lesson_0019",
-        "lesson": "Ladder climbs that exceed 8 tiles in height and lack horizontal ledges, rest platforms, or alternative paths become fatigue traps \u2014 players fall repeatedly at the same height, lose all progress, and perceive the climb as unfair rather than skillful."
-      }
-    ]
-  },
-  {
-    "id": "lesson_0004",
-    "lesson": "Horizontal floor gaps/pits are not perceived as verticality by players even if platforms sit at different heights \u2014 true verticality needs traversal that changes the player's elevation (climbing/descending), not just gaps at one baseline.",
-    "category": "traversal",
-    "conditions": [],
-    "outcome": "",
-    "confidence": 0.6,
-    "source_round": 2,
-    "evidence_rounds": [
-      2
-    ],
-    "seen_count": 1,
-    "applied_count": 20,
-    "successful_applications": 0,
-    "applications": [
-      {
-        "design_round": 7,
-        "rating": 3,
-        "completed": false,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 8,
-        "rating": 2,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 9,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 10,
+        "design_round": 27,
         "rating": 2,
         "completed": false,
         "deaths": 0,
         "success": false
       },
       {
-        "design_round": 11,
-        "rating": 2,
-        "completed": false,
-        "deaths": 3,
-        "success": false
-      },
-      {
-        "design_round": 12,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 13,
-        "rating": 1,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 14,
-        "rating": 2,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 15,
-        "rating": 1,
-        "completed": false,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 16,
-        "rating": 3,
-        "completed": false,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 17,
-        "rating": 3,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 18,
-        "rating": 3,
-        "completed": false,
-        "deaths": 4,
-        "success": false
-      },
-      {
-        "design_round": 19,
-        "rating": 3,
-        "completed": true,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 20,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 22,
-        "rating": 2,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 23,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 24,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 25,
-        "rating": 1,
-        "completed": true,
-        "deaths": 1,
-        "success": false
-      },
-      {
-        "design_round": 26,
-        "rating": 1,
-        "completed": false,
-        "deaths": 0,
-        "success": false
-      },
-      {
-        "design_round": 27
+        "design_round": 28
       }
     ],
     "merged_from": []
@@ -547,7 +568,7 @@
       2
     ],
     "seen_count": 1,
-    "applied_count": 14,
+    "applied_count": 15,
     "successful_applications": 0,
     "applications": [
       {
@@ -642,7 +663,14 @@
         "success": false
       },
       {
-        "design_round": 27
+        "design_round": 27,
+        "rating": 2,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 28
       }
     ],
     "merged_from": []
@@ -659,7 +687,7 @@
       2
     ],
     "seen_count": 1,
-    "applied_count": 11,
+    "applied_count": 12,
     "successful_applications": 0,
     "applications": [
       {
@@ -733,7 +761,14 @@
         "success": false
       },
       {
-        "design_round": 27
+        "design_round": 27,
+        "rating": 2,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 28
       }
     ],
     "merged_from": []
@@ -750,7 +785,7 @@
       4
     ],
     "seen_count": 3,
-    "applied_count": 18,
+    "applied_count": 19,
     "successful_applications": 0,
     "applications": [
       {
@@ -873,7 +908,14 @@
         "success": false
       },
       {
-        "design_round": 27
+        "design_round": 27,
+        "rating": 2,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 28
       }
     ],
     "merged_from": [
@@ -907,7 +949,7 @@
       17
     ],
     "seen_count": 3,
-    "applied_count": 18,
+    "applied_count": 19,
     "successful_applications": 0,
     "applications": [
       {
@@ -1030,7 +1072,14 @@
         "success": false
       },
       {
-        "design_round": 27
+        "design_round": 27,
+        "rating": 2,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 28
       }
     ],
     "merged_from": [
@@ -1069,7 +1118,7 @@
       23
     ],
     "seen_count": 6,
-    "applied_count": 17,
+    "applied_count": 18,
     "successful_applications": 0,
     "applications": [
       {
@@ -1185,7 +1234,14 @@
         "success": false
       },
       {
-        "design_round": 27
+        "design_round": 27,
+        "rating": 2,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 28
       }
     ],
     "merged_from": [
@@ -1290,7 +1346,7 @@
       6
     ],
     "seen_count": 1,
-    "applied_count": 14,
+    "applied_count": 15,
     "successful_applications": 0,
     "applications": [
       {
@@ -1385,7 +1441,14 @@
         "success": false
       },
       {
-        "design_round": 27
+        "design_round": 27,
+        "rating": 2,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 28
       }
     ],
     "merged_from": []
@@ -1402,7 +1465,7 @@
       6
     ],
     "seen_count": 1,
-    "applied_count": 15,
+    "applied_count": 16,
     "successful_applications": 0,
     "applications": [
       {
@@ -1504,7 +1567,14 @@
         "success": false
       },
       {
-        "design_round": 27
+        "design_round": 27,
+        "rating": 2,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 28
       }
     ],
     "merged_from": []
@@ -1533,7 +1603,7 @@
       12
     ],
     "seen_count": 3,
-    "applied_count": 20,
+    "applied_count": 21,
     "successful_applications": 0,
     "applications": [
       {
@@ -1670,7 +1740,14 @@
         "success": false
       },
       {
-        "design_round": 27
+        "design_round": 27,
+        "rating": 2,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 28
       }
     ],
     "merged_from": [
@@ -1712,7 +1789,7 @@
       26
     ],
     "seen_count": 2,
-    "applied_count": 4,
+    "applied_count": 5,
     "successful_applications": 0,
     "applications": [
       {
@@ -1737,7 +1814,14 @@
         "success": false
       },
       {
-        "design_round": 27
+        "design_round": 27,
+        "rating": 2,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 28
       }
     ],
     "merged_from": [

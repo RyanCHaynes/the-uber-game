@@ -7,7 +7,9 @@ it against the closed vocabulary from
 ``agent/entity/llm_adaptive_boss_system_plan.md``, and renders a static
 structural preview and live simulation. The workshop and shipped game share
 ``agent/web/entity_runtime.js``, so a validated workshop behavior runs through
-the same interpreter that executes it in a scrolling CSV level.
+the same interpreter that executes it in a scrolling CSV level. Valid generated
+specs can be saved directly to the main roster and receive the next free level
+digit.
 
 Run it with::
 

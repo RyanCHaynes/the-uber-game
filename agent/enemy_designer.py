@@ -478,6 +478,45 @@ def maybe_add_entityspec(analysis: dict, feedback: dict,
     return record
 
 
+def save_entityspec(spec: dict, source: str = "workshop") -> dict:
+    """Validate and append a workshop EntitySpec to the main-game roster.
+
+    The save is rollback-safe and deliberately refuses replacement: stable
+    roster IDs must stay unambiguous, so editing an existing archetype remains
+    the Enemy Designer's patch path rather than a workshop side effect.
+    """
+    if not isinstance(spec, dict):
+        raise ValueError("spec must be a JSON object")
+    candidate_spec = copy.deepcopy(spec)
+    result = entity_schema.validate(candidate_spec)
+    errors = list(result.errors) + dry_run_spec(candidate_spec)
+    if errors:
+        raise ValueError("EntitySpec rejected: " + "; ".join(errors))
+    roster = load_roster()
+    if len(roster) >= MAX_ARCHETYPES:
+        raise FileExistsError(f"enemy roster is full ({MAX_ARCHETYPES} archetypes)")
+    entity_id = candidate_spec.get("id")
+    if any(item.get("id") == entity_id for item in roster if isinstance(item, dict)):
+        raise FileExistsError(f"enemy id '{entity_id}' is already in the roster")
+    candidate_spec.setdefault("desc", f"EntitySpec {candidate_spec.get('kind', 'enemy')} saved from {source}")
+    _sanitize_enemy(candidate_spec)
+    candidate = roster + [candidate_spec]
+    errors = validate_roster(candidate)
+    if errors:
+        raise ValueError("roster rejected: " + "; ".join(errors))
+    _backup_last_good()
+    _write_roster(candidate)
+    record = {
+        "kind": "save_entityspec",
+        "source": source,
+        "entity_id": entity_id,
+        "name": candidate_spec.get("name"),
+        "digit": len(candidate),
+    }
+    _log_design(0, record)
+    return {**record, "roster_count": len(candidate), "max_archetypes": MAX_ARCHETYPES}
+
+
 def adapt(analysis: dict, feedback: dict, roster: list[dict],
           lessons_text: str, previous: dict | None = None,
           errors: list[str] | None = None) -> dict:

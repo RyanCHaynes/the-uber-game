@@ -53,6 +53,9 @@ emitters, events, and signals. `web/entity_runtime.js` runs these definitions in
 the main scrolling world and in the standalone workshop. A boss digit is a
 single encounter marker even if repeated in the CSV, and the level exit remains
 locked until that boss is defeated. The shipped Iron Moth is roster digit `4`.
+The standalone workshop at `http://localhost:8788` can generate, simulate, and
+save a valid EntitySpec directly into this roster; duplicate IDs and invalid or
+inert definitions are rejected before the file is changed.
 
 ## Architecture
 

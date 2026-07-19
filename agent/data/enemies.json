@@ -427,5 +427,291 @@
         }
       }
     }
+  },
+  {
+    "v": 1,
+    "id": "mech_moth",
+    "name": "Mechanical Moth",
+    "kind": "boss",
+    "limits": {
+      "maxAlive": 1,
+      "maxSpawnsPerSecond": 8,
+      "maxSpawnDepth": 2
+    },
+    "vars": {
+      "wingsAlive": 2
+    },
+    "defs": {
+      "missile": {
+        "id": "missile",
+        "tags": [
+          "projectile",
+          "enemy"
+        ],
+        "visual": {
+          "shape": "capsule",
+          "size": [
+            0.5,
+            0.2
+          ],
+          "tint": "#ff4444"
+        },
+        "body": {
+          "shape": "capsule",
+          "size": [
+            0.5,
+            0.2
+          ],
+          "gravity": 0
+        },
+        "motion": {
+          "type": "home",
+          "speed": 6,
+          "turnRate": 180
+        },
+        "contact": {
+          "damage": 2,
+          "destroySelf": true,
+          "knockback": 3
+        },
+        "life": {
+          "ttl": 5
+        }
+      }
+    },
+    "root": {
+      "id": "moth_body",
+      "tags": [
+        "boss",
+        "enemy"
+      ],
+      "visual": {
+        "shape": "ellipse",
+        "size": [
+          2,
+          1.2
+        ],
+        "tint": "#8888aa"
+      },
+      "body": {
+        "shape": "ellipse",
+        "size": [
+          1.8,
+          1
+        ],
+        "gravity": 0
+      },
+      "health": {
+        "max": 120
+      },
+      "contact": {
+        "damage": 3,
+        "knockback": 5
+      },
+      "motion": {
+        "type": "hover",
+        "speed": 2
+      },
+      "emitters": {
+        "left_wing": {
+          "at": [
+            -1.2,
+            0
+          ],
+          "ref": "missile",
+          "pattern": "aimed"
+        },
+        "right_wing": {
+          "at": [
+            1.2,
+            0
+          ],
+          "ref": "missile",
+          "pattern": "aimed"
+        }
+      },
+      "children": [
+        {
+          "id": "left_wing",
+          "tags": [
+            "part",
+            "wing"
+          ],
+          "at": [
+            -1.2,
+            0
+          ],
+          "visual": {
+            "shape": "triangle",
+            "size": [
+              1,
+              1.5
+            ],
+            "tint": "#6666cc"
+          },
+          "body": {
+            "shape": "triangle",
+            "size": [
+              1,
+              1.5
+            ],
+            "gravity": 0
+          },
+          "health": {
+            "max": 30
+          },
+          "link": {
+            "parent": "moth_body",
+            "onParentDeath": "destroy"
+          }
+        },
+        {
+          "id": "right_wing",
+          "tags": [
+            "part",
+            "wing"
+          ],
+          "at": [
+            1.2,
+            0
+          ],
+          "visual": {
+            "shape": "triangle",
+            "size": [
+              1,
+              1.5
+            ],
+            "tint": "#6666cc"
+          },
+          "body": {
+            "shape": "triangle",
+            "size": [
+              1,
+              1.5
+            ],
+            "gravity": 0
+          },
+          "health": {
+            "max": 30
+          },
+          "link": {
+            "parent": "moth_body",
+            "onParentDeath": "destroy"
+          }
+        }
+      ],
+      "on": {
+        "partDestroyed": [
+          {
+            "add": {
+              "var": "wingsAlive",
+              "value": -1
+            }
+          },
+          {
+            "signal": {
+              "name": "wing_destroyed"
+            }
+          }
+        ]
+      }
+    },
+    "brain": {
+      "start": "flight",
+      "states": {
+        "flight": {
+          "tracks": [
+            {
+              "id": "missile_volley",
+              "loop": true,
+              "steps": [
+                {
+                  "telegraph": {
+                    "part": "moth_body",
+                    "time": 0.5
+                  }
+                },
+                {
+                  "fire": {
+                    "emitter": "left_wing",
+                    "count": 2,
+                    "spread": 15
+                  }
+                },
+                {
+                  "fire": {
+                    "emitter": "right_wing",
+                    "count": 2,
+                    "spread": 15
+                  }
+                },
+                {
+                  "wait": 2
+                }
+              ]
+            }
+          ],
+          "transitions": [
+            {
+              "when": "self.vars.wingsAlive <= 0",
+              "to": "crash"
+            }
+          ]
+        },
+        "crash": {
+          "enter": [
+            {
+              "setMotion": {
+                "type": "dash",
+                "speed": 15,
+                "duration": 0.8
+              }
+            },
+            {
+              "wait": 1
+            },
+            {
+              "setMotion": {
+                "type": "chase",
+                "speed": 5
+              }
+            }
+          ],
+          "tracks": [
+            {
+              "id": "rage_attack",
+              "loop": true,
+              "steps": [
+                {
+                  "telegraph": {
+                    "part": "moth_body",
+                    "time": 0.3
+                  }
+                },
+                {
+                  "fire": {
+                    "emitter": "left_wing",
+                    "count": 4,
+                    "spread": 45
+                  }
+                },
+                {
+                  "fire": {
+                    "emitter": "right_wing",
+                    "count": 4,
+                    "spread": 45
+                  }
+                },
+                {
+                  "wait": 1
+                }
+              ]
+            }
+          ],
+          "transitions": []
+        }
+      }
+    },
+    "desc": "EntitySpec boss saved from workshop"
   }
 ]

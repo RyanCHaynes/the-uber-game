@@ -10,6 +10,7 @@ Endpoints:
     GET  /                index.html
     GET  /api/status      backend/mode + recent LLM traffic
     POST /api/generate    {"description": str} -> spec + validation + tokens
+    POST /api/save        {"spec": EntitySpec} -> append to main enemy roster
 """
 
 import json
@@ -17,7 +18,7 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from .. import llm
+from .. import enemy_designer, llm
 from . import generator
 
 PORT = 8788
@@ -27,6 +28,7 @@ ENTITY_RUNTIME_JS = ENTITY_DIR.parent / "web" / "entity_runtime.js"
 
 # Serialize generation: one shared token budget / LLM queue underneath.
 _gen_lock = threading.Lock()
+_save_lock = threading.Lock()
 
 
 def _status() -> dict:
@@ -37,6 +39,8 @@ def _status() -> dict:
         "tokens": llm.cycle_usage(),
         "llm_queue": llm.queue_status(),
         "llm_log": llm.read_log(20),
+        "roster_count": len(enemy_designer.load_roster()),
+        "roster_max": enemy_designer.MAX_ARCHETYPES,
     }
 
 
@@ -82,6 +86,18 @@ class Handler(BaseHTTPRequestHandler):
             finally:
                 _gen_lock.release()
             self._send(200, result)
+        elif self.path == "/api/save":
+            body = self._body()
+            try:
+                with _save_lock:
+                    saved = enemy_designer.save_entityspec(body.get("spec"), "workshop")
+            except FileExistsError as err:
+                self._send(409, {"error": str(err)})
+                return
+            except ValueError as err:
+                self._send(422, {"error": str(err)})
+                return
+            self._send(201, saved)
         else:
             self._send(404, {"error": "not found"})
 

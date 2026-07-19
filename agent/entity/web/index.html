@@ -64,6 +64,7 @@
   <h1>🛠 Entity Workshop</h1>
   <span id="mode" class="badge mock">…</span>
   <span id="model" class="muted"></span>
+  <span id="roster" class="muted"></span>
   <span class="spacer"></span>
   <span id="tokens" class="muted"></span>
 </header>
@@ -76,7 +77,9 @@
       <div id="examples"></div>
       <div class="row">
         <button id="gen" class="primary">Generate</button>
+        <button id="save" disabled>Save to main roster</button>
         <span id="status" class="muted"></span>
+        <span id="saveStatus" class="muted"></span>
         <span id="err"></span>
       </div>
     </div>
@@ -129,6 +132,7 @@ function el(id) { return document.getElementById(id); }
 function setStatus(text, busy) {
   el("status").textContent = text || "";
   el("gen").disabled = !!busy;
+  if (busy) el("save").disabled = true;
 }
 
 async function refreshStatus() {
@@ -138,6 +142,7 @@ async function refreshStatus() {
     badge.className = "badge " + (s.mode === "mock" ? "mock" : "llm");
     badge.textContent = s.mode === "mock" ? "MOCK (no API key)" : "NEMOTRON";
     el("model").textContent = s.model || "";
+    el("roster").textContent = `main roster: ${s.roster_count ?? "?"}/${s.roster_max ?? 9}`;
     if (s.tokens) el("tokens").textContent =
       `tokens: ${s.tokens.used.toLocaleString()} / ${s.tokens.budget.toLocaleString()}`;
     renderLlm(s.llm_log || []);
@@ -278,6 +283,7 @@ function renderPreview(spec) {
 async function generate() {
   const description = el("desc").value.trim();
   el("err").textContent = "";
+  el("saveStatus").textContent = "";
   if (!description) { el("err").textContent = "Enter a description first."; return; }
   setStatus("Generating…", true);
   try {
@@ -294,6 +300,7 @@ async function generate() {
     renderPreview(data.spec);
     const playable = !!(data.spec && data.validation && data.validation.ok);
     el("sim").disabled = !playable;
+    el("save").disabled = !playable;
     el("simStatus").textContent = playable
       ? "Ready — click ▶ Simulate (then click the arena to control)."
       : "Fix validation errors before simulating.";
@@ -308,7 +315,34 @@ async function generate() {
   }
 }
 
+async function saveToRoster() {
+  if (!lastSpec) return;
+  el("err").textContent = "";
+  el("saveStatus").textContent = "Saving…";
+  el("save").disabled = true;
+  try {
+    const response = await fetch("/api/save", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ spec: lastSpec }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      el("err").textContent = data.error || `Save failed (HTTP ${response.status})`;
+      el("saveStatus").textContent = "";
+      el("save").disabled = false;
+      return;
+    }
+    el("saveStatus").textContent = `Saved as enemy digit ${data.digit} — available in the main game.`;
+    await refreshStatus();
+  } catch (error) {
+    el("err").textContent = "Save failed: " + error;
+    el("saveStatus").textContent = "";
+    el("save").disabled = false;
+  }
+}
+
 el("gen").addEventListener("click", generate);
+el("save").addEventListener("click", saveToRoster);
 el("desc").addEventListener("keydown", e => {
   if ((e.metaKey || e.ctrlKey) && e.key === "Enter") generate();
 });

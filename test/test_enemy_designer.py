@@ -1,4 +1,5 @@
 import json
+import copy
 import tempfile
 import unittest
 from pathlib import Path
@@ -28,7 +29,7 @@ class EnemyDesignerTests(unittest.TestCase):
 
         self.assertEqual(errors, [])
         self.assertEqual(roster[2]["attack"]["speed"], original_speed)
-        self.assertEqual(patched[2]["attack"]["speed"], original_speed * 0.8)
+        self.assertEqual(patched[2]["attack"]["speed"], round(original_speed * 0.8, 2))
         self.assertEqual(patched[2]["parts"][0]["hp"], original_body_hp + 5)
 
     def test_invalid_patch_rolls_back_to_unchanged_roster(self):
@@ -64,6 +65,33 @@ class EnemyDesignerTests(unittest.TestCase):
         self.assertTrue(any("damageable" in error for error in errors))
         self.assertTrue(any("cannot move" in error for error in errors))
 
+    def test_workshop_save_appends_valid_entityspec_with_digit_and_backup(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            roster_path = root / "enemies.json"
+            last_good = root / "store" / "enemies_last_good.json"
+            design_log = root / "store" / "enemy_design_log.jsonl"
+            original = self.roster()[:3]
+            roster_path.write_text(json.dumps(original))
+            spec = copy.deepcopy(self.roster()[-1])
+            spec["id"] = "workshop_moth"
+            spec["name"] = "Workshop Moth"
+            with mock.patch.object(enemy_designer, "ROSTER_PATH", roster_path), \
+                 mock.patch.object(enemy_designer, "LAST_GOOD_PATH", last_good), \
+                 mock.patch.object(enemy_designer, "DESIGN_LOG_PATH", design_log):
+                saved = enemy_designer.save_entityspec(spec)
+
+            updated = json.loads(roster_path.read_text())
+            backup = json.loads(last_good.read_text())
+        self.assertEqual(saved["digit"], 4)
+        self.assertEqual(updated[-1]["id"], "workshop_moth")
+        self.assertEqual(backup, original)
+
+    def test_workshop_save_refuses_duplicate_id(self):
+        spec = copy.deepcopy(self.roster()[-1])
+        with self.assertRaisesRegex(FileExistsError, "already in the roster"):
+            enemy_designer.save_entityspec(spec)
+
     def test_adapt_and_write_backs_up_and_logs_valid_change(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -89,7 +117,8 @@ class EnemyDesignerTests(unittest.TestCase):
             logged = json.loads(design_log.read_text().strip())
         self.assertEqual(result, patch)
         self.assertEqual(backup, original)
-        self.assertEqual(updated[2]["attack"]["speed"], 3.6)
+        self.assertEqual(updated[2]["attack"]["speed"],
+                         round(original[2]["attack"]["speed"] * 0.8, 2))
         self.assertEqual(logged["source_round"], 8)
         self.assertEqual(logged["patch"], patch)
 

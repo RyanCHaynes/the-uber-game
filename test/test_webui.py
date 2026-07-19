@@ -1,9 +1,17 @@
 import unittest
+from pathlib import Path
 
 from agent import webui
 
 
 class TraceTelemetryTests(unittest.TestCase):
+    def test_entity_workshop_exposes_roster_save_control(self):
+        html = (Path(webui.__file__).parent / "entity" / "web" / "index.html").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('id="save"', html)
+        self.assertIn('fetch("/api/save"', html)
+
     def test_trace_is_normalized_and_invalid_samples_are_dropped(self):
         trace = webui._sanitize_trace([
             {"x": 10.26, "y": 20, "t_ms": 750.4},
