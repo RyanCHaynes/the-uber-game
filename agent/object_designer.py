@@ -70,13 +70,17 @@ or behavior names outside the supported templates."""
 PLACEMENT_SYSTEM = """You are an expert ladder placement designer. Study the generated
 JSON level plan together with potential ladder areas, then choose the candidates that create
 intentional vertical routes, alternate paths, recoveries, and pacing changes. Python derived
-the potential areas from the private grid and proved each one mechanically valid.
+the potential areas from the private grid and proved each one mechanically valid by rebuilding
+the player's navigation graph with that ladder present.
 
 Use the JSON plan's solid rectangles, spawn, exit, enemies, dimensions, and progression to
 understand the whole scene. Avoid repetitive evenly spaced ladders; choose a small set whose
 locations have distinct gameplay purposes. Prefer priority=critical_access prospects because
-they unlock upper landings that traversal validation cannot reach without a ladder. Treat
-alternate_route prospects as optional shortcuts, not mandatory decoration.
+they unlock standable regions that traversal validation cannot reach without a ladder. Rank
+critical prospects by inaccessible_coverage and unlocked_standable_cells. Candidates with the same unlocked_region_id
+serve the same inaccessible region, so select at most one of them. Treat alternate_route
+prospects as optional shortcuts, not mandatory decoration. Do not add a ladder merely because
+a platform exists; every selection should add useful reachability or a deliberate alternate route.
 Return ONLY: {"placements":["L001","L014"]}
 
 Return at most 32 unique candidate IDs exactly as provided. Never invent or modify an ID.
@@ -337,8 +341,72 @@ def apply_proposals(proposals: list[dict], source_round: int) -> list[dict]:
     return added
 
 
+def _jump_landings(grid: list[list[str]], start_col: int,
+                   start_row: int) -> set[tuple[int, int]]:
+    """Simulate representative browser-physics jumps from one standable cell."""
+    tile, player_w, player_h = csv_level.TILE, 20, 28
+    speed, jump, gravity, max_fall = 3.2, 9.6, 0.5, 12
+    rows, cols = len(grid), len(grid[0])
+
+    def solid(col, row):
+        if col < 0 or col >= cols:
+            return True
+        if row < 0 or row >= rows:
+            return False
+        return grid[row][col] == "X"
+
+    landings = set()
+    # Releasing horizontal input at different points samples short, medium, and
+    # full jumps while using exactly the browser's speed/gravity constants.
+    for direction in (-1, 0, 1):
+        for hold_frames in ((0,) if direction == 0 else (4, 8, 12, 16, 22, 32, 48)):
+            x = start_col * tile + (tile - player_w) / 2
+            y = (start_row + 1) * tile - player_h - 0.01
+            vy = -jump
+            for frame in range(90):
+                vx = direction * speed if frame < hold_frames else 0
+                vy = min(vy + gravity, max_fall)
+                x += vx
+                top = int(y // tile)
+                bottom = int((y + player_h - 1) // tile)
+                if vx > 0:
+                    col = int((x + player_w) // tile)
+                    if any(solid(col, row) for row in range(top, bottom + 1)):
+                        x = col * tile - player_w - 0.01
+                elif vx < 0:
+                    col = int(x // tile)
+                    if any(solid(col, row) for row in range(top, bottom + 1)):
+                        x = (col + 1) * tile + 0.01
+
+                y += vy
+                left = int(x // tile)
+                right = int((x + player_w - 1) // tile)
+                grounded = False
+                if vy > 0:
+                    row = int((y + player_h) // tile)
+                    if any(solid(col, row) for col in range(left, right + 1)):
+                        y = row * tile - player_h - 0.01
+                        vy = 0
+                        grounded = True
+                elif vy < 0:
+                    row = int(y // tile)
+                    if any(solid(col, row) for col in range(left, right + 1)):
+                        y = (row + 1) * tile + 0.01
+                        vy = 0
+                if grounded and frame > 1:
+                    col = int((x + player_w / 2) // tile)
+                    row = int((y + player_h - 1) // tile)
+                    if csv_level._standable(grid, col, row):
+                        landings.add((col, row))
+                    break
+                if y > rows * tile + 100:
+                    break
+    landings.discard((start_col, start_row))
+    return landings
+
+
 def _reachable_cells(grid: list[list[str]]) -> set[tuple[int, int]]:
-    """Reachable standable/ladder cells under the same coarse rules as validation."""
+    """Build a platform navigation graph using collision-aware movement links."""
     spawn = csv_level.find_one(grid, "S")
     if spawn is None:
         return set()
@@ -348,26 +416,36 @@ def _reachable_cells(grid: list[list[str]]) -> set[tuple[int, int]]:
     if landing is None:
         return set()
     rows, cols = len(grid), len(grid[0])
-    by_col = {}
-    for row in range(rows):
-        for col in range(cols):
-            if csv_level._standable(grid, col, row) or grid[row][col] == "L":
-                by_col.setdefault(col, []).append(row)
     seen, frontier = {landing}, [landing]
     while frontier:
         col, row = frontier.pop()
+        # Walking links connect adjacent cells on the same platform.
+        for next_col in (col - 1, col + 1):
+            node = (next_col, row)
+            if node not in seen and csv_level._standable(grid, next_col, row):
+                seen.add(node); frontier.append(node)
+            # Walking off an edge creates a directed fall link to the first
+            # landing below. Without these links, lower areas look falsely
+            # inaccessible and a ladder can receive inflated credit.
+            elif (0 <= next_col < cols and grid[row][next_col] != "X"
+                  and not csv_level._standable(grid, next_col, row)):
+                for drop_row in range(row + 1, rows - 1):
+                    if csv_level._standable(grid, next_col, drop_row):
+                        drop = (next_col, drop_row)
+                        if drop not in seen:
+                            seen.add(drop); frontier.append(drop)
+                        break
+                    if grid[drop_row][next_col] == "X":
+                        break
         for next_row in (row - 1, row + 1):
             if (0 <= next_row < rows and (col, next_row) not in seen
                     and (grid[row][col] == "L" or grid[next_row][col] == "L")
                     and (csv_level._standable(grid, col, next_row)
                          or grid[next_row][col] == "L")):
                 seen.add((col, next_row)); frontier.append((col, next_row))
-        for next_col in range(col - csv_level.MAX_JUMP_DX,
-                              col + csv_level.MAX_JUMP_DX + 1):
-            for next_row in by_col.get(next_col, ()):
-                if ((next_col, next_row) not in seen
-                        and row - next_row <= csv_level.MAX_JUMP_UP):
-                    seen.add((next_col, next_row)); frontier.append((next_col, next_row))
+        for node in _jump_landings(grid, col, row):
+            if node not in seen:
+                seen.add(node); frontier.append(node)
     return seen
 
 
@@ -391,6 +469,11 @@ def ladder_candidates(level_csv: str, max_candidates: int = 160) -> tuple[list[d
         return [], errors
     rows, cols = len(grid), len(grid[0])
     reachable = _reachable_cells(grid)
+    standable_cells = {
+        (col, row) for row in range(rows) for col in range(cols)
+        if csv_level._standable(grid, col, row)
+    }
+    inaccessible_cells = standable_cells - reachable
     raw = []
     for x in range(cols):
         for bottom_y in range(1, rows - 1):
@@ -417,10 +500,28 @@ def ladder_candidates(level_csv: str, max_candidates: int = 160) -> tuple[list[d
                         if grid[wall_y][neighbor] != "X":
                             break
                         wall_depth += 1
-                    if wall_depth < 3:
-                        continue  # require a substantial vertical face beside the ladder
                     upper_landing = (neighbor, top_y)
+                    # Evaluate the ladder as an off-mesh traversal link: add it
+                    # temporarily, rebuild connectivity, and measure playable
+                    # standable space that becomes reachable from spawn.
+                    for ladder_y in range(top_y, bottom_y + 1):
+                        grid[ladder_y][x] = "L"
+                    with_ladder = _reachable_cells(grid)
+                    for ladder_y in range(top_y, bottom_y + 1):
+                        grid[ladder_y][x] = "."
+                    unlocked = (with_ladder - reachable) & standable_cells
+                    unlocked_count = len(unlocked)
+                    is_long_wall = wall_depth >= 3
+                    if unlocked_count < 3 and not is_long_wall:
+                        continue
                     inaccessible = upper_landing not in reachable
+                    unlocked_columns = sorted({col for col, _ in unlocked})
+                    unlocked_rows = sorted({row for _, row in unlocked})
+                    unlocked_region_id = (
+                        f"c{unlocked_columns[0]}-{unlocked_columns[-1]}_"
+                        f"r{unlocked_rows[0]}-{unlocked_rows[-1]}"
+                        if unlocked_columns and unlocked_rows else "none"
+                    )
                     raw.append({
                         "x": x, "top_y": top_y, "bottom_y": bottom_y,
                         "length": length, "wall_height": wall_depth,
@@ -428,23 +529,46 @@ def ladder_candidates(level_csv: str, max_candidates: int = 160) -> tuple[list[d
                         "upper_landing": {"x": neighbor, "y": top_y},
                         "upper_platform_width": platform_width,
                         "access_without_ladder": "unreachable" if inaccessible else "reachable_by_alternate_route",
-                        "priority": "critical_access" if inaccessible else "alternate_route",
+                        "candidate_type": "long_wall_climb" if is_long_wall else "elevated_platform_access",
+                        "unlocked_standable_cells": unlocked_count,
+                        "inaccessible_coverage": round(
+                            unlocked_count / len(inaccessible_cells), 3
+                        ) if inaccessible_cells else 0.0,
+                        "unlocked_column_span": (
+                            [unlocked_columns[0], unlocked_columns[-1]] if unlocked_columns else []
+                        ),
+                        "unlocked_region_id": unlocked_region_id,
+                        "priority": "critical_access" if unlocked_count >= 3 else "alternate_route",
+                        "_unlocked_cells": unlocked,
                     })
     # Prefer walls that unlock otherwise unreachable space, then taller walls
     # and substantial platforms. Coordinates break ties deterministically.
     raw.sort(key=lambda item: (
-        item["priority"] != "critical_access", -item["wall_height"],
+        item["priority"] != "critical_access", -item["unlocked_standable_cells"],
+        -item["wall_height"],
         -item["upper_platform_width"], item["x"], item["top_y"],
     ))
-    # Adjacent columns often describe the same wall/landing. Keep only the best
-    # prospect for a particular upper landing and lower elevation.
+    # Different ladder columns can unlock the same disconnected component. Keep
+    # only the highest-gain prospect for that region so Nemotron sees meaningful
+    # choices rather than coordinate-level duplicates.
     deduplicated = []
     used_destinations = set()
+    covered_critical_cells = set()
     for item in raw:
-        key = (item["upper_landing"]["x"], item["upper_landing"]["y"], item["bottom_y"])
+        if item["priority"] == "critical_access":
+            novel_cells = item["_unlocked_cells"] - covered_critical_cells
+            if len(novel_cells) < 3:
+                continue
+            key = ("region", item["unlocked_region_id"])
+        else:
+            key = ("landing", item["upper_landing"]["x"],
+                   item["upper_landing"]["y"], item["bottom_y"])
         if key in used_destinations:
             continue
         used_destinations.add(key)
+        if item["priority"] == "critical_access":
+            covered_critical_cells.update(item["_unlocked_cells"])
+        item.pop("_unlocked_cells", None)
         deduplicated.append(item)
     raw = deduplicated
     # Keep broad horizontal coverage when a large level has many possibilities.
@@ -481,6 +605,12 @@ def _apply_placement_patch(level_csv: str, patch: dict,
     selected = [by_id[candidate_id] for candidate_id in placements if candidate_id in by_id]
     if sum(item["length"] for item in selected) > MAX_PLACEMENTS:
         errors.append(f"selected ladders exceed the {MAX_PLACEMENTS}-tile maximum")
+    occupied = set()
+    for item in selected:
+        cells = {(item["x"], y) for y in range(item["top_y"], item["bottom_y"] + 1)}
+        if cells & occupied:
+            errors.append("selected ladder runs overlap another ladder run")
+        occupied.update(cells)
     if errors:
         return level_csv, errors
 

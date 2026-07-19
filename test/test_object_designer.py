@@ -88,6 +88,25 @@ class ObjectDesignerTests(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertEqual(candidates, [])
 
+    def test_inaccessible_wide_platform_is_ranked_by_connectivity_gain(self):
+        grid = [list("." * 20) for _ in range(14)]
+        grid[11][2] = "S"; grid[11][17] = "E"
+        for col in range(8, 14):
+            grid[6][col] = "X"
+        grid[12] = list("X" * 20); grid[13] = list("X" * 20)
+        level = "\n".join(",".join(row) for row in grid)
+
+        candidates, errors = object_designer.ladder_candidates(level)
+
+        self.assertEqual(errors, [])
+        self.assertTrue(candidates)
+        candidate = candidates[0]
+        self.assertEqual(candidate["priority"], "critical_access")
+        self.assertEqual(candidate["candidate_type"], "elevated_platform_access")
+        self.assertGreaterEqual(candidate["unlocked_standable_cells"], 3)
+        self.assertGreater(candidate["inaccessible_coverage"], 0)
+        self.assertNotEqual(candidate["unlocked_region_id"], "none")
+
     def test_rejects_isolated_or_destructive_object_placement(self):
         candidates, _ = object_designer.ladder_candidates(self.base_level())
         malformed = {"placements": [123]}

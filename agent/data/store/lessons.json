@@ -17,7 +17,7 @@
       3
     ],
     "seen_count": 5,
-    "applied_count": 10,
+    "applied_count": 12,
     "successful_applications": 0,
     "applications": [
       {
@@ -89,6 +89,16 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 18
       }
     ],
     "merged_from": [
@@ -123,7 +133,7 @@
       5
     ],
     "seen_count": 3,
-    "applied_count": 10,
+    "applied_count": 12,
     "successful_applications": 0,
     "applications": [
       {
@@ -195,6 +205,16 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 18
       }
     ],
     "merged_from": [
@@ -220,7 +240,7 @@
       2
     ],
     "seen_count": 1,
-    "applied_count": 10,
+    "applied_count": 12,
     "successful_applications": 0,
     "applications": [
       {
@@ -292,6 +312,16 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 18
       }
     ],
     "merged_from": []
@@ -308,7 +338,7 @@
       2
     ],
     "seen_count": 1,
-    "applied_count": 6,
+    "applied_count": 7,
     "successful_applications": 0,
     "applications": [
       {
@@ -352,6 +382,13 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
       }
     ],
     "merged_from": []
@@ -368,7 +405,7 @@
       2
     ],
     "seen_count": 1,
-    "applied_count": 5,
+    "applied_count": 7,
     "successful_applications": 0,
     "applications": [
       {
@@ -405,6 +442,16 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 18
       }
     ],
     "merged_from": []
@@ -421,7 +468,7 @@
       4
     ],
     "seen_count": 3,
-    "applied_count": 9,
+    "applied_count": 10,
     "successful_applications": 0,
     "applications": [
       {
@@ -486,6 +533,9 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 18
       }
     ],
     "merged_from": [
@@ -587,7 +637,7 @@
       5
     ],
     "seen_count": 3,
-    "applied_count": 6,
+    "applied_count": 8,
     "successful_applications": 0,
     "applications": [
       {
@@ -631,6 +681,16 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 18
       }
     ],
     "merged_from": [
@@ -716,7 +776,7 @@
       6
     ],
     "seen_count": 1,
-    "applied_count": 7,
+    "applied_count": 9,
     "successful_applications": 0,
     "applications": [
       {
@@ -767,6 +827,16 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 18
       }
     ],
     "merged_from": []
@@ -783,7 +853,7 @@
       6
     ],
     "seen_count": 1,
-    "applied_count": 8,
+    "applied_count": 10,
     "successful_applications": 0,
     "applications": [
       {
@@ -841,6 +911,16 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 18
       }
     ],
     "merged_from": []
@@ -861,7 +941,7 @@
       7
     ],
     "seen_count": 1,
-    "applied_count": 9,
+    "applied_count": 11,
     "successful_applications": 0,
     "applications": [
       {
@@ -926,6 +1006,16 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 18
       }
     ],
     "merged_from": []
@@ -954,7 +1044,7 @@
       12
     ],
     "seen_count": 3,
-    "applied_count": 9,
+    "applied_count": 11,
     "successful_applications": 0,
     "applications": [
       {
@@ -1019,6 +1109,16 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 18
       }
     ],
     "merged_from": [
@@ -1048,9 +1148,52 @@
       17
     ],
     "seen_count": 1,
-    "applied_count": 0,
+    "applied_count": 2,
     "successful_applications": 0,
-    "applications": [],
+    "applications": [
+      {
+        "design_round": 17,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 18
+      }
+    ],
+    "merged_from": []
+  },
+  {
+    "id": "lesson_0017",
+    "lesson": "Long uninterrupted ladder climbs without rest platforms or horizontal traversal options cause player fatigue and falls, turning vertical traversal into a punishment loop rather than a challenge.",
+    "category": "traversal",
+    "conditions": [
+      "vertical shaft exceeds ~10 tiles height",
+      "ladders are the sole traversal method",
+      "no horizontal ledges, platforms, or branching paths along the climb"
+    ],
+    "outcome": "player falls mid-climb, loses significant progress, disengages from vertical section",
+    "confidence": 0.85,
+    "source_round": 17,
+    "evidence_rounds": [
+      17
+    ],
+    "seen_count": 1,
+    "applied_count": 2,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 17,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 18
+      }
+    ],
     "merged_from": []
   }
 ]
