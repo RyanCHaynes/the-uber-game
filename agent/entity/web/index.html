@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Entity Workshop</title>
+<style>
+  :root {
+    --bg: #14161c; --panel: #1d2029; --panel2: #232734; --line: #313749;
+    --text: #d8dce8; --dim: #8b91a5; --accent: #ffb454; --green: #7bd88f;
+    --red: #f07178; --blue: #6fc3ff; --purple: #c792ea;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.5 system-ui, sans-serif; }
+  header { display: flex; align-items: center; gap: 12px; padding: 10px 18px;
+           background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  h1 { font-size: 17px; margin: 0; color: var(--accent); }
+  .badge { padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+  .badge.mock { background: #3a3320; color: var(--accent); }
+  .badge.llm  { background: #1e3a2a; color: var(--green); }
+  .spacer { flex: 1; }
+  .muted { color: var(--dim); font-size: 12px; }
+  main { display: grid; grid-template-columns: minmax(360px, 1fr) minmax(340px, 1fr);
+         gap: 14px; padding: 14px 18px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+           padding: 12px 14px; margin-bottom: 14px; }
+  .panel h2 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase;
+              letter-spacing: .08em; color: var(--dim); }
+  textarea { width: 100%; min-height: 90px; resize: vertical; background: var(--bg);
+             color: var(--text); border: 1px solid var(--line); border-radius: 6px;
+             padding: 9px 11px; font: 14px/1.5 system-ui, sans-serif; }
+  button { background: var(--panel2); color: var(--text); border: 1px solid var(--line);
+           border-radius: 6px; padding: 6px 14px; cursor: pointer; font-size: 13px; }
+  button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  button:disabled { opacity: .4; cursor: default; }
+  button.primary { background: var(--accent); color: #14161c; border: none; font-weight: 700; }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  #examples { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .chip { background: var(--panel2); border: 1px solid var(--line); border-radius: 6px;
+          padding: 3px 10px; font-size: 12px; cursor: pointer; color: var(--dim); }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  canvas { width: 100%; background: #0e1015; border-radius: 6px; display: block; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; font-size: 12px;
+            color: var(--dim); }
+  pre { margin: 0; font: 12px/1.5 ui-monospace, monospace; white-space: pre-wrap;
+        word-break: break-word; background: #0e1015; border-radius: 6px; padding: 10px;
+        max-height: 420px; overflow: auto; }
+  .find { font: 12px/1.5 ui-monospace, monospace; padding: 4px 8px; border-radius: 4px;
+          margin: 3px 0; }
+  .find.err { background: #3a2020; color: var(--red); }
+  .find.warn { background: #3a3320; color: var(--accent); }
+  .find.ok { background: #1e3a2a; color: var(--green); }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px;
+          border: 1px solid var(--line); color: var(--dim); margin-left: 6px; }
+  #err { color: var(--red); font-weight: 600; }
+  .llmEntry { border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px;
+              margin-bottom: 8px; font-size: 12px; }
+  .llmEntry .h { color: var(--dim); margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🛠 Entity Workshop</h1>
+  <span id="mode" class="badge mock">…</span>
+  <span id="model" class="muted"></span>
+  <span class="spacer"></span>
+  <span id="tokens" class="muted"></span>
+</header>
+
+<main>
+  <div>
+    <div class="panel">
+      <h2>Describe an enemy or boss</h2>
+      <textarea id="desc" placeholder="e.g. A fast flying wasp that dive-bombs the player and spits a fan of stingers"></textarea>
+      <div id="examples"></div>
+      <div class="row">
+        <button id="gen" class="primary">Generate</button>
+        <span id="status" class="muted"></span>
+        <span id="err"></span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Arena</h2>
+      <div class="row" style="margin-top:0; margin-bottom:8px">
+        <button id="sim" class="primary" disabled>▶ Simulate</button>
+        <button id="simStop" disabled>■ Stop</button>
+        <span id="simStatus" class="muted">Generate an entity, then Simulate.</span>
+      </div>
+      <canvas id="cv" width="768" height="416" tabindex="0"></canvas>
+      <div class="legend">
+        <span>← → / A·D move</span><span>↑ / W / space jump</span>
+        <span>click to fire</span><span>R restart</span>
+      </div>
+      <div id="simHud" class="muted" style="margin-top:6px; font-family:ui-monospace,monospace"></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2>Validation</h2>
+      <div id="validation"><span class="muted">No entity generated yet.</span></div>
+    </div>
+    <div class="panel">
+      <h2>EntitySpec JSON</h2>
+      <pre id="json">—</pre>
+    </div>
+    <div class="panel">
+      <h2>Recent LLM traffic</h2>
+      <div id="llm"><span class="muted">—</span></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const EXAMPLES = [
+  "A slow ground turret that fires aimed shots in bursts",
+  "A fast flying wasp that dive-bombs and spits a fan of stingers",
+  "A mechanical moth boss with two destructible wings that launch homing missiles, then crashes and rages when both wings are gone",
+  "A patrolling armored beetle with high health and heavy contact damage",
+];
+
+let lastSpec = null;
+
+function el(id) { return document.getElementById(id); }
+
+function setStatus(text, busy) {
+  el("status").textContent = text || "";
+  el("gen").disabled = !!busy;
+}
+
+async function refreshStatus() {
+  try {
+    const s = await (await fetch("/api/status")).json();
+    const badge = el("mode");
+    badge.className = "badge " + (s.mode === "mock" ? "mock" : "llm");
+    badge.textContent = s.mode === "mock" ? "MOCK (no API key)" : "NEMOTRON";
+    el("model").textContent = s.model || "";
+    if (s.tokens) el("tokens").textContent =
+      `tokens: ${s.tokens.used.toLocaleString()} / ${s.tokens.budget.toLocaleString()}`;
+    renderLlm(s.llm_log || []);
+  } catch (e) { /* server may be starting */ }
+}
+
+function renderLlm(log) {
+  if (!log.length) { el("llm").innerHTML = '<span class="muted">No calls yet.</span>'; return; }
+  el("llm").innerHTML = log.slice(-6).reverse().map(e => `
+    <div class="llmEntry">
+      <div class="h">${e.ts || ""} · ${e.label || ""} · ${e.duration_s ?? "?"}s ·
+        in ${e.input_tokens || 0} / out ${e.output_tokens || 0}</div>
+    </div>`).join("");
+}
+
+function findingRow(cls, text) {
+  const d = document.createElement("div");
+  d.className = "find " + cls;
+  d.textContent = text;
+  return d;
+}
+
+function renderValidation(v, error) {
+  const box = el("validation");
+  box.innerHTML = "";
+  if (error) box.appendChild(findingRow("err", "⚠ " + error));
+  if (!v) {
+    if (!error) box.innerHTML = '<span class="muted">No validation.</span>';
+    return;
+  }
+  if (v.ok && !v.warnings.length)
+    box.appendChild(findingRow("ok", "✓ Valid — passes schema and reference checks"));
+  else if (v.ok)
+    box.appendChild(findingRow("ok", "✓ Valid (with warnings)"));
+  v.errors.forEach(e => box.appendChild(findingRow("err", "✗ " + e)));
+  v.warnings.forEach(w => box.appendChild(findingRow("warn", "! " + w)));
+}
+
+// --- static structural preview ---------------------------------------------
+function collectParts(spec) {
+  // Returns [{id, hp, at:[x,y], size:[w,h], shape, tint, isRoot, emitters:[{at,ref}]}]
+  const parts = [];
+  const root = spec && spec.root;
+  if (!root) return parts;
+  function emittersOf(node) {
+    const out = [];
+    if (node.emitters) for (const [name, em] of Object.entries(node.emitters))
+      out.push({ name, at: em.at || [0, 0], ref: em.ref });
+    return out;
+  }
+  function sizeOf(node) {
+    const v = node.visual || {}, b = node.body || {};
+    if (v.size) return v.size;
+    if (b.size) return b.size;
+    if (b.radius) return [b.radius * 2, b.radius * 2];
+    return [1, 1];
+  }
+  function hpOf(node) { return node.health && node.health.max; }
+  const rootAt = [0, 0];
+  parts.push({ id: root.id || "root", hp: hpOf(root), at: rootAt, size: sizeOf(root),
+    shape: (root.visual && root.visual.shape) || "box",
+    tint: (root.visual && root.visual.tint), isRoot: true, emitters: emittersOf(root) });
+  (root.children || []).forEach(c => {
+    const at = c.at || [0, 0];
+    parts.push({ id: c.id || "part", hp: hpOf(c), at, size: sizeOf(c),
+      shape: (c.visual && c.visual.shape) || "box",
+      tint: (c.visual && c.visual.tint), isRoot: false, emitters: emittersOf(c) });
+  });
+  return parts;
+}
+
+function drawShape(ctx, shape, x, y, w, h) {
+  ctx.beginPath();
+  if (shape === "circle" || shape === "ellipse") {
+    ctx.ellipse(x, y, w / 2, h / 2, 0, 0, Math.PI * 2);
+  } else if (shape === "diamond") {
+    ctx.moveTo(x, y - h / 2); ctx.lineTo(x + w / 2, y);
+    ctx.lineTo(x, y + h / 2); ctx.lineTo(x - w / 2, y); ctx.closePath();
+  } else if (shape === "triangle") {
+    ctx.moveTo(x, y - h / 2); ctx.lineTo(x + w / 2, y + h / 2);
+    ctx.lineTo(x - w / 2, y + h / 2); ctx.closePath();
+  } else { // box, capsule, fallback
+    ctx.rect(x - w / 2, y - h / 2, w, h);
+  }
+}
+
+function renderPreview(spec) {
+  const cv = el("cv"), ctx = cv.getContext("2d");
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const parts = collectParts(spec);
+  if (!parts.length) return;
+
+  // world bounds from part extents
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  parts.forEach(p => {
+    minX = Math.min(minX, p.at[0] - p.size[0] / 2);
+    maxX = Math.max(maxX, p.at[0] + p.size[0] / 2);
+    minY = Math.min(minY, p.at[1] - p.size[1] / 2);
+    maxY = Math.max(maxY, p.at[1] + p.size[1] / 2);
+  });
+  const pad = 1.2;
+  const worldW = (maxX - minX) + pad * 2, worldH = (maxY - minY) + pad * 2;
+  const scale = Math.min(cv.width / worldW, cv.height / worldH) * 0.9;
+  const cx = cv.width / 2, cy = cv.height / 2;
+  const midX = (minX + maxX) / 2, midY = (minY + maxY) / 2;
+  const toX = wx => cx + (wx - midX) * scale;
+  const toY = wy => cy + (wy - midY) * scale;
+
+  parts.forEach(p => {
+    const px = toX(p.at[0]), py = toY(p.at[1]);
+    const pw = p.size[0] * scale, ph = p.size[1] * scale;
+    drawShape(ctx, p.shape, px, py, pw, ph);
+    ctx.fillStyle = p.tint || (p.isRoot ? "#c792ea" : "#7bd88f");
+    ctx.globalAlpha = 0.85; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.lineWidth = p.isRoot ? 2 : 1;
+    ctx.strokeStyle = "#0e1015"; ctx.stroke();
+    // label
+    ctx.fillStyle = "#d8dce8";
+    ctx.font = "12px ui-monospace, monospace";
+    ctx.textAlign = "center";
+    const label = p.id + (p.hp != null ? ` · ${p.hp}hp` : "");
+    ctx.fillText(label, px, py - ph / 2 - 5);
+    // emitters
+    p.emitters.forEach(em => {
+      const ex = toX(p.at[0] + em.at[0]), ey = toY(p.at[1] + em.at[1]);
+      ctx.beginPath();
+      ctx.moveTo(ex, ey - 5); ctx.lineTo(ex + 5, ey);
+      ctx.lineTo(ex, ey + 5); ctx.lineTo(ex - 5, ey); ctx.closePath();
+      ctx.fillStyle = "#f07178"; ctx.fill();
+      if (em.ref) {
+        ctx.fillStyle = "#8b91a5"; ctx.font = "10px ui-monospace, monospace";
+        ctx.fillText("→" + em.ref, ex, ey + 16);
+      }
+    });
+  });
+}
+
+async function generate() {
+  const description = el("desc").value.trim();
+  el("err").textContent = "";
+  if (!description) { el("err").textContent = "Enter a description first."; return; }
+  setStatus("Generating…", true);
+  try {
+    const res = await fetch("/api/generate", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ description }),
+    });
+    const data = await res.json();
+    if (res.status === 409) { el("err").textContent = data.error; setStatus("", false); return; }
+    lastSpec = data.spec;
+    el("json").textContent = data.spec ? JSON.stringify(data.spec, null, 2) : "—";
+    renderValidation(data.validation, data.error);
+    SIM.stop();
+    renderPreview(data.spec);
+    const playable = !!(data.spec && data.validation && data.validation.ok);
+    el("sim").disabled = !playable;
+    el("simStatus").textContent = playable
+      ? "Ready — click ▶ Simulate (then click the arena to control)."
+      : "Fix validation errors before simulating.";
+    const bits = [];
+    if (data.mode) bits.push(data.mode);
+    if (data.attempts) bits.push(`${data.attempts} attempt(s)`);
+    setStatus(bits.join(" · "), false);
+    refreshStatus();
+  } catch (e) {
+    el("err").textContent = "Request failed: " + e;
+    setStatus("", false);
+  }
+}
+
+el("gen").addEventListener("click", generate);
+el("desc").addEventListener("keydown", e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") generate();
+});
+el("examples").innerHTML = EXAMPLES.map((x, i) =>
+  `<span class="chip" data-i="${i}">${x.length > 42 ? x.slice(0, 42) + "…" : x}</span>`).join("");
+el("examples").querySelectorAll(".chip").forEach(c =>
+  c.addEventListener("click", () => { el("desc").value = EXAMPLES[+c.dataset.i]; }));
+
+// ===========================================================================
+//  LIVE SIMULATION — a fixed arena, a player (move/jump/fire matching the main
+//  game), and the generated entity fighting back with its full spec behaviors:
+//  motion controllers, brain states with parallel tracks, emitters/patterns,
+//  events/signals, and an expression evaluator for transitions.
+// ===========================================================================
+const SIM = (() => {
+  const cv = el("cv"), ctx = cv.getContext("2d");
+  const TILE = 32, COLS = 24, ROWS = 13;
+  const W = COLS * TILE, H = ROWS * TILE;
+
+  // --- fixed arena: border walls, ground floor, two platforms --------------
+  const grid = [];
+  for (let r = 0; r < ROWS; r++) {
+    grid[r] = [];
+    for (let c = 0; c < COLS; c++) {
+      const border = c === 0 || c === COLS - 1 || r === ROWS - 1;
+      grid[r][c] = border ? "X" : " ";
+    }
+  }
+  for (let c = 5; c <= 9; c++) grid[8][c] = "X";
+  for (let c = 14; c <= 18; c++) grid[8][c] = "X";
+  const isSolid = (c, r) => c < 0 || c >= COLS ? true : r < 0 || r >= ROWS ? false : grid[r][c] === "X";
+
+  // --- player (constants lifted from the main game) ------------------------
+  const P_SPEED = 3.2, P_JUMP = 9.6, P_GRAV = 0.5, P_MAXFALL = 12;
+  const SHOT_SPEED = 10, SHOT_G = 0.35, SHOT_LOFT = 1.5, SHOT_CD = 320, SHOT_DMG = 15;
+  const PLAYER_HP = 3, GRAV_WORLD = 18 * TILE;  // px/s^2 for gravity-bound entities
+
+  let player, keys = {}, mouse = { x: 0, y: 0 }, lastShotAt = 0;
+  let ents = [], defs = {}, pShots = [], signals = new Set();
+  let arenaTime = 0, deaths = 0, result = null;
+  let running = false, rafId = 0, lastT = 0, acc = 0;
+
+  const rootEnt = () => ents.find(e => e.isRoot);
+  const playerCX = () => player.x + player.w / 2;
+  const playerCY = () => player.y + player.h / 2;
+  const vec = (a, s) => [a[0] * s, a[1] * s];
+  const distToPlayer = e => Math.hypot(playerCX() - e.x, playerCY() - e.y) / TILE;  // tiles
+  const NEAR_TILES = 5, FAR_TILES = 8;
+
+  function nodeSize(node) {
+    const v = node.visual || {}, b = node.body || {};
+    if (Array.isArray(v.size)) return v.size;
+    if (Array.isArray(b.size)) return b.size;
+    if (b.radius) return [b.radius * 2, b.radius * 2];
+    return [1, 1];
+  }
+
+  function mkEntity(node, parent, isRoot) {
+    const size = nodeSize(node);
+    return {
+      id: node.id || "e", spec: node, tags: node.tags || [],
+      parent, isRoot: !!isRoot, detached: false, isProjectile: false,
+      atOffset: vec(node.at || [0, 0], TILE),
+      x: 0, y: 0, vx: 0, vy: 0,
+      w: Math.max(6, size[0] * TILE), h: Math.max(6, size[1] * TILE),
+      shape: (node.visual && node.visual.shape) || (node.body && node.body.shape) || "box",
+      tint: (node.visual && node.visual.tint) || (isRoot ? "#c792ea" : "#7bd88f"),
+      gravityOn: node.body ? !!node.body.gravity : false,
+      hpMax: node.health && node.health.max, hp: node.health && node.health.max,
+      contact: node.contact || null, emitters: node.emitters || {},
+      on: node.on || {}, vars: Object.assign({}, node.vars || {}),
+      ttl: node.life && node.life.ttl, age: 0,
+      motion: node.motion ? Object.assign({}, node.motion) : null,
+      alive: true, telegraphUntil: 0, autoFireAt: 0,
+      moveTarget: null, dashUntil: 0, children: [], brain: null,
+    };
+  }
+
+  // --- instantiate a spec into live entities -------------------------------
+  function instantiate(spec) {
+    ents = []; defs = spec.defs || {}; pShots = []; signals.clear();
+    arenaTime = 0; deaths = 0; result = null;
+    const root = mkEntity(spec.root, null, true);
+    // Flyers start in the air; ground enemies start on the floor (gravity settles
+    // them there anyway, but spawning in place avoids a drop-in from the ceiling).
+    root.x = W * 0.62;
+    root.y = root.gravityOn ? H - TILE - root.h / 2 - 1 : H * 0.32;
+    ents.push(root);
+    for (const cn of spec.root.children || []) {
+      const c = mkEntity(cn, root, false);
+      c.x = root.x + c.atOffset[0]; c.y = root.y + c.atOffset[1];
+      root.children.push(c); ents.push(c);
+    }
+    if (spec.brain && spec.brain.states) {
+      root.brain = { states: spec.brain.states, cur: null, tracks: [] };
+      enterState(root, spec.brain.start);
+    }
+  }
+
+  function resolveDef(ref) {
+    if (defs[ref]) return Object.assign({ id: ref }, defs[ref]);
+    const e = ents.find(x => x.id === ref);
+    return e ? e.spec : null;
+  }
+
+  // --- expression evaluator (safe: tokenizer + Pratt parser) ---------------
+  function evalExpr(src, self) {
+    try { return !!ev(parse(tokenize(String(src))), self); }
+    catch (e) { return false; }
+  }
+  function tokenize(s) {
+    const out = [], re = /\s*([0-9]*\.?[0-9]+|'[^']*'|[A-Za-z_][\w.]*|<=|>=|==|!=|&&|\|\||[()<>!*/+\-,])/g;
+    let m; while ((m = re.exec(s))) out.push(m[1]);
+    return out;
+  }
+  function parse(tk) {
+    let i = 0;
+    const peek = () => tk[i], next = () => tk[i++];
+    const BIN = { "||": 1, "&&": 2, "==": 3, "!=": 3, "<": 4, ">": 4, "<=": 4, ">=": 4, "+": 5, "-": 5, "*": 6, "/": 6 };
+    function prim() {
+      const t = next();
+      if (t === "(") { const e = expr(0); next(); return e; }
+      if (t === "!") return { op: "!", a: prim() };
+      if (t === "-") return { op: "neg", a: prim() };
+      if (/^'.*'$/.test(t)) return { str: t.slice(1, -1) };
+      if (/^[0-9.]+$/.test(t)) return { num: parseFloat(t) };
+      if (peek() === "(") {   // function call
+        next(); const args = [];
+        if (peek() !== ")") { args.push(expr(0)); while (peek() === ",") { next(); args.push(expr(0)); } }
+        next(); return { fn: t, args };
+      }
+      return { id: t };
+    }
+    function expr(min) {
+      let left = prim();
+      while (peek() && BIN[peek()] >= min && BIN[peek()]) {
+        const op = next(); const right = expr(BIN[op] + 1);
+        left = { op, a: left, b: right };
+      }
+      return left;
+    }
+    return expr(0);
+  }
+  function ev(n, self) {
+    if ("num" in n) return n.num;
+    if ("str" in n) return n.str;
+    if (n.id !== undefined) return resolvePath(n.id, self);
+    if (n.fn !== undefined) return callFn(n.fn, n.args.map(a => ev(a, self)), self);
+    if (n.op === "!") return !ev(n.a, self);
+    if (n.op === "neg") return -ev(n.a, self);
+    const a = ev(n.a, self), b = ev(n.b, self);
+    switch (n.op) {
+      case "&&": return a && b; case "||": return a || b;
+      case "==": return a == b; case "!=": return a != b;
+      case "<": return a < b; case ">": return a > b;
+      case "<=": return a <= b; case ">=": return a >= b;
+      case "+": return a + b; case "-": return a - b;
+      case "*": return a * b; case "/": return a / b;
+    }
+  }
+  function resolvePath(path, self) {
+    const parts = path.split(".");
+    if (path === "true") return true;
+    if (path === "false") return false;
+    // sensor shorthands usable directly in transition `when` expressions
+    if (path === "timer") return self && self.brain ? arenaTime - (self.brain.stateSince || 0) : arenaTime;
+    if (path === "playerNear") return self ? distToPlayer(self) < NEAR_TILES : false;
+    if (path === "playerFar") return self ? distToPlayer(self) > FAR_TILES : false;
+    if (path === "playerAbove") return self ? playerCY() < self.y - TILE : false;
+    if (path === "playerBelow") return self ? playerCY() > self.y + TILE : false;
+    let base;
+    if (parts[0] === "self") base = self;
+    else if (parts[0] === "root") base = rootEnt();
+    else if (parts[0] === "player") base = { hp: player.hp, isGrounded: player.grounded, x: playerCX(), y: playerCY(), velocity: { x: player.vx, y: player.vy } };
+    else if (parts[0] === "arena") base = { time: arenaTime };
+    else return 0;
+    let v = base;
+    for (let k = 1; k < parts.length; k++) {
+      if (parts[k] === "hpPct" && v && v.hpMax) { v = v.hp / v.hpMax; continue; }
+      v = v ? v[parts[k]] : undefined;
+    }
+    return v == null ? 0 : v;
+  }
+  function callFn(name, a, self) {
+    const sel = a[0];
+    if (name === "alive") return ents.some(e => e.id === sel && e.alive);
+    if (name === "exists") return ents.some(e => e.id === sel);
+    if (name === "countAlive") {
+      const tag = String(sel).startsWith("tag:") ? String(sel).slice(4) : null;
+      return ents.filter(e => e.alive && (tag ? e.tags.includes(tag) : e.id === sel)).length;
+    }
+    if (name === "distance") {
+      const p = ptOf(a[0], self), q = ptOf(a[1], self);
+      return Math.hypot(p.x - q.x, p.y - q.y) / TILE;
+    }
+    if (name === "randomChance") return Math.random() < a[0];
+    if (name === "cooldownReady") return true;
+    return 0;
+  }
+  function ptOf(ref, self) {
+    if (ref === "player") return { x: playerCX(), y: playerCY() };
+    if (ref === "self") return { x: self.x, y: self.y };
+    const e = ents.find(x => x.id === ref && x.alive);
+    return e ? { x: e.x, y: e.y } : { x: 0, y: 0 };
+  }
+
+  // --- brain: states with parallel tracks ----------------------------------
+  function enterState(e, stateId) {
+    const st = e.brain.states[stateId];
+    if (!st) return;
+    e.brain.cur = stateId;
+    e.brain.stateSince = arenaTime;
+    e.brain.tracks = (st.tracks || []).map(t => ({
+      spec: t, i: 0, loop: t.loop !== false, waitUntil: 0, started: false, done: false,
+    }));
+    // One-time entry sequence. `enter` is the canonical place; many specs also
+    // (mistakenly) put a timed entry sequence in `on.stateEnter`. Honor both,
+    // run as a non-looping track so wait/fire/setMotion steps execute in order.
+    const enterSeq = (st.enter || []).concat(e.on.stateEnter || []);
+    if (enterSeq.length)
+      e.brain.tracks.push({ spec: { steps: enterSeq, loop: false }, i: 0, loop: false,
+                            waitUntil: 0, started: false, done: false });
+  }
+  function runExit(e) { for (const act of e.on.stateExit || []) doAction(e, act, performance.now()); }
+  function resolvePoint(target, e) {
+    if (target === "player") return { x: playerCX(), y: playerCY() };
+    if (target === "self") return { x: e.x, y: e.y };
+    if (target === "arena.randomAir") return { x: TILE + Math.random() * (W - 2 * TILE), y: TILE + Math.random() * (H * 0.5) };
+    if (target === "arena.randomGround") return { x: TILE + Math.random() * (W - 2 * TILE), y: H - TILE * 1.5 };
+    const t = ents.find(x => x.id === target && x.alive);
+    return t ? { x: t.x, y: t.y } : { x: e.x, y: e.y };
+  }
+  function advanceTracks(e, now) {
+    if (!e.brain) return;
+    for (const tr of e.brain.tracks) {
+      if (tr.done) continue;
+      let guard = 0;
+      while (guard++ < 20) {
+        const step = tr.spec.steps[tr.i];
+        if (!step) { if (tr.loop) { tr.i = 0; continue; } tr.done = true; break; }
+        const verb = Object.keys(step)[0], args = step[verb];
+        // blocking verbs manage their own completion
+        if (verb === "wait") {
+          if (!tr.started) { tr.started = true; tr.waitUntil = now + waitMs(args); }
+          if (now < tr.waitUntil) break;
+          tr.started = false; tr.i++; continue;
+        }
+        if (verb === "telegraph") {
+          if (!tr.started) { tr.started = true; tr.waitUntil = now + (args.time || 0.5) * 1000; e.telegraphUntil = tr.waitUntil; }
+          if (now < tr.waitUntil) break;
+          tr.started = false; tr.i++; continue;
+        }
+        if (verb === "moveTo" || verb === "dash") {
+          if (!tr.started) {
+            tr.started = true;
+            e.moveTarget = { pt: resolvePoint(args.target, e), speed: (args.speed || 3) * TILE };
+            if (verb === "dash") { e.moveTarget.speed = (args.speed || 7) * TILE; e.dashUntil = now + (args.duration || 0.5) * 1000; }
+          }
+          const arrived = !e.moveTarget || Math.hypot(e.moveTarget.pt.x - e.x, e.moveTarget.pt.y - e.y) < 8;
+          const timedOut = verb === "dash" && now >= e.dashUntil;
+          if (arrived || timedOut) { e.moveTarget = null; tr.started = false; tr.i++; continue; }
+          break;
+        }
+        // instantaneous verbs
+        doAction(e, step, now);
+        tr.i++;
+      }
+    }
+  }
+  // Evaluated after this frame's events fire, so signal-driven transitions see them.
+  function evalTransitions(e) {
+    if (!e.brain) return;
+    const st = e.brain.states[e.brain.cur];
+    for (const t of (st && st.transitions) || []) {
+      if ((t.when && evalExpr(t.when, e)) || (t.event && signals.has(t.event))) {
+        runExit(e); enterState(e, t.to); break;
+      }
+    }
+  }
+  function waitMs(a) {
+    if (typeof a === "number") return a * 1000;
+    if (a && Array.isArray(a.range)) return (a.range[0] + Math.random() * (a.range[1] - a.range[0])) * 1000;
+    if (a && a.seconds != null) return a.seconds * 1000;
+    if (a && a.duration != null) return a.duration * 1000;
+    return 500;
+  }
+
+  // --- actions (shared by brain steps and event handlers) ------------------
+  function doAction(e, step, now) {
+    const verb = Object.keys(step)[0], a = step[verb] || {};
+    switch (verb) {
+      case "fire": fire(e, a); break;
+      case "spawn": spawnRef(e, a.ref, a); break;
+      case "signal": signals.add(typeof a === "string" ? a : a.name); break;
+      case "setMotion": {
+        const t = a.target && a.target !== "self" ? ents.find(x => x.id === a.target) : e;
+        if (t) t.motion = Object.assign({}, a, { target: undefined });
+        break;
+      }
+      case "set": case "add": case "mul": {
+        const tgt = varTarget(e, a.target); if (!tgt) break;
+        const cur = tgt.obj[tgt.key] || 0, val = a.value || 0;
+        tgt.obj[tgt.key] = verb === "set" ? val : verb === "add" ? cur + val : cur * val;
+        break;
+      }
+      case "destroy": { const t = ents.find(x => x.id === a.target) || e; killEntity(t); break; }
+      case "detach": { const t = ents.find(x => x.id === a.target) || e; t.parent = null; t.detached = true; break; }
+      case "enable": case "disable": break;
+      case "telegraph": e.telegraphUntil = now + (a.time || 0.4) * 1000; break;
+      case "heal": if (e.hpMax) e.hp = Math.min(e.hpMax, e.hp + (a.value || 1)); break;
+      default: break;
+    }
+  }
+  function varTarget(e, path) {
+    if (!path) return null;
+    const parts = String(path).split(".");
+    let obj = parts[0] === "root" ? rootEnt() : e;
+    // e.g. root.vars.rage  ->  obj.vars, key "rage"
+    let cur = obj;
+    for (let k = 1; k < parts.length - 1; k++) cur = cur[parts[k]] || (cur[parts[k]] = {});
+    return { obj: cur, key: parts[parts.length - 1] };
+  }
+
+  // --- emitters / patterns -------------------------------------------------
+  function angleToPlayer(x, y) { return Math.atan2(playerCY() - y, playerCX() - x); }
+  function patternAngles(pattern, base, count, spreadDeg) {
+    const n = Math.max(1, count | 0), sp = (spreadDeg || 0) * Math.PI / 180, out = [];
+    if (pattern === "ring") { for (let k = 0; k < n; k++) out.push(base + k / n * Math.PI * 2); return out; }
+    if (pattern === "fan" || pattern === "arc") {
+      for (let k = 0; k < n; k++) out.push(base - sp / 2 + (n === 1 ? 0 : k / (n - 1) * sp)); return out;
+    }
+    if (pattern === "burst") { for (let k = 0; k < n; k++) out.push(base + (Math.random() - 0.5) * (sp || 0.3)); return out; }
+    for (let k = 0; k < n; k++) out.push(base);   // single / aimed
+    return out;
+  }
+  function fire(e, a) {
+    let ox = e.x, oy = e.y, ref = a.ref, count = a.count || 1;
+    if (a.emitter) {                       // "leftWing.missiles" or "missiles"
+      const dot = a.emitter.indexOf(".");
+      const holderId = dot > 0 ? a.emitter.slice(0, dot) : e.id;
+      const emName = dot > 0 ? a.emitter.slice(dot + 1) : a.emitter;
+      const holder = ents.find(x => x.id === holderId && x.alive);
+      if (!holder) return;                 // firing from a destroyed part: nothing
+      const em = (holder.emitters || {})[emName] || {};
+      const off = vec(em.at || [0, 0], TILE);
+      ox = holder.x + off[0]; oy = holder.y + off[1];
+      ref = ref || em.ref;
+      a = Object.assign({ pattern: em.pattern }, a);
+    }
+    const tmpl = resolveDef(ref); if (!tmpl) return;
+    const base = angleToPlayer(ox, oy);
+    for (const ang of patternAngles(a.pattern || "aimed", base, count, a.spread)) {
+      spawnProjectile(tmpl, ox, oy, ang, a.speed);
+    }
+  }
+  function spawnRef(e, ref, a) {
+    const tmpl = resolveDef(ref); if (!tmpl) return;
+    const base = angleToPlayer(e.x, e.y);
+    for (const ang of patternAngles(a.pattern || "single", base, a.count || 1, a.spread || 40))
+      spawnProjectile(tmpl, e.x, e.y, ang, a.speed);
+  }
+  function spawnProjectile(tmpl, x, y, ang, speedOverride) {
+    if (ents.filter(e => e.alive).length > 120) return;   // hard safety cap
+    const e = mkEntity(tmpl, null, false);
+    e.isProjectile = true; e.x = x; e.y = y;
+    const spd = (speedOverride != null ? speedOverride
+      : (e.motion && e.motion.speed != null ? e.motion.speed : 5)) * TILE;
+    e.vx = Math.cos(ang) * spd; e.vy = Math.sin(ang) * spd;
+    ents.push(e);
+    runEvent(e, "spawn");
+  }
+
+  // --- lifecycle -----------------------------------------------------------
+  function runEvent(e, name) {
+    signals.add(name);                       // built-in events double as signals
+    for (const act of e.on[name] || []) doAction(e, act, performance.now());
+  }
+  function damageEntity(e, dmg) {
+    if (e.hpMax == null || !e.alive) return;
+    e.hp -= dmg;
+    runEvent(e, "damage");
+    if (e.hp <= 0) killEntity(e);
+  }
+  function killEntity(e) {
+    if (!e.alive) return;
+    e.alive = false;
+    runEvent(e, "destroy");
+    for (const c of e.children) {
+      const pol = (c.spec.link && c.spec.link.onParentDeath) || (e.isRoot ? "destroy" : "ignore");
+      if (pol === "destroy") killEntity(c);
+      else if (pol === "detach") { c.parent = null; c.detached = true; }
+      else if (pol === "disable") c.alive = false;
+    }
+    if (e.parent) { runEvent(e.parent, "childDestroyed"); runEvent(e.parent, "partDestroyed"); }
+    if (e.isRoot) result = "defeated";
+  }
+
+  // --- per-step update -----------------------------------------------------
+  function playerStep() {
+    player.vx = (keys.ArrowLeft || keys.KeyA ? -P_SPEED : 0) + (keys.ArrowRight || keys.KeyD ? P_SPEED : 0);
+    if ((keys.ArrowUp || keys.Space || keys.KeyW) && player.grounded) { player.vy = -P_JUMP; player.grounded = false; }
+    player.vy = Math.min(player.vy + P_GRAV, P_MAXFALL);
+    player.x += player.vx;
+    let top = Math.floor(player.y / TILE), bot = Math.floor((player.y + player.h - 1) / TILE);
+    if (player.vx > 0) { const c = Math.floor((player.x + player.w) / TILE); for (let r = top; r <= bot; r++) if (isSolid(c, r)) player.x = c * TILE - player.w - 0.01; }
+    else if (player.vx < 0) { const c = Math.floor(player.x / TILE); for (let r = top; r <= bot; r++) if (isSolid(c, r)) player.x = (c + 1) * TILE + 0.01; }
+    player.y += player.vy; player.grounded = false;
+    const left = Math.floor(player.x / TILE), right = Math.floor((player.x + player.w - 1) / TILE);
+    if (player.vy > 0) { const r = Math.floor((player.y + player.h) / TILE); for (let c = left; c <= right; c++) if (isSolid(c, r)) { player.y = r * TILE - player.h - 0.01; player.vy = 0; player.grounded = true; } }
+    else if (player.vy < 0) { const r = Math.floor(player.y / TILE); for (let c = left; c <= right; c++) if (isSolid(c, r)) { player.y = (r + 1) * TILE + 0.01; player.vy = 0; } }
+    if (player.y > H + 80) respawnPlayer();
+  }
+  function respawnPlayer() { player.x = 2 * TILE + 6; player.y = H - TILE - player.h; player.vx = player.vy = 0; player.grounded = true; }
+  function hurtPlayer(dmg, now) {
+    if (now < player.invulnUntil) return;
+    player.hp -= dmg; player.invulnUntil = now + 1000;
+    if (player.hp <= 0) { deaths++; player.hp = PLAYER_HP; player.invulnUntil = now + 1500; respawnPlayer(); }
+  }
+  function stepEntity(e, dt, now) {
+    e.age += dt;
+    if (e.ttl && e.age >= e.ttl) { killEntity(e); return; }
+    // children rigidly follow their parent unless detached
+    if (e.parent && !e.detached) { e.x = e.parent.x + e.atOffset[0]; e.y = e.parent.y + e.atOffset[1]; return; }
+    // movement: brain moveTo/dash target overrides the motion controller
+    if (e.moveTarget) {
+      const d = Math.hypot(e.moveTarget.pt.x - e.x, e.moveTarget.pt.y - e.y) || 1;
+      e.vx = (e.moveTarget.pt.x - e.x) / d * e.moveTarget.speed;
+      e.vy = (e.moveTarget.pt.y - e.y) / d * e.moveTarget.speed;
+    } else if (e.motion) {
+      stepMotion(e, dt);
+    } else if (e.gravityOn) {
+      e.vy += GRAV_WORLD * dt;
+    }
+    integrate(e, dt);
+    // A brain-less simple enemy auto-fires its own emitters at the player.
+    // Bosses orchestrate firing through their brain, so their parts never
+    // auto-fire (that would double up with brain 'fire' steps).
+    if (e.isRoot && !e.brain && Object.keys(e.emitters).length && now >= e.autoFireAt) {
+      e.autoFireAt = now + 1500;
+      for (const name of Object.keys(e.emitters)) fire(e, { emitter: name });
+    }
+  }
+  function stepMotion(e, dt) {
+    const m = e.motion, spd = (m.speed != null ? m.speed : 3) * TILE;
+    const px = playerCX(), py = playerCY();
+    let ix = e.vx, iy = e.vy;                 // default (velocity): keep current
+    if (m.type === "static") { ix = 0; iy = 0; }
+    else if (m.type === "gravity") { iy = e.vy + GRAV_WORLD * dt; }
+    else if (m.type === "chase") { const a = Math.atan2(py - e.y, px - e.x); ix = Math.cos(a) * spd; iy = Math.sin(a) * spd; }
+    else if (m.type === "home") {
+      const a = Math.atan2(py - e.y, px - e.x), cur = Math.atan2(e.vy, e.vx) || a;
+      const turn = (m.turnRate || 120) * Math.PI / 180 * dt;
+      let da = ((a - cur + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+      da = Math.max(-turn, Math.min(turn, da));
+      const na = cur + da; ix = Math.cos(na) * spd; iy = Math.sin(na) * spd;
+    }
+    else if (m.type === "hover") { ix = (px - e.x) * 1.5; iy = ((py - 3 * TILE) - e.y) * 1.5; }
+    else if (m.type === "orbit") {
+      e._oa = (e._oa || 0) + (m.rate || 1.2) * dt; const R = (m.radius || 3) * TILE;
+      ix = (px + Math.cos(e._oa) * R - e.x) * 3; iy = (py + Math.sin(e._oa) * R - e.y) * 3;
+    }
+    else if (m.type === "patrol") {
+      e._px = (e._px == null ? e.x : e._px); e._dir = e._dir || 1;
+      if (e.x > e._px + (m.range || 3) * TILE) e._dir = -1;
+      if (e.x < e._px - (m.range || 3) * TILE) e._dir = 1;
+      ix = e._dir * spd; iy = 0;
+    }
+    // Flying controllers steer in both axes (a homing missile must curve
+    // vertically); gravity never overrides them, even if body.gravity is set.
+    // For ground controllers, gravity owns the vertical axis so non-flying
+    // enemies fall and rest on the ground/platforms.
+    const flying = m.type === "home" || m.type === "hover" || m.type === "orbit";
+    e.vx = ix;
+    e.vy = (e.gravityOn && !flying) ? e.vy + GRAV_WORLD * dt : iy;
+  }
+  function integrate(e, dt) {
+    e.x += e.vx * dt; e.y += e.vy * dt;
+    if (e.gravityOn) {                       // land on solids
+      const c = Math.floor(e.x / TILE), rb = Math.floor((e.y + e.h / 2) / TILE);
+      if (isSolid(c, rb)) { e.y = rb * TILE - e.h / 2 - 0.01; if (e.vy > 0) e.vy = 0; }
+    }
+    if (e.isProjectile && (e.x < -40 || e.x > W + 40 || e.y < -40 || e.y > H + 40)) e.alive = false;
+    if (!e.isProjectile && !e.detached) {    // keep the boss inside the arena
+      e.x = Math.max(TILE + e.w / 2, Math.min(W - TILE - e.w / 2, e.x));
+      e.y = Math.max(e.h / 2, Math.min(H - TILE - e.h / 2, e.y));
+    }
+  }
+  function collide(now) {
+    // player shots vs entities
+    for (const s of pShots) {
+      s.vy += SHOT_G; s.x += s.vx; s.y += s.vy;
+      if (isSolid(Math.floor(s.x / TILE), Math.floor(s.y / TILE))) { s.dead = true; continue; }
+      for (const e of ents) {
+        if (!e.alive || e.isProjectile && e.hpMax == null) continue;
+        if (Math.abs(s.x - e.x) <= e.w / 2 + 3 && Math.abs(s.y - e.y) <= e.h / 2 + 3) {
+          s.dead = true;
+          if (e.hpMax != null) damageEntity(e, SHOT_DMG);   // else: armor blocks
+          break;
+        }
+      }
+    }
+    pShots = pShots.filter(s => !s.dead && s.y < H + 60);
+    // entity / projectile contact vs player
+    for (const e of ents) {
+      if (!e.alive || !e.contact) continue;
+      if (Math.abs(playerCX() - e.x) <= e.w / 2 + player.w / 2 &&
+          Math.abs(playerCY() - e.y) <= e.h / 2 + player.h / 2) {
+        hurtPlayer(e.contact.damage || 1, now);
+        if (e.contact.destroySelf) e.alive = false;
+      }
+    }
+  }
+  function update(dt, now) {
+    arenaTime += dt;
+    playerStep();
+    const root = rootEnt();
+    if (root) advanceTracks(root, now);
+    for (const e of ents) if (e.alive) stepEntity(e, dt, now);
+    collide(now);
+    // edge-triggered proximity sensors → events (drive on.playerNear / far)
+    if (root && root.brain) {
+      const d = distToPlayer(root);
+      if (d < NEAR_TILES && !root.brain._near) { runEvent(root, "playerNear"); root.brain._near = true; }
+      else if (d > FAR_TILES && root.brain._near) { runEvent(root, "playerFar"); root.brain._near = false; }
+    }
+    if (root) evalTransitions(root);          // sees this frame's signals
+    ents = ents.filter(e => e.alive);
+    signals.clear();
+    if (!rootEnt()) result = result || "defeated";
+  }
+
+  // --- render --------------------------------------------------------------
+  function drawShape(shape, x, y, w, h) {
+    ctx.beginPath();
+    if (shape === "circle" || shape === "ellipse") ctx.ellipse(x, y, w / 2, h / 2, 0, 0, 7);
+    else if (shape === "diamond") { ctx.moveTo(x, y - h / 2); ctx.lineTo(x + w / 2, y); ctx.lineTo(x, y + h / 2); ctx.lineTo(x - w / 2, y); ctx.closePath(); }
+    else if (shape === "triangle") { ctx.moveTo(x, y - h / 2); ctx.lineTo(x + w / 2, y + h / 2); ctx.lineTo(x - w / 2, y + h / 2); ctx.closePath(); }
+    else ctx.rect(x - w / 2, y - h / 2, w, h);
+  }
+  function render(now) {
+    ctx.clearRect(0, 0, W, H);
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (grid[r][c] === "X") {
+      ctx.fillStyle = "#4a5568"; ctx.fillRect(c * TILE, r * TILE, TILE, TILE);
+      ctx.fillStyle = "#5d6b80"; ctx.fillRect(c * TILE, r * TILE, TILE, 3);
+    }
+    for (const e of ents) {
+      if (!e.alive) continue;
+      drawShape(e.shape, e.x, e.y, e.w, e.h);
+      ctx.fillStyle = now < e.telegraphUntil && (Math.floor(now / 80) % 2) ? "#ffffff" : e.tint;
+      ctx.globalAlpha = e.isProjectile ? 1 : 0.9; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.lineWidth = e.isRoot ? 2 : 1; ctx.strokeStyle = "#0e1015"; ctx.stroke();
+      if (e.hpMax && !e.isProjectile) {
+        const bw = Math.max(e.w, 24);
+        ctx.fillStyle = "#2a2f3a"; ctx.fillRect(e.x - bw / 2, e.y - e.h / 2 - 8, bw, 4);
+        ctx.fillStyle = "#7bd88f"; ctx.fillRect(e.x - bw / 2, e.y - e.h / 2 - 8, bw * Math.max(0, e.hp / e.hpMax), 4);
+      }
+    }
+    for (const s of pShots) { ctx.fillStyle = "#ffd166"; ctx.beginPath(); ctx.arc(s.x, s.y, 4, 0, 7); ctx.fill(); }
+    // player
+    const flash = now < player.invulnUntil && Math.floor(now / 100) % 2;
+    ctx.fillStyle = flash ? "#3a4a6a" : "#6fc3ff";
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+    ctx.fillStyle = "#0e1015"; ctx.fillRect(player.x + 12, player.y + 6, 4, 4);
+    // hp hearts
+    for (let k = 0; k < player.hp; k++) { ctx.fillStyle = "#f07178"; ctx.fillRect(6 + k * 12, 6, 9, 9); }
+    if (result) {
+      ctx.fillStyle = "rgba(14,16,21,.78)"; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#7bd88f"; ctx.font = "bold 26px system-ui"; ctx.textAlign = "center";
+      ctx.fillText("Entity defeated 🎉", W / 2, H / 2);
+      ctx.fillStyle = "#8b91a5"; ctx.font = "14px system-ui";
+      ctx.fillText("press Stop, tweak the spec, regenerate", W / 2, H / 2 + 26);
+    }
+  }
+  function hud() {
+    const root = rootEnt();
+    const bits = [`t ${arenaTime.toFixed(1)}s`, `deaths ${deaths}`, `entities ${ents.filter(e => e.alive).length}`];
+    if (root) bits.push(`${root.id} ${root.hp ?? "∞"}${root.hpMax ? "/" + root.hpMax : ""}hp`);
+    if (root && root.brain) bits.push(`state:${root.brain.cur}`);
+    el("simHud").textContent = bits.join("   ·   ");
+  }
+
+  // --- loop / lifecycle ----------------------------------------------------
+  function frame(t) {
+    if (!running) return;
+    rafId = requestAnimationFrame(frame);
+    const now = performance.now();
+    let real = (now - lastT) / 1000; lastT = now;
+    acc += Math.min(real, 0.1);
+    let iters = 0;
+    while (acc >= 1 / 60 && iters < 8 && !result) { update(1 / 60, now); acc -= 1 / 60; iters++; }
+    render(now); hud();
+    if (result) { running = false; el("simStatus").textContent = "Entity defeated 🎉 — Stop to reset."; }
+  }
+  function start(spec) {
+    if (!spec || !spec.root) return;
+    stop();
+    player = { x: 2 * TILE + 6, y: H - TILE - 28, w: 20, h: 28, vx: 0, vy: 0, grounded: true, hp: PLAYER_HP, invulnUntil: 0 };
+    instantiate(spec);
+    running = true; lastT = performance.now(); acc = 0;
+    el("sim").disabled = true; el("simStop").disabled = false;
+    el("simStatus").textContent = "Running — click the arena, then move/jump/fire.";
+    cv.focus(); rafId = requestAnimationFrame(frame);
+  }
+  function stop() {
+    running = false; cancelAnimationFrame(rafId);
+    el("simStop").disabled = true;
+    el("sim").disabled = !(lastSpec && document.getElementById("json").textContent !== "—");
+    if (lastSpec) { renderPreview(lastSpec); el("simStatus").textContent = "Stopped — showing structure. ▶ Simulate to run again."; }
+    el("simHud").textContent = "";
+  }
+
+  // --- input ---------------------------------------------------------------
+  cv.addEventListener("keydown", e => {
+    keys[e.code] = true;
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space", "KeyR"].includes(e.code)) e.preventDefault();
+    if (e.code === "KeyR" && running) start(lastSpec);
+  });
+  window.addEventListener("keyup", e => { keys[e.code] = false; });
+  cv.addEventListener("blur", () => { keys = {}; });
+  cv.addEventListener("click", () => cv.focus());
+  cv.addEventListener("mousemove", e => {
+    const rect = cv.getBoundingClientRect();
+    mouse.x = (e.clientX - rect.left) * (cv.width / rect.width);
+    mouse.y = (e.clientY - rect.top) * (cv.height / rect.height);
+  });
+  cv.addEventListener("mousedown", e => {
+    cv.focus();
+    if (e.button !== 0 || !running || result) return;
+    const now = performance.now();
+    if (now - lastShotAt < SHOT_CD) return;
+    lastShotAt = now;
+    const px = playerCX(), py = playerCY(), dx = mouse.x - px, dy = mouse.y - py, d = Math.hypot(dx, dy) || 1;
+    pShots.push({ x: px, y: py, vx: dx / d * SHOT_SPEED, vy: dy / d * SHOT_SPEED - SHOT_LOFT, dead: false });
+  });
+
+  return { start, stop };
+})();
+
+el("sim").addEventListener("click", () => SIM.start(lastSpec));
+el("simStop").addEventListener("click", () => SIM.stop());
+
+refreshStatus();
+setInterval(refreshStatus, 4000);
+</script>
+</body>
+</html>

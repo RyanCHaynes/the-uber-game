@@ -5,3 +5,6 @@ __pycache__/
 *.pyc
 work/
 outputs/
+node_modules/
+dist/
+agent/data/llm_log.jsonl

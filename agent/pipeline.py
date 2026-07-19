@@ -122,6 +122,18 @@ def run_cycle(round_number: int, level_path: Path) -> Path:
             # Object ideation is optional; it must never block the next level.
             print(f"  object designer skipped after error: {err}")
 
+    from . import enemy_designer
+    if brain == "llm":
+        print("  evaluating enemy roster (enemy designer)...")
+        try:
+            enemy_designer.adapt_and_write(
+                analysis, feedback, round_number,
+                store.format_lessons(selected_memory),
+            )
+        except Exception as err:
+            # Enemy adaptation is optional; it must never block the next level.
+            print(f"  enemy designer skipped after error: {err}")
+
     print(f"  designing next level ({brain})...")
     new_csv, generated_plan = design(
         level_csv, analysis, store.format_lessons(selected_memory),
