@@ -227,7 +227,7 @@ def _mock_spec(description: str) -> dict:
     }
 
 
-def generate(description: str) -> dict:
+def generate(description: str, *, reset_budget: bool = True) -> dict:
     """Generate and validate an EntitySpec from a natural-language description.
 
     Returns {"spec", "validation", "attempts", "mode", "tokens", "error"}.
@@ -245,7 +245,8 @@ def generate(description: str) -> dict:
                 "attempts": 1, "mode": "mock", "tokens": llm.cycle_usage(),
                 "error": None}
 
-    llm.reset_cycle_usage()
+    if reset_budget:
+        llm.reset_cycle_usage()
     user = f"Design this entity:\n{description}"
     last_errors: list[str] = []
     spec = None

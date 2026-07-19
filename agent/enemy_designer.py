@@ -17,6 +17,8 @@ import re
 from pathlib import Path
 
 from . import llm
+from .entity import generator as entity_generator
+from .entity import schema as entity_schema
 
 DATA_DIR = Path(__file__).parent / "data"
 ROSTER_PATH = DATA_DIR / "enemies.json"
@@ -36,6 +38,9 @@ ENEMY_KEYWORDS = (
     "enemy", "enemies", "grub", "turret", "wasp", "shoot", "shot", "stinger",
     "bomb", "hit", "damage", "kill", "attack", "flyer", "fly", "bullet", "hurt",
 )
+NEW_ARCHETYPE_KEYWORDS = (
+    "boss", "new enemy", "new archetype", "different enemy", "enemy variety",
+)
 
 SYSTEM = """You are the Enemy Designer for a self-improving 2D platformer. You own
 what each enemy IS and tune it between rounds from playtest feedback. You never place
@@ -51,10 +56,14 @@ ids. Return ONLY this JSON shape:
 Path rules:
 - Target enemies and parts by their stable "id", never by array index.
 - A part field is "<enemyId>.parts.<partId>.<field>", e.g. "wasp.parts.body.hp".
-- Only edit numeric fields that already exist. Tunable fields:
+- EntitySpec nodes use "<specId>.entity.<entityId>.<field>", e.g.
+  "iron_moth.entity.core.health.max" or "iron_moth.entity.seeker.motion.speed".
+- Only edit numeric fields that already exist. Legacy tunable fields:
   movement.speed, movement.range, movement.bob, movement.bob_hz,
   attack.cooldown_s, attack.speed, attack.damage, attack.range, attack.gravity,
   contact_damage, and per-part hp / w / h / r / offset.x / offset.y.
+- EntitySpec tunable fields include health.max, motion numeric parameters,
+  contact.damage, life.ttl, and boss limits.
 - "set" replaces, "add" adds a delta, "mul" multiplies. Values are numbers only.
 
 Rules:
@@ -79,8 +88,57 @@ def roster_summary() -> str:
     if not roster:
         return ""
     return "\n".join(
-        f"{i + 1}: {e['name']} — {e.get('desc', '')}" for i, e in enumerate(roster)
+        f"{i + 1}: {e.get('name', e.get('id', 'unnamed'))} — "
+        f"{e.get('desc', 'EntitySpec ' + e.get('kind', 'enemy'))}"
+        for i, e in enumerate(roster)
     )
+
+
+def is_entity_spec(enemy) -> bool:
+    return isinstance(enemy, dict) and isinstance(enemy.get("root"), dict) \
+        and (enemy.get("v") is not None or enemy.get("kind") in {"enemy", "boss"})
+
+
+def _walk_spec_nodes(spec: dict):
+    """Yield every stable-id EntitySpec node, including reusable defs."""
+    def walk(node):
+        if not isinstance(node, dict):
+            return
+        yield node
+        for child in node.get("children") or []:
+            yield from walk(child)
+    yield from walk(spec.get("root"))
+    for def_id, node in (spec.get("defs") or {}).items():
+        if isinstance(node, dict):
+            node.setdefault("id", def_id)
+        yield from walk(node)
+
+
+def dry_run_spec(spec: dict) -> list[str]:
+    """Headless activation gate matching the browser runtime's invariants."""
+    errors = []
+    root = spec.get("root") if isinstance(spec, dict) else None
+    if not isinstance(root, dict):
+        return ["EntitySpec dry-run: root is missing"]
+    if not isinstance(root.get("body"), dict):
+        errors.append("EntitySpec dry-run: root needs a body for world collision")
+    nodes = list(_walk_spec_nodes(spec))
+    if not (isinstance(root.get("health"), dict)
+            and _is_number(root["health"].get("max"))):
+        errors.append("EntitySpec dry-run: root is not damageable")
+    brain = spec.get("brain") or {}
+    states = brain.get("states") if isinstance(brain, dict) else {}
+    brain_steps = [step for state in (states or {}).values() if isinstance(state, dict)
+                   for track in state.get("tracks") or [] if isinstance(track, dict)
+                   for step in track.get("steps") or []]
+    can_act = any((node.get("motion") or {}).get("type") not in (None, "static")
+                  or node.get("emitters") for node in nodes) or bool(brain_steps)
+    if not can_act:
+        errors.append("EntitySpec dry-run: entity cannot move, emit, or execute brain steps")
+    limits = spec.get("limits") or {}
+    if spec.get("kind") == "boss" and limits.get("maxAlive", 64) > entity_schema.MAX_TOTAL_ENTITIES:
+        errors.append(f"EntitySpec dry-run: maxAlive exceeds {entity_schema.MAX_TOTAL_ENTITIES}")
+    return errors
 
 
 def _is_hex_color(value) -> bool:
@@ -114,6 +172,35 @@ _ATTACK_RANGES = {
 
 def _sanitize_enemy(enemy: dict):
     """Clamp every tunable numeric field of one enemy in place."""
+    if is_entity_spec(enemy):
+        for node in _walk_spec_nodes(enemy):
+            health = node.get("health")
+            if isinstance(health, dict) and "max" in health:
+                health["max"] = int(_clamp(health["max"], 1, entity_schema.MAX_HEALTH, 10))
+            motion = node.get("motion")
+            if isinstance(motion, dict):
+                for key, limits in {
+                    "speed": (0, 20, 3), "range": (0, 30, 3),
+                    "radius": (0, 30, 3), "rate": (0, 10, 1),
+                    "turnRate": (0, 720, 120),
+                }.items():
+                    if key in motion:
+                        motion[key] = _clamp(motion[key], *limits)
+            contact = node.get("contact")
+            if isinstance(contact, dict) and "damage" in contact:
+                contact["damage"] = _clamp(contact["damage"], 0, 5, 1)
+            life = node.get("life")
+            if isinstance(life, dict) and "ttl" in life:
+                life["ttl"] = _clamp(life["ttl"], 0.1, 60, 3)
+        limits = enemy.get("limits")
+        if isinstance(limits, dict):
+            limits["maxAlive"] = int(_clamp(limits.get("maxAlive", 64), 1,
+                                              entity_schema.MAX_TOTAL_ENTITIES, 64))
+            limits["maxSpawnsPerSecond"] = _clamp(
+                limits.get("maxSpawnsPerSecond", 12), 1, 30, 12)
+            limits["maxSpawnDepth"] = int(_clamp(
+                limits.get("maxSpawnDepth", 4), 1, entity_schema.MAX_CHILDREN_DEPTH, 4))
+        return
     if _is_number(enemy.get("contact_damage")):
         enemy["contact_damage"] = int(_clamp(enemy["contact_damage"], 0, 5, 1))
     movement = enemy.get("movement")
@@ -165,6 +252,11 @@ def validate_roster(roster) -> list[str]:
         else:
             seen_ids.add(enemy_id)
             tag = enemy_id
+        if is_entity_spec(enemy):
+            result = entity_schema.validate(enemy)
+            errors.extend(f"{tag} EntitySpec: {error}" for error in result.errors)
+            errors.extend(f"{tag}: {error}" for error in dry_run_spec(enemy))
+            continue
         for field in ("name", "desc"):
             if not isinstance(enemy.get(field), str):
                 errors.append(f"{tag} {field} must be a string")
@@ -233,6 +325,18 @@ def _resolve_target(roster: list[dict], dotted: str) -> tuple[dict, str]:
     enemy = next((e for e in roster if isinstance(e, dict) and e.get("id") == segments[0]), None)
     if enemy is None:
         raise KeyError(f"no enemy with id '{segments[0]}'")
+    if is_entity_spec(enemy) and len(segments) > 3 and segments[1] == "entity":
+        entity_id = segments[2]
+        node = next((item for item in _walk_spec_nodes(enemy)
+                     if item.get("id") == entity_id), None)
+        if node is None:
+            raise KeyError(f"no EntitySpec node '{entity_id}' on '{segments[0]}'")
+        for segment in segments[3:-1]:
+            nxt = node.get(segment) if isinstance(node, dict) else None
+            if not isinstance(nxt, dict):
+                raise KeyError(f"'{segment}' is not a nested object")
+            node = nxt
+        return node, segments[-1]
     node = enemy
     index = 1
     while index < len(segments) - 1:
@@ -272,12 +376,16 @@ def _apply_op(roster: list[dict], op) -> str | None:
     if not isinstance(node, dict) or key not in node:
         return f"path '{path}' does not point to an existing field"
     current = node[key]
-    if opcode == "set":
-        node[key] = value
-    elif not _is_number(current):
+    if opcode != "set" and not _is_number(current):
         return f"cannot {opcode} non-numeric field '{path}'"
-    else:
-        node[key] = current + value if opcode == "add" else current * value
+    proposed = (value if opcode == "set" else
+                current + value if opcode == "add" else current * value)
+    if _is_number(current):
+        max_delta = max(1.0, abs(current) * 0.5)
+        if abs(proposed - current) > max_delta:
+            return (f"'{path}' changes by more than the per-round 50% budget "
+                    f"({current!r} -> {proposed!r})")
+    node[key] = proposed
     return None
 
 
@@ -293,7 +401,13 @@ def apply_patch(roster: list[dict], patch: dict) -> tuple[list[dict], list[str]]
         return roster, [f"patch has {len(ops)} ops; the change budget is {MAX_OPS}"]
     candidate = copy.deepcopy(roster)
     errors = []
+    seen_paths = set()
     for position, op in enumerate(ops):
+        if isinstance(op, (list, tuple)) and len(op) == 3 and op[1] in seen_paths:
+            errors.append(f"op[{position}] repeats path '{op[1]}' in one round")
+            continue
+        if isinstance(op, (list, tuple)) and len(op) == 3:
+            seen_paths.add(op[1])
         error = _apply_op(candidate, op)
         if error:
             errors.append(f"op[{position}] {error}")
@@ -317,6 +431,51 @@ def has_combat_signal(feedback: dict) -> bool:
         return True
     comment = str(player.get("comment", "")).lower()
     return any(keyword in comment for keyword in ENEMY_KEYWORDS)
+
+
+def maybe_add_entityspec(analysis: dict, feedback: dict,
+                         source_round: int) -> dict | None:
+    """Rare add-an-archetype path backed by the EntitySpec generator.
+
+    Creation is intentionally demand-driven: normal combat feedback adapts the
+    current roster, while an explicit request for a boss/new archetype can spend
+    the larger generation call. The candidate passes schema validation and the
+    dry-run gate before the roster is replaced.
+    """
+    roster = load_roster()
+    if len(roster) >= MAX_ARCHETYPES:
+        return None
+    player = (feedback.get("players") or [{}])[0]
+    comment = str(player.get("comment", "")).strip()
+    combined = f"{comment} {analysis.get('diagnosis', '')}".lower()
+    if not any(keyword in combined for keyword in NEW_ARCHETYPE_KEYWORDS):
+        return None
+    description = (
+        "Create one fair 2D platformer enemy or boss requested by this playtest. "
+        "It must work in a scrolling tile world, be damageable, and visibly act.\n"
+        f"Player request: {comment or '(none)'}\n"
+        f"Analyst diagnosis: {analysis.get('diagnosis', '(none)')}"
+    )
+    result = entity_generator.generate(description, reset_budget=False)
+    spec = result.get("spec") if isinstance(result, dict) else None
+    validation = result.get("validation") if isinstance(result, dict) else None
+    if not isinstance(spec, dict) or not validation or not validation.get("ok"):
+        raise ValueError(f"EntitySpec generation failed: {result.get('error') or validation}")
+    if any(item.get("id") == spec.get("id") for item in roster if isinstance(item, dict)):
+        raise ValueError(f"generated EntitySpec id '{spec.get('id')}' already exists")
+    spec.setdefault("desc", f"EntitySpec {spec.get('kind', 'enemy')} generated from round {source_round}")
+    _sanitize_enemy(spec)
+    candidate = copy.deepcopy(roster) + [spec]
+    errors = validate_roster(candidate)
+    if errors:
+        raise ValueError("generated EntitySpec rejected: " + "; ".join(errors))
+    _backup_last_good()
+    _write_roster(candidate)
+    record = {"kind": "add_entityspec", "entity_id": spec.get("id"),
+              "name": spec.get("name"), "validation": validation}
+    _log_design(source_round, record)
+    print(f"  enemy designer added EntitySpec: {spec.get('name')} [{len(candidate)}]")
+    return record
 
 
 def adapt(analysis: dict, feedback: dict, roster: list[dict],

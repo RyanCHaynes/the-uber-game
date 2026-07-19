@@ -113,6 +113,7 @@
   </div>
 </main>
 
+<script src="/entity_runtime.js"></script>
 <script>
 const EXAMPLES = [
   "A slow ground turret that fires aimed shots in bursts",
@@ -322,7 +323,10 @@ el("examples").querySelectorAll(".chip").forEach(c =>
 //  motion controllers, brain states with parallel tracks, emitters/patterns,
 //  events/signals, and an expression evaluator for transitions.
 // ===========================================================================
-const SIM = (() => {
+// Kept temporarily as a dead-code reference while the shared runtime settles;
+// both the workshop and shipped game now execute EntitySpec through
+// /entity_runtime.js.
+const LEGACY_SIM = false ? (() => {
   const cv = el("cv"), ctx = cv.getContext("2d");
   const TILE = 32, COLS = 24, ROWS = 13;
   const W = COLS * TILE, H = ROWS * TILE;
@@ -944,7 +948,29 @@ const SIM = (() => {
   });
 
   return { start, stop };
-})();
+})() : null;
+
+const SIM = EntityRuntime.createWorkshop({
+  canvas: el("cv"),
+  getSpec: () => lastSpec,
+  onStart: () => {
+    el("sim").disabled = true;
+    el("simStop").disabled = false;
+    el("simStatus").textContent = "Running — click the arena, then move/jump/fire.";
+  },
+  onStop: () => {
+    el("simStop").disabled = true;
+    el("sim").disabled = !(lastSpec && document.getElementById("json").textContent !== "—");
+    if (lastSpec) renderPreview(lastSpec);
+    el("simStatus").textContent = "Stopped — showing structure. ▶ Simulate to run again.";
+    el("simHud").textContent = "";
+  },
+  onHud: text => { el("simHud").textContent = text; },
+  onDefeated: () => {
+    el("simStop").disabled = false;
+    el("simStatus").textContent = "Entity defeated 🎉 — Stop to reset.";
+  },
+});
 
 el("sim").addEventListener("click", () => SIM.start(lastSpec));
 el("simStop").addEventListener("click", () => SIM.stop());

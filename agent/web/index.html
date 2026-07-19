@@ -189,6 +189,7 @@
   <div id="llmLog"><div class="panel dim">no LLM calls yet — play a round in LLM mode</div></div>
 </div>
 
+<script src="/entity_runtime.js"></script>
 <script>
 // Surface any client-side failure in the header instead of dying silently.
 window.addEventListener("error", e => { $("err").textContent = "page error: " + e.message; });
@@ -534,15 +535,37 @@ let fps = 0, fpsFrames = 0, fpsWindowStart = performance.now();
 // combat state
 const MAX_HP = 3, SHOT_COOLDOWN = 320, SHOT_SPEED = 15, SHOT_G = 0.35, SHOT_LOFT = 1.5;
 let roster = [], enemySpawns = [], enemies = [], playerShots = [], enemyShots = [];
+let entityHost = null, entityRootCount = 0;
 let objectCatalog = [], objectBySymbol = {}, collectedObjects = new Set(), objectsCollected = 0;
 let mouse = { x: 0, y: 0 };
 let hp = MAX_HP, kills = 0, hitsTaken = 0, invulnUntil = 0, lastShotAt = 0;
 let cam = { x: 0, y: 0 };
 
 function spawnEnemies() {
+  entityRootCount = 0;
+  entityHost = EntityRuntime.create({
+    tile: TILE,
+    isSolid,
+    getBounds: () => ({ width: world.cols * TILE, height: world.rows * TILE }),
+    getPlayer: () => player,
+    damagePlayer,
+    playerShotDamage: 15,
+    onRootKilled: () => { kills++; },
+  });
+  const spawnedBossTypes = new Set();
   enemies = enemySpawns.map(sp => {
     const def = roster[sp.type];
     if (!def) return null;
+    if (EntityRuntime.isEntitySpec(def)) {
+      // Boss digits are placement markers, not swarm spawners: repeated copies
+      // of the same boss digit instantiate exactly one boss encounter.
+      if (def.kind === "boss" && spawnedBossTypes.has(sp.type)) return null;
+      if (def.kind === "boss") spawnedBossTypes.add(sp.type);
+      entityHost.spawn(def, sp.c * TILE + 16, sp.r * TILE + 16,
+                       { rosterIndex: sp.type, c: sp.c, r: sp.r });
+      entityRootCount++;
+      return null;
+    }
     return {
       def,
       x: sp.c * TILE + 16, y: sp.r * TILE + 16,
@@ -649,6 +672,9 @@ function updateShots(now) {
       }
     }
   }
+  // Both formats consume the same world-space shots. The EntitySpec runtime
+  // marks a hit shot dead, preventing damage to more than one target.
+  if (entityHost) entityHost.update(now, 1 / 60, playerShots);
   for (const s of enemyShots) {
     s.vy += s.g; s.x += s.vx; s.y += s.vy;
     if (isSolid(Math.floor(s.x / TILE), Math.floor(s.y / TILE)) ||
@@ -823,7 +849,8 @@ function ptStep() {
   if (world.exit) {
     const ex = world.exit.c * TILE, ey = world.exit.r * TILE;
     if (player.x < ex + TILE && player.x + player.w > ex &&
-        player.y < ey + TILE && player.y + player.h > ey) {
+        player.y < ey + TILE && player.y + player.h > ey &&
+        (!entityHost || entityHost.stats().bosses === 0)) {
       runCompleted = true;
       showRatingForm();
     }
@@ -1013,6 +1040,9 @@ function ptDraw() {
       }
     }
   }
+  // Shared EntitySpec entities are world-space objects and therefore render
+  // under the same scrolling camera transform as tiles and legacy enemies.
+  if (entityHost) entityHost.draw(ctx2, nowDraw);
 
   // projectiles
   for (const s of playerShots) {
@@ -1067,13 +1097,14 @@ function ptDraw() {
   ctx2.textAlign = "left";
   ctx2.font = "15px system-ui";
   ctx2.fillText("❤️".repeat(hp) + "🖤".repeat(Math.max(0, MAX_HP - hp)), 10, 8);
-  if (enemies.length) {
+  const totalEnemyRoots = enemies.length + entityRootCount;
+  if (totalEnemyRoots) {
     ctx2.fillStyle = "#d8dce8";
-    ctx2.fillText(`⚔ ${kills}/${enemies.length}`, 10, 30);
+    ctx2.fillText(`⚔ ${kills}/${totalEnemyRoots}`, 10, 30);
   }
   if (objectCatalog.some(item => item.behavior === "collectible")) {
     ctx2.fillStyle = "#d8dce8";
-    ctx2.fillText(`◆ ${objectsCollected}`, 10, enemies.length ? 52 : 30);
+    ctx2.fillText(`◆ ${objectsCollected}`, 10, totalEnemyRoots ? 52 : 30);
   }
 
   if (phase !== "playing") {

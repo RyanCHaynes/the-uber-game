@@ -221,6 +221,16 @@ if brain == "llm":
 
 ## 6. Phase 2 — EntitySpec in the game (unlock bosses)
 
+**Implemented (2026-07-18).** The shared runtime now lives at
+`agent/web/entity_runtime.js` and is served by both web apps. The main game
+dispatches legacy and EntitySpec roster entries, runs EntitySpecs in CSV world
+coordinates, supports a single-instance boss digit with an exit lock, and feeds
+damage/kills into existing telemetry. The Enemy Designer validates mixed
+rosters with `schema.validate`, applies stable-ID EntitySpec patches, performs a
+headless activation gate before writes, and can invoke the EntitySpec generator
+for explicit new-enemy/boss requests. The Iron Moth at roster digit 4 is the
+initial native boss and legacy entries remain supported during migration.
+
 Only after Phase 1 is stable. This is the largest piece; budget it separately.
 
 1. **Extract the interpreter.** Pull the SIM module out of

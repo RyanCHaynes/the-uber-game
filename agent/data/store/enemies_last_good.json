@@ -4,11 +4,41 @@
     "name": "Grub",
     "desc": "Slow ground patroller. No ranged attack - only dangerous to touch. Fully vulnerable.",
     "parts": [
-      { "id": "body", "shape": "rect", "w": 30, "h": 18, "color": "#f07178", "offset": { "x": 0, "y": 6 }, "vulnerable": true, "hp": 20 },
-      { "id": "head", "shape": "circle", "r": 8, "color": "#ff9e9e", "parent": "body", "offset": { "x": 12, "y": -12 }, "vulnerable": true, "hp": 10 }
+      {
+        "id": "body",
+        "shape": "rect",
+        "w": 30,
+        "h": 18,
+        "color": "#f07178",
+        "offset": {
+          "x": 0,
+          "y": 6
+        },
+        "vulnerable": true,
+        "hp": 20
+      },
+      {
+        "id": "head",
+        "shape": "circle",
+        "r": 8,
+        "color": "#ff9e9e",
+        "parent": "body",
+        "offset": {
+          "x": 12,
+          "y": -12
+        },
+        "vulnerable": true,
+        "hp": 10
+      }
     ],
-    "movement": { "type": "patrol", "speed": 45, "range": 96 },
-    "attack": { "type": "none" },
+    "movement": {
+      "type": "patrol",
+      "speed": 45,
+      "range": 96
+    },
+    "attack": {
+      "type": "none"
+    },
     "contact_damage": 1
   },
   {
@@ -16,11 +46,43 @@
     "name": "Dome Turret",
     "desc": "Stationary. Armored dome blocks shots from above - hit the glowing core. Lobs arcing bombs at the player.",
     "parts": [
-      { "id": "dome", "shape": "rect", "w": 36, "h": 14, "color": "#5d6b80", "offset": { "x": 0, "y": -10 }, "vulnerable": false },
-      { "id": "core", "shape": "circle", "r": 9, "color": "#ffb454", "offset": { "x": 0, "y": 6 }, "vulnerable": true, "hp": 30 }
+      {
+        "id": "dome",
+        "shape": "rect",
+        "w": 36,
+        "h": 14,
+        "color": "#5d6b80",
+        "offset": {
+          "x": 0,
+          "y": -10
+        },
+        "vulnerable": false
+      },
+      {
+        "id": "core",
+        "shape": "circle",
+        "r": 9,
+        "color": "#ffb454",
+        "offset": {
+          "x": 0,
+          "y": 6
+        },
+        "vulnerable": true,
+        "hp": 30
+      }
     ],
-    "movement": { "type": "stationary" },
-    "attack": { "type": "lob", "cooldown_s": 2.4, "speed": 6.0, "damage": 1, "range": 420, "gravity": 0.3, "color": "#ffb454" },
+    "movement": {
+      "type": "stationary"
+    },
+    "attack": {
+      "type": "lob",
+      "cooldown_s": 2.4,
+      "speed": 6,
+      "damage": 1,
+      "range": 420,
+      "gravity": 0.3,
+      "color": "#ffb454"
+    },
     "contact_damage": 1
   },
   {
@@ -28,11 +90,136 @@
     "name": "Wasp",
     "desc": "Flies in a bobbing patrol. Fires straight stingers at the player. Small and fragile but hard to hit.",
     "parts": [
-      { "id": "body", "shape": "circle", "r": 10, "color": "#c792ea", "offset": { "x": 0, "y": 0 }, "vulnerable": true, "hp": 15 },
-      { "id": "stinger", "shape": "tri", "w": 12, "h": 10, "color": "#e2b6ff", "parent": "body", "offset": { "x": -13, "y": 4 }, "vulnerable": true, "hp": 5 }
+      {
+        "id": "body",
+        "shape": "circle",
+        "r": 10,
+        "color": "#c792ea",
+        "offset": {
+          "x": 0,
+          "y": 0
+        },
+        "vulnerable": true,
+        "hp": 12
+      },
+      {
+        "id": "stinger",
+        "shape": "tri",
+        "w": 12,
+        "h": 10,
+        "color": "#e2b6ff",
+        "parent": "body",
+        "offset": {
+          "x": -13,
+          "y": 4
+        },
+        "vulnerable": true,
+        "hp": 1
+      }
     ],
-    "movement": { "type": "flyer", "speed": 55, "range": 110, "bob": 22, "bob_hz": 0.9 },
-    "attack": { "type": "shoot", "cooldown_s": 1.8, "speed": 4.5, "damage": 1, "range": 380, "gravity": 0, "color": "#c792ea" },
+    "movement": {
+      "type": "flyer",
+      "speed": 55,
+      "range": 110,
+      "bob": 22,
+      "bob_hz": 0.9
+    },
+    "attack": {
+      "type": "shoot",
+      "cooldown_s": 1.8,
+      "speed": 4.5,
+      "damage": 1,
+      "range": 380,
+      "gravity": 0,
+      "color": "#c792ea"
+    },
     "contact_damage": 1
+  },
+  {
+    "v": 1,
+    "id": "iron_moth",
+    "name": "Iron Moth",
+    "desc": "EntitySpec boss with destructible wings, homing missiles, and a faster rage phase below half health.",
+    "kind": "boss",
+    "limits": {
+      "maxAlive": 48,
+      "maxSpawnsPerSecond": 8,
+      "maxSpawnDepth": 4
+    },
+    "defs": {
+      "seeker": {
+        "id": "seeker",
+        "tags": ["enemy", "projectile", "shootable"],
+        "visual": {"shape": "diamond", "size": [0.45, 0.3], "tint": "#f07178"},
+        "body": {"shape": "box", "size": [0.4, 0.25], "gravity": 0},
+        "health": {"max": 2},
+        "motion": {"type": "home", "target": "player", "speed": 2.4, "turnRate": 120},
+        "contact": {"damage": 1, "destroySelf": true},
+        "life": {"ttl": 7}
+      }
+    },
+    "root": {
+      "id": "moth_core",
+      "tags": ["boss"],
+      "visual": {"shape": "ellipse", "size": [2.8, 1.5], "tint": "#c792ea"},
+      "body": {"shape": "box", "size": [2.4, 1.2], "gravity": 0},
+      "health": {"max": 100},
+      "contact": {"damage": 1},
+      "children": [
+        {
+          "id": "left_wing",
+          "tags": ["bossPart", "wing"],
+          "at": [-1.7, 0],
+          "visual": {"shape": "diamond", "size": [1.8, 0.8], "tint": "#ffb454"},
+          "body": {"shape": "box", "size": [1.6, 0.7], "gravity": 0},
+          "health": {"max": 20},
+          "emitters": {"missiles": {"at": [-0.5, 0], "ref": "seeker", "pattern": "fan"}},
+          "on": {"destroy": [{"signal": {"name": "wingDestroyed"}}]}
+        },
+        {
+          "id": "right_wing",
+          "tags": ["bossPart", "wing"],
+          "at": [1.7, 0],
+          "visual": {"shape": "diamond", "size": [1.8, 0.8], "tint": "#ffb454"},
+          "body": {"shape": "box", "size": [1.6, 0.7], "gravity": 0},
+          "health": {"max": 20},
+          "emitters": {"missiles": {"at": [0.5, 0], "ref": "seeker", "pattern": "fan"}},
+          "on": {"destroy": [{"signal": {"name": "wingDestroyed"}}]}
+        }
+      ]
+    },
+    "brain": {
+      "start": "hunt",
+      "states": {
+        "hunt": {
+          "tracks": [
+            {"id": "move", "loop": true, "steps": [
+              {"moveTo": {"target": "arena.randomAir", "speed": 2.5}},
+              {"wait": {"range": [0.4, 0.8]}}
+            ]},
+            {"id": "attack", "loop": true, "steps": [
+              {"telegraph": {"part": "left_wing", "time": 0.45}},
+              {"fire": {"emitter": "left_wing.missiles", "count": 2, "pattern": "fan", "spread": 22}},
+              {"fire": {"emitter": "right_wing.missiles", "count": 2, "pattern": "fan", "spread": 22}},
+              {"wait": 2.0}
+            ]}
+          ],
+          "transitions": [{"when": "self.hpPct <= 0.5", "to": "rage"}]
+        },
+        "rage": {
+          "tracks": [
+            {"id": "rage_move", "loop": true, "steps": [
+              {"dash": {"target": "player", "speed": 6, "duration": 0.5}},
+              {"wait": 0.65}
+            ]},
+            {"id": "rage_attack", "loop": true, "steps": [
+              {"fire": {"emitter": "left_wing.missiles", "count": 3, "pattern": "fan", "spread": 35}},
+              {"fire": {"emitter": "right_wing.missiles", "count": 3, "pattern": "fan", "spread": 35}},
+              {"wait": 1.2}
+            ]}
+          ]
+        }
+      }
+    }
   }
 ]

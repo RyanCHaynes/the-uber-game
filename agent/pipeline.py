@@ -123,13 +123,18 @@ def run_cycle(round_number: int, level_path: Path) -> Path:
     if brain == "llm":
         print("  evaluating enemy roster (enemy designer)...")
         try:
+            added_entity = enemy_designer.maybe_add_entityspec(
+                analysis, feedback, round_number,
+            )
             enemy_patch = enemy_designer.adapt_and_write(
                 analysis, feedback, round_number,
                 store.format_lessons(selected_memory),
             )
-            if enemy_patch:
+            if enemy_patch or added_entity:
+                enemy_artifact = ({"added": added_entity, "patch": enemy_patch}
+                                  if added_entity else enemy_patch)
                 (feedback_path.parent / "enemy_design.json").write_text(
-                    json.dumps(enemy_patch, indent=2)
+                    json.dumps(enemy_artifact, indent=2)
                 )
         except Exception as err:
             # Enemy adaptation is optional; it must never block the next level.

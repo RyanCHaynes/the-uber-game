@@ -17,6 +17,7 @@ class EnemyDesignerTests(unittest.TestCase):
     def test_patch_uses_stable_enemy_and_part_ids_without_mutating_input(self):
         roster = self.roster()
         original_speed = roster[2]["attack"]["speed"]
+        original_body_hp = roster[2]["parts"][0]["hp"]
         patched, errors = enemy_designer.apply_patch(roster, {
             "note": "make stingers easier to dodge and the body tougher",
             "ops": [
@@ -28,7 +29,7 @@ class EnemyDesignerTests(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertEqual(roster[2]["attack"]["speed"], original_speed)
         self.assertEqual(patched[2]["attack"]["speed"], original_speed * 0.8)
-        self.assertEqual(patched[2]["parts"][0]["hp"], 20)
+        self.assertEqual(patched[2]["parts"][0]["hp"], original_body_hp + 5)
 
     def test_invalid_patch_rolls_back_to_unchanged_roster(self):
         roster = self.roster()
@@ -38,6 +39,30 @@ class EnemyDesignerTests(unittest.TestCase):
         self.assertTrue(errors)
         self.assertIs(patched, roster)
         self.assertEqual(patched, self.roster())
+
+    def test_entityspec_roster_entry_passes_schema_and_dry_run(self):
+        spec = next(item for item in self.roster()
+                    if enemy_designer.is_entity_spec(item))
+        self.assertEqual(spec["kind"], "boss")
+        self.assertEqual(enemy_designer.dry_run_spec(spec), [])
+
+    def test_entityspec_patch_resolves_stable_node_id(self):
+        roster = self.roster()
+        patched, errors = enemy_designer.apply_patch(roster, {
+            "note": "make the core slightly less durable",
+            "ops": [["mul", "iron_moth.entity.moth_core.health.max", 0.9]],
+        })
+        self.assertEqual(errors, [])
+        boss = next(item for item in patched if item.get("id") == "iron_moth")
+        self.assertEqual(boss["root"]["health"]["max"], 90)
+
+    def test_entityspec_dry_run_rejects_inert_undamageable_root(self):
+        spec = {"v": 1, "id": "prop", "name": "Prop", "kind": "enemy",
+                "root": {"id": "prop_root", "visual": {"shape": "box"},
+                         "body": {"shape": "box"}}}
+        errors = enemy_designer.dry_run_spec(spec)
+        self.assertTrue(any("damageable" in error for error in errors))
+        self.assertTrue(any("cannot move" in error for error in errors))
 
     def test_adapt_and_write_backs_up_and_logs_valid_change(self):
         with tempfile.TemporaryDirectory() as directory:

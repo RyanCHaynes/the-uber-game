@@ -76,5 +76,24 @@
     "last_error": "ladders contains 33 runs; maximum is 32",
     "last_attempt": 2,
     "source": "python_validator"
+  },
+  {
+    "id": "OL-005",
+    "lesson": "Check every proposed ladder against Python's validation feedback before repeating it.",
+    "conditions": [
+      "validator rejection"
+    ],
+    "outcome": "Avoids repeating mechanically invalid placement patches.",
+    "confidence": 0.98,
+    "seen_count": 1,
+    "evidence_rounds": [
+      26
+    ],
+    "role": "object_designer",
+    "category": "validation_failure",
+    "failure_type": "other_validation",
+    "last_error": "selected ladders exceed the 128-tile maximum",
+    "last_attempt": 1,
+    "source": "python_validator"
   }
 ]

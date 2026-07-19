@@ -23,6 +23,7 @@ from . import generator
 PORT = 8788
 ENTITY_DIR = Path(__file__).parent
 INDEX_HTML = ENTITY_DIR / "web" / "index.html"
+ENTITY_RUNTIME_JS = ENTITY_DIR.parent / "web" / "entity_runtime.js"
 
 # Serialize generation: one shared token budget / LLM queue underneath.
 _gen_lock = threading.Lock()
@@ -60,6 +61,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path in ("/", "/index.html"):
             self._send(200, INDEX_HTML.read_bytes(), "text/html; charset=utf-8")
+        elif self.path == "/entity_runtime.js":
+            self._send(200, ENTITY_RUNTIME_JS.read_bytes(), "text/javascript; charset=utf-8")
         elif self.path == "/api/status":
             self._send(200, _status())
         else:

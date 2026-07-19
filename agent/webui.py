@@ -28,6 +28,7 @@ DATA_DIR = AGENT_DIR / "data"
 LEVELS_DIR = DATA_DIR / "levels"
 ROUNDS_DIR = DATA_DIR / "rounds"
 INDEX_HTML = AGENT_DIR / "web" / "index.html"
+ENTITY_RUNTIME_JS = AGENT_DIR / "web" / "entity_runtime.js"
 
 _state = {"running": False, "log": [], "error": None}
 _lock = threading.Lock()
@@ -194,6 +195,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path in ("/", "/index.html"):
             self._send(200, INDEX_HTML.read_bytes(), "text/html; charset=utf-8")
+        elif self.path == "/entity_runtime.js":
+            self._send(200, ENTITY_RUNTIME_JS.read_bytes(), "text/javascript; charset=utf-8")
         elif self.path == "/api/state":
             self._send(200, _snapshot())
         elif self.path == "/api/llmlog":

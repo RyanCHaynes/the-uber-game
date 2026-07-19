@@ -5,8 +5,9 @@ multi-part bosses) with the same NVIDIA Nemotron setup the main design agent
 uses. It generates an EntitySpec from a natural-language description, validates
 it against the closed vocabulary from
 ``agent/entity/llm_adaptive_boss_system_plan.md``, and renders a static
-structural preview. Behavior is not simulated here — that belongs to the game
-engine this tool will eventually feed.
+structural preview and live simulation. The workshop and shipped game share
+``agent/web/entity_runtime.js``, so a validated workshop behavior runs through
+the same interpreter that executes it in a scrolling CSV level.
 
 Run it with::
 

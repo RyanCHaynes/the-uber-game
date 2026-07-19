@@ -39,17 +39,26 @@ The player aims with the mouse (trajectory preview + crosshair) and left-clicks
 to lob a gravity-arcing projectile. 3 hearts, brief invulnerability after a hit;
 dying respawns at S and counts as a death.
 
-Enemy types live in `data/enemies.json` — agent-editable JSON. Each type has:
+Enemy types live in `data/enemies.json` — agent-editable JSON. A roster entry
+may use the legacy schema or native EntitySpec. Legacy entries have:
 `parts` (colored shapes — rect/circle/tri — positioned by `offset`, optionally
 attached to a `parent` part; each part is `vulnerable` with `hp`, or armored and
 blocks shots), `movement` (`stationary` | `patrol` | `flyer` with speed/range/bob),
 `attack` (`none` | `lob` | `shoot` — projectile speed, cooldown, range, gravity),
 and `contact_damage`. An enemy dies when all its vulnerable parts are destroyed.
 
+EntitySpec entries support nested damageable parts, reusable projectile/summon
+definitions, motion controllers, parallel brain tracks, state transitions,
+emitters, events, and signals. `web/entity_runtime.js` runs these definitions in
+the main scrolling world and in the standalone workshop. A boss digit is a
+single encounter marker even if repeated in the CSV, and the level exit remains
+locked until that boss is defeated. The shipped Iron Moth is roster digit `4`.
+
 ## Architecture
 
 ```
 web/index.html   playable platformer + dashboard (map, feedback, lessons, log)
+entity_runtime.js shared EntitySpec interpreter (game + entity workshop)
      |  POST /api/feedback  (rating, comment, time, falls, fall locations)
 webui.py         writes data/rounds/round_NNN/feedback.json, runs the cycle
      |
@@ -62,6 +71,7 @@ csv_level.py     parse + validate: structure, exactly one S/E, exit standable,
                  (MAX_JUMP_DX/MAX_JUMP_UP — keep in sync with the JS physics)
 pipeline.py      orchestrates a cycle; writes data/levels/level_NNN.csv
                  + next_level.ready marker
+enemy_designer.py validates/adapts mixed rosters; generates EntitySpecs on demand
 ```
 
 `llm.py` is the only file that knows the provider. Production calls always use
