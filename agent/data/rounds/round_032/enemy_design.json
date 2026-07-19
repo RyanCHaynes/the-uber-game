@@ -1,0 +1,35 @@
+{
+  "note": "Increased Iron Moth seeker speed and turn rate to make homing missiles more threatening; increased Mech Moth missile speed and turn rate for the same reason; slightly increased Wasp movement speed and bob amplitude to make flying enemies harder to hit.",
+  "ops": [
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.speed",
+      1.25
+    ],
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.turnRate",
+      1.2
+    ],
+    [
+      "mul",
+      "mech_moth.entity.missile.motion.speed",
+      1.2
+    ],
+    [
+      "mul",
+      "mech_moth.entity.missile.motion.turnRate",
+      1.15
+    ],
+    [
+      "mul",
+      "wasp.movement.speed",
+      1.15
+    ],
+    [
+      "mul",
+      "wasp.movement.bob",
+      1.2
+    ]
+  ]
+}

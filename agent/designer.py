@@ -9,7 +9,7 @@ import json
 from . import csv_level, llm, object_designer
 
 MAX_ATTEMPTS = 4
-MIN_DESIGN_COLS = 250   # hard floor for designed levels — enforced by validation
+MIN_DESIGN_COLS = 80    # hard floor for designed levels — enforced by validation
 
 SYSTEM = f"""You are the Designer for a 2D tile platformer that redesigns itself between
 rounds to become more fun. Return ONLY one JSON object describing a level plan. Python

@@ -7,11 +7,11 @@ from agent import csv_level, designer
 class LevelPlanCompilerTests(unittest.TestCase):
     def valid_plan(self):
         return {
-            "width": 250,
+            "width": 150,
             "height": 12,
             "spawn": {"x": 2, "y": 9},
-            "exit": {"x": 247, "y": 9},
-            "solids": [{"x": 0, "y": 10, "width": 250, "height": 2}],
+            "exit": {"x": 147, "y": 9},
+            "solids": [{"x": 0, "y": 10, "width": 150, "height": 2}],
             "enemies": [
                 {"type": 1, "x": 20, "y": 9},
                 {"type": 2, "x": 100, "y": 9},
@@ -23,16 +23,16 @@ class LevelPlanCompilerTests(unittest.TestCase):
         compact = designer._compile_plan(self.valid_plan())
         rows = compact.splitlines()
         self.assertEqual(len(rows), 12)
-        self.assertTrue(all(len(row) == 250 for row in rows))
+        self.assertTrue(all(len(row) == 150 for row in rows))
         self.assertEqual(rows[9][2], "S")
-        self.assertEqual(rows[9][247], "E")
+        self.assertEqual(rows[9][147], "E")
         self.assertEqual(
             csv_level.validate_text(compact, min_cols=designer.MIN_DESIGN_COLS), []
         )
 
     def test_rejects_rectangle_outside_bounds(self):
         plan = self.valid_plan()
-        plan["solids"] = [{"x": 249, "y": 10, "width": 2, "height": 2}]
+        plan["solids"] = [{"x": 149, "y": 10, "width": 2, "height": 2}]
         with self.assertRaisesRegex(ValueError, "outside the level bounds"):
             designer._compile_plan(plan)
 
@@ -44,20 +44,20 @@ class LevelPlanCompilerTests(unittest.TestCase):
 
     def test_rejects_non_integer_dimensions(self):
         plan = self.valid_plan()
-        plan["width"] = "250"
+        plan["width"] = "150"
         with self.assertRaisesRegex(ValueError, "width must be an integer"):
             designer._compile_plan(plan)
 
     def test_repairs_bounds_entity_count_and_embedded_spawn(self):
         plan = self.valid_plan()
-        plan["width"] = 350
+        plan["width"] = 150
         plan["height"] = 30
         plan["spawn"] = {"x": 5, "y": 27}
-        plan["exit"] = {"x": 340, "y": 27}
+        plan["exit"] = {"x": 140, "y": 27}
         plan["solids"] = [
-            {"x": 0, "y": 28, "width": 350, "height": 2},
+            {"x": 0, "y": 28, "width": 150, "height": 2},
             {"x": 0, "y": 24, "width": 15, "height": 4},
-            {"x": 321, "y": 24, "width": 30, "height": 2},
+            {"x": 140, "y": 24, "width": 30, "height": 2},
         ]
         plan["enemies"] = [
             {"type": 1, "x": 20 + i * 3, "y": 27} for i in range(25)
@@ -67,7 +67,7 @@ class LevelPlanCompilerTests(unittest.TestCase):
         compact = designer._compile_plan(repaired)
 
         self.assertEqual(len(repaired["enemies"]), csv_level.MAX_ENEMIES)
-        self.assertEqual(repaired["solids"][2]["width"], 29)
+        self.assertEqual(repaired["solids"][2]["width"], 10)
         self.assertNotEqual(repaired["spawn"], plan["spawn"])
         self.assertIn("clipped solids[2]", " ".join(corrections))
         self.assertIn("trimmed enemies", " ".join(corrections))
@@ -79,7 +79,7 @@ class LevelPlanCompilerTests(unittest.TestCase):
         plan = self.valid_plan()
         plan["solids"] = [
             {"x": 0, "y": 10, "width": 10, "height": 2},
-            {"x": 20, "y": 10, "width": 230, "height": 2},
+            {"x": 20, "y": 10, "width": 130, "height": 2},
         ]
         candidate = designer._compile_plan(plan)
         self.assertIn(
@@ -138,7 +138,7 @@ class LevelPlanCompilerTests(unittest.TestCase):
 
         self.assertEqual(errors, [])
         self.assertEqual(len(grid), 12)
-        self.assertEqual(len(grid[0]), 250)
+        self.assertEqual(len(grid[0]), 150)
         self.assertIn(",", result)
         complete_json.assert_called_once()
         self.assertEqual(complete_json.call_args.kwargs["max_tokens"], 6000)
@@ -146,7 +146,7 @@ class LevelPlanCompilerTests(unittest.TestCase):
     @mock.patch("agent.designer.llm.complete_json")
     def test_retry_includes_repaired_previous_plan_and_validation_error(self, complete_json):
         invalid = self.valid_plan()
-        invalid["solids"] = [{"x": 0, "y": 0, "width": 250, "height": 12}]
+        invalid["solids"] = [{"x": 0, "y": 0, "width": 150, "height": 12}]
         valid = self.valid_plan()
         complete_json.side_effect = [invalid, valid]
         current = "\n".join([
@@ -169,7 +169,7 @@ class LevelPlanCompilerTests(unittest.TestCase):
         self.assertEqual(complete_json.call_count, 2)
         retry_prompt = complete_json.call_args_list[1].args[1]
         self.assertIn("PREVIOUS INVALID PLAN", retry_prompt)
-        self.assertIn('"width":250', retry_prompt)
+        self.assertIn('"width":150', retry_prompt)
         self.assertIn("cannot place spawn", retry_prompt)
 
 

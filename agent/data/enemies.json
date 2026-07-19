@@ -33,7 +33,7 @@
     ],
     "movement": {
       "type": "patrol",
-      "speed": 45,
+      "speed": 54,
       "range": 96
     },
     "attack": {
@@ -119,9 +119,9 @@
     ],
     "movement": {
       "type": "flyer",
-      "speed": 55,
+      "speed": 63.25,
       "range": 110,
-      "bob": 22,
+      "bob": 26.4,
       "bob_hz": 0.9
     },
     "attack": {
@@ -176,8 +176,8 @@
         "motion": {
           "type": "home",
           "target": "player",
-          "speed": 2.4,
-          "turnRate": 120
+          "speed": 2.55,
+          "turnRate": 100.8
         },
         "contact": {
           "damage": 1,
@@ -466,8 +466,8 @@
         },
         "motion": {
           "type": "home",
-          "speed": 6,
-          "turnRate": 180
+          "speed": 7.2,
+          "turnRate": 207
         },
         "contact": {
           "damage": 2,
@@ -713,5 +713,267 @@
       }
     },
     "desc": "EntitySpec boss saved from workshop"
+  },
+  {
+    "v": 1,
+    "id": "sky_sentinel",
+    "name": "Sky Sentinel",
+    "kind": "enemy",
+    "defs": {
+      "feather_dart": {
+        "id": "feather_dart",
+        "tags": [
+          "projectile",
+          "enemy"
+        ],
+        "visual": {
+          "shape": "diamond",
+          "size": [
+            0.25,
+            0.25
+          ],
+          "tint": "#e8c547"
+        },
+        "body": {
+          "shape": "circle",
+          "radius": 0.12,
+          "gravity": 0
+        },
+        "motion": {
+          "type": "velocity",
+          "speed": 10
+        },
+        "contact": {
+          "damage": 1,
+          "destroySelf": true
+        },
+        "life": {
+          "ttl": 2.5
+        }
+      }
+    },
+    "root": {
+      "id": "sky_sentinel",
+      "tags": [
+        "enemy",
+        "flying",
+        "exit_guard"
+      ],
+      "visual": {
+        "shape": "ellipse",
+        "size": [
+          1.1,
+          0.7
+        ],
+        "tint": "#c8b8e8"
+      },
+      "body": {
+        "shape": "box",
+        "size": [
+          1.0,
+          0.6
+        ],
+        "gravity": 0
+      },
+      "health": {
+        "max": 8
+      },
+      "contact": {
+        "damage": 1,
+        "knockback": 3
+      },
+      "motion": {
+        "type": "hover",
+        "speed": 2.5,
+        "amplitude": 1.2,
+        "frequency": 0.8
+      },
+      "emitters": {
+        "wing_tip": {
+          "at": [
+            0.6,
+            0
+          ],
+          "ref": "feather_dart",
+          "pattern": "aimed"
+        }
+      }
+    },
+    "brain": {
+      "start": "patrol_guard",
+      "states": {
+        "patrol_guard": {
+          "tracks": [
+            {
+              "id": "swoop_attack",
+              "loop": true,
+              "steps": [
+                {
+                  "telegraph": {
+                    "part": "sky_sentinel",
+                    "time": 0.5
+                  }
+                },
+                {
+                  "setMotion": {
+                    "type": "dash",
+                    "speed": 14,
+                    "duration": 0.6
+                  }
+                },
+                {
+                  "fire": {
+                    "emitter": "wing_tip",
+                    "count": 2,
+                    "spread": 15
+                  }
+                },
+                {
+                  "wait": 0.4
+                },
+                {
+                  "setMotion": {
+                    "type": "hover",
+                    "speed": 2.5,
+                    "amplitude": 1.2,
+                    "frequency": 0.8
+                  }
+                },
+                {
+                  "wait": 2.0
+                }
+              ]
+            }
+          ],
+          "transitions": [
+            {
+              "when": "distance(self, player) > 12",
+              "to": "patrol_guard"
+            }
+          ]
+        }
+      }
+    },
+    "desc": "EntitySpec enemy generated from round 33"
+  },
+  {
+    "v": 1,
+    "id": "missile_patroller",
+    "name": "Missile Patroller",
+    "kind": "enemy",
+    "defs": {
+      "homing_missile": {
+        "id": "homing_missile",
+        "tags": [
+          "projectile",
+          "enemy"
+        ],
+        "visual": {
+          "shape": "capsule",
+          "size": [
+            0.5,
+            0.25
+          ],
+          "tint": "#ff6600"
+        },
+        "body": {
+          "shape": "box",
+          "size": [
+            0.45,
+            0.2
+          ],
+          "gravity": 0
+        },
+        "motion": {
+          "type": "home",
+          "speed": 6,
+          "turnRate": 180
+        },
+        "contact": {
+          "damage": 2,
+          "destroySelf": true,
+          "knockback": 2
+        },
+        "life": {
+          "ttl": 5
+        }
+      }
+    },
+    "root": {
+      "id": "missile_patroller",
+      "tags": [
+        "enemy",
+        "ground"
+      ],
+      "visual": {
+        "shape": "box",
+        "size": [
+          1.2,
+          1
+        ],
+        "tint": "#884422"
+      },
+      "body": {
+        "shape": "box",
+        "size": [
+          1.1,
+          0.9
+        ],
+        "gravity": 1
+      },
+      "health": {
+        "max": 12
+      },
+      "contact": {
+        "damage": 1,
+        "knockback": 3
+      },
+      "motion": {
+        "type": "patrol",
+        "speed": 2,
+        "distance": 4
+      },
+      "emitters": {
+        "launcher": {
+          "at": [
+            0.6,
+            -0.2
+          ],
+          "ref": "homing_missile",
+          "pattern": "aimed"
+        }
+      }
+    },
+    "brain": {
+      "start": "patrol_fire",
+      "states": {
+        "patrol_fire": {
+          "tracks": [
+            {
+              "id": "attack_loop",
+              "loop": true,
+              "steps": [
+                {
+                  "telegraph": {
+                    "part": "missile_patroller",
+                    "time": 0.6
+                  }
+                },
+                {
+                  "fire": {
+                    "emitter": "launcher",
+                    "count": 1
+                  }
+                },
+                {
+                  "wait": 2.5
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "desc": "EntitySpec enemy saved from workshop"
   }
 ]

@@ -23,14 +23,14 @@ MAX_JUMP_DX = 4
 MAX_JUMP_UP = 4
 
 MIN_ROWS, MAX_ROWS = 8, 40
-MIN_COLS, MAX_COLS = 15, 400
+MIN_COLS, MAX_COLS = 15, 160
 
 
 def parse(text: str) -> tuple[list[list[str]], list[str]]:
     """Parse CSV text into a grid. Returns (grid, errors).
 
     Rows of unequal length are padded with '.' to the widest row rather than
-    rejected — at 400 columns, LLM designers reliably miscount by a cell or two,
+    rejected — over a hundred columns, LLM designers reliably miscount by a cell or two,
     and padding is harmless (reachability still validates the result).
     """
     errors = []
