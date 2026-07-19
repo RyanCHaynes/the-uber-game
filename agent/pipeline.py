@@ -74,8 +74,47 @@ def run_cycle(round_number: int, level_path: Path) -> Path:
         )
         print(f"  saved to library: levels/{level_path.stem}")
 
-    print(f"  designing next level ({brain})...")
     player_comment = feedback["players"][0].get("comment", "")
+    memory_query = " ".join([
+        str(analysis.get("diagnosis", "")),
+        player_comment,
+        " ".join(
+            str(item.get("lesson", "")) if isinstance(item, dict) else str(item)
+            for item in new_lessons
+        ),
+    ])
+    selected_memory = store.relevant_lessons(memory_query, limit=12)
+    from . import object_designer
+    if brain == "llm":
+        print("  evaluating scene-object needs (object designer)...")
+        try:
+            proposals = object_designer.propose(
+                analysis, feedback, store.format_lessons(selected_memory)
+            )
+            added_objects = object_designer.apply_proposals(proposals, round_number)
+            if added_objects:
+                print("  added object type(s): " + ", ".join(
+                    f"{item['name']} [{item['symbol']}]" for item in added_objects
+                ))
+            else:
+                print("  existing object catalog is sufficient")
+        except Exception as err:
+            # Object ideation is optional; it must never block the next level.
+            print(f"  object designer skipped after error: {err}")
+
+    from . import enemy_designer
+    if brain == "llm":
+        print("  evaluating enemy roster (enemy designer)...")
+        try:
+            enemy_designer.adapt_and_write(
+                analysis, feedback, round_number,
+                store.format_lessons(selected_memory),
+            )
+        except Exception as err:
+            # Enemy adaptation is optional; it must never block the next level.
+            print(f"  enemy designer skipped after error: {err}")
+
+    print(f"  designing next level ({brain})...")
     new_csv = design(level_csv, analysis, store.lessons_as_text(), store.library_summary(),
                      player_comment=player_comment, roster_text=roster_summary())
 
