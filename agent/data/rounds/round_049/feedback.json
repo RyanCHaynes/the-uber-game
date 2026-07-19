@@ -1,0 +1,91 @@
+{
+  "round": 49,
+  "level": "level_048",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 2,
+      "completed": true,
+      "deaths": 2,
+      "fall_locations": [
+        {
+          "x": 70,
+          "y": 420,
+          "cause": "combat"
+        },
+        {
+          "x": 70,
+          "y": 420,
+          "cause": "combat"
+        }
+      ],
+      "time_seconds": 19.0,
+      "enemies_killed": 1,
+      "hits_taken": 3,
+      "objects_collected": 0,
+      "player_trace": [
+        {
+          "x": 80.0,
+          "y": 432.0,
+          "t_ms": 0
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 135
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 886
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 1633
+        },
+        {
+          "x": 80.0,
+          "y": 434.0,
+          "t_ms": 2382
+        },
+        {
+          "x": 220.8,
+          "y": 338.0,
+          "t_ms": 3129
+        },
+        {
+          "x": 364.8,
+          "y": 294.0,
+          "t_ms": 3879
+        },
+        {
+          "x": 508.8,
+          "y": 434.0,
+          "t_ms": 4632
+        },
+        {
+          "x": 652.8,
+          "y": 434.0,
+          "t_ms": 5379
+        },
+        {
+          "x": 800.0,
+          "y": 434.0,
+          "t_ms": 6135
+        },
+        {
+          "x": 928.0,
+          "y": 434.0,
+          "t_ms": 6878
+        },
+        {
+          "x": 928.0,
+          "y": 400.2,
+          "t_ms": 7635
+        }
+      ],
+      "comment": "the moth enemy is too fast."
+    }
+  ]
+}

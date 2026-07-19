@@ -1,0 +1,15 @@
+{
+  "note": "Reduced Iron Moth seeker missile speed and turn rate to make the boss fairer on flat terrain where players have limited vertical evasion options.",
+  "ops": [
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.speed",
+      0.75
+    ],
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.turnRate",
+      0.75
+    ]
+  ]
+}

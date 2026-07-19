@@ -176,8 +176,8 @@
         "motion": {
           "type": "home",
           "target": "player",
-          "speed": 2.4,
-          "turnRate": 120
+          "speed": 1.8,
+          "turnRate": 90
         },
         "contact": {
           "damage": 1,

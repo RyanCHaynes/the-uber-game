@@ -234,17 +234,24 @@ def _should_create(state: dict, feedback: dict, roster: list[dict]) -> bool:
 
 # ------------------------------------------------------------------------- cycle
 
-def run_battle_cycle(round_number: int, prev_feedback: dict | None = None) -> Path:
-    """Produce the next battle arena `level_NNN.csv`. Returns its path.
+def run_battle_cycle(round_number: int, prev_feedback: dict | None = None) -> Path | None:
+    """Produce the next battle arena `level_NNN.csv`. Returns its path, or None when
+    the battle bestiary is empty (nothing to field yet).
 
     `prev_feedback` is the just-played battle's feedback (None for the very first
     arena, e.g. when the player switches into Battle mode)."""
     mock = pipeline._use_mock()
     state = _load_state()
     state["round"] = round_number
-    roster = enemy_designer.load_roster()
+    roster = enemy_designer.load_roster(enemy_designer.BATTLE)
     if not roster:
-        raise RuntimeError("battle mode requires a non-empty enemy roster")
+        # The battle bestiary starts empty and is populated by the enemy workshop
+        # (import into both bestiaries) or battle's own create lever. Until it has
+        # at least one enemy there is nothing to field — surface a clear message
+        # to the dashboard log and skip generation rather than crashing the cycle.
+        print("[battle] bestiary empty — design and import enemies from the workshop "
+              "before starting a battle")
+        return None
 
     if prev_feedback:
         state["D"] = _update_difficulty(state.get("D", BASE_D), prev_feedback)
@@ -262,9 +269,10 @@ def run_battle_cycle(round_number: int, prev_feedback: dict | None = None) -> Pa
         if scores[top_id] < d - BUFF_MARGIN:
             print(f"  roster ceiling {scores[top_id]:.2f} < target {d}; hardening '{top_id}'")
             try:
-                if enemy_designer.harden_and_write(top_id, feedback, round_number):
+                if enemy_designer.harden_and_write(top_id, feedback, round_number,
+                                                   target=enemy_designer.BATTLE):
                     buffed = top_id
-                    roster = enemy_designer.load_roster()
+                    roster = enemy_designer.load_roster(enemy_designer.BATTLE)
                     scores = {e["id"]: difficulty_score(e) for e in roster
                               if isinstance(e, dict) and e.get("id")}
             except Exception as err:
@@ -275,11 +283,12 @@ def run_battle_cycle(round_number: int, prev_feedback: dict | None = None) -> Pa
             try:
                 analysis = {"diagnosis": f"Battle mode round {round_number} wants a new enemy "
                             f"archetype for variety at difficulty {d}."}
-                record = enemy_designer.maybe_add_entityspec(analysis, feedback, round_number)
+                record = enemy_designer.maybe_add_entityspec(analysis, feedback, round_number,
+                                                             target=enemy_designer.BATTLE)
                 if record:
                     created = record.get("entity_id") or record.get("name")
                     state["last_create_round"] = round_number
-                    roster = enemy_designer.load_roster()
+                    roster = enemy_designer.load_roster(enemy_designer.BATTLE)
                     scores = {e["id"]: difficulty_score(e) for e in roster
                               if isinstance(e, dict) and e.get("id")}
             except Exception as err:

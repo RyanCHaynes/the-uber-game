@@ -21,9 +21,32 @@ from .entity import generator as entity_generator
 from .entity import schema as entity_schema
 
 DATA_DIR = Path(__file__).parent / "data"
+
+# Adventure bestiary (the historical default — kept at the same paths so existing
+# data and monkeypatching tests are untouched).
 ROSTER_PATH = DATA_DIR / "enemies.json"
 LAST_GOOD_PATH = DATA_DIR / "store" / "enemies_last_good.json"
 DESIGN_LOG_PATH = DATA_DIR / "store" / "enemy_design_log.jsonl"
+
+# Battle bestiary: a fully separate roster so battle buffs/creates never mutate the
+# adventure roster (and vice-versa). Starts empty (data/battle_enemies.json = []).
+BATTLE_ROSTER_PATH = DATA_DIR / "battle_enemies.json"
+BATTLE_LAST_GOOD_PATH = DATA_DIR / "store" / "battle_enemies_last_good.json"
+BATTLE_DESIGN_LOG_PATH = DATA_DIR / "store" / "battle_enemy_design_log.jsonl"
+
+# Roster targets: a string selects which bestiary the IO helpers read/write. Paths
+# are resolved from the module attributes at call time, so tests can monkeypatch
+# either bestiary's paths.
+ADVENTURE = "adventure"
+BATTLE = "battle"
+
+
+def _paths(target: str = ADVENTURE) -> tuple[Path, Path, Path]:
+    """(roster, last_good, design_log) paths for a bestiary target."""
+    if target == BATTLE:
+        return BATTLE_ROSTER_PATH, BATTLE_LAST_GOOD_PATH, BATTLE_DESIGN_LOG_PATH
+    return ROSTER_PATH, LAST_GOOD_PATH, DESIGN_LOG_PATH
+
 
 MAX_ARCHETYPES = 9      # CSV digit ceiling (1-9); array index + 1 is the digit
 MAX_OPS = 12            # change budget: at most this many tweaks per round
@@ -72,19 +95,20 @@ Rules:
 - If the feedback does not clearly implicate an enemy, return {"note":"...","ops":[]}."""
 
 
-def load_roster() -> list[dict]:
-    if not ROSTER_PATH.exists():
+def load_roster(target: str = ADVENTURE) -> list[dict]:
+    roster_path, _, _ = _paths(target)
+    if not roster_path.exists():
         return []
     try:
-        data = json.loads(ROSTER_PATH.read_text())
+        data = json.loads(roster_path.read_text())
     except (json.JSONDecodeError, OSError):
         return []
     return data if isinstance(data, list) else []
 
 
-def roster_summary() -> str:
+def roster_summary(target: str = ADVENTURE) -> str:
     """Digit -> type summary, matching the format the Level Designer already reads."""
-    roster = load_roster()
+    roster = load_roster(target)
     if not roster:
         return ""
     return "\n".join(
@@ -434,7 +458,7 @@ def has_combat_signal(feedback: dict) -> bool:
 
 
 def maybe_add_entityspec(analysis: dict, feedback: dict,
-                         source_round: int) -> dict | None:
+                         source_round: int, target: str = ADVENTURE) -> dict | None:
     """Rare add-an-archetype path backed by the EntitySpec generator.
 
     Creation is intentionally demand-driven: normal combat feedback adapts the
@@ -442,7 +466,7 @@ def maybe_add_entityspec(analysis: dict, feedback: dict,
     the larger generation call. The candidate passes schema validation and the
     dry-run gate before the roster is replaced.
     """
-    roster = load_roster()
+    roster = load_roster(target)
     if len(roster) >= MAX_ARCHETYPES:
         return None
     player = (feedback.get("players") or [{}])[0]
@@ -469,17 +493,18 @@ def maybe_add_entityspec(analysis: dict, feedback: dict,
     errors = validate_roster(candidate)
     if errors:
         raise ValueError("generated EntitySpec rejected: " + "; ".join(errors))
-    _backup_last_good()
-    _write_roster(candidate)
+    _backup_last_good(target)
+    _write_roster(candidate, target)
     record = {"kind": "add_entityspec", "entity_id": spec.get("id"),
               "name": spec.get("name"), "validation": validation}
-    _log_design(source_round, record)
+    _log_design(source_round, record, target)
     print(f"  enemy designer added EntitySpec: {spec.get('name')} [{len(candidate)}]")
     return record
 
 
-def save_entityspec(spec: dict, source: str = "workshop") -> dict:
-    """Validate and append a workshop EntitySpec to the main-game roster.
+def save_entityspec(spec: dict, source: str = "workshop",
+                    target: str = ADVENTURE) -> dict:
+    """Validate and append a workshop EntitySpec to a game roster.
 
     The save is rollback-safe and deliberately refuses replacement: stable
     roster IDs must stay unambiguous, so editing an existing archetype remains
@@ -492,7 +517,7 @@ def save_entityspec(spec: dict, source: str = "workshop") -> dict:
     errors = list(result.errors) + dry_run_spec(candidate_spec)
     if errors:
         raise ValueError("EntitySpec rejected: " + "; ".join(errors))
-    roster = load_roster()
+    roster = load_roster(target)
     if len(roster) >= MAX_ARCHETYPES:
         raise FileExistsError(f"enemy roster is full ({MAX_ARCHETYPES} archetypes)")
     entity_id = candidate_spec.get("id")
@@ -504,8 +529,8 @@ def save_entityspec(spec: dict, source: str = "workshop") -> dict:
     errors = validate_roster(candidate)
     if errors:
         raise ValueError("roster rejected: " + "; ".join(errors))
-    _backup_last_good()
-    _write_roster(candidate)
+    _backup_last_good(target)
+    _write_roster(candidate, target)
     record = {
         "kind": "save_entityspec",
         "source": source,
@@ -513,7 +538,7 @@ def save_entityspec(spec: dict, source: str = "workshop") -> dict:
         "name": candidate_spec.get("name"),
         "digit": len(candidate),
     }
-    _log_design(0, record)
+    _log_design(0, record, target)
     return {**record, "roster_count": len(candidate), "max_archetypes": MAX_ARCHETYPES}
 
 
@@ -544,19 +569,23 @@ def adapt(analysis: dict, feedback: dict, roster: list[dict],
     return result if isinstance(result, dict) else {"ops": []}
 
 
-def _write_roster(roster: list[dict]):
-    ROSTER_PATH.write_text(json.dumps(roster, indent=2))
+def _write_roster(roster: list[dict], target: str = ADVENTURE):
+    roster_path, _, _ = _paths(target)
+    roster_path.parent.mkdir(parents=True, exist_ok=True)
+    roster_path.write_text(json.dumps(roster, indent=2))
 
 
-def _backup_last_good():
-    if ROSTER_PATH.exists():
-        LAST_GOOD_PATH.parent.mkdir(parents=True, exist_ok=True)
-        LAST_GOOD_PATH.write_text(ROSTER_PATH.read_text())
+def _backup_last_good(target: str = ADVENTURE):
+    roster_path, last_good_path, _ = _paths(target)
+    if roster_path.exists():
+        last_good_path.parent.mkdir(parents=True, exist_ok=True)
+        last_good_path.write_text(roster_path.read_text())
 
 
-def _log_design(source_round: int, patch: dict):
-    DESIGN_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(DESIGN_LOG_PATH, "a") as log:
+def _log_design(source_round: int, patch: dict, target: str = ADVENTURE):
+    _, _, design_log_path = _paths(target)
+    design_log_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(design_log_path, "a") as log:
         log.write(json.dumps({
             "ts": datetime.datetime.now().isoformat(timespec="seconds"),
             "source_round": source_round,
@@ -565,10 +594,10 @@ def _log_design(source_round: int, patch: dict):
 
 
 def adapt_and_write(analysis: dict, feedback: dict, source_round: int,
-                    lessons_text: str = "") -> dict | None:
+                    lessons_text: str = "", target: str = ADVENTURE) -> dict | None:
     """Rollback-safe adaptation: author a patch, validate it, and only write the
     roster when it validates. On repeated failure the roster is left untouched."""
-    roster = load_roster()
+    roster = load_roster(target)
     if not roster:
         print("  enemy roster is empty; nothing to adapt")
         return None
@@ -586,9 +615,9 @@ def adapt_and_write(analysis: dict, feedback: dict, source_round: int,
         new_roster, errors = apply_patch(roster, patch)
         previous = patch
         if not errors:
-            _backup_last_good()
-            _write_roster(new_roster)
-            _log_design(source_round, patch)
+            _backup_last_good(target)
+            _write_roster(new_roster, target)
+            _log_design(source_round, patch, target)
             print(f"  enemy designer applied {len(ops)} op(s): "
                   f"{str(patch.get('note', '')).strip()[:80]}")
             return patch
@@ -659,11 +688,11 @@ def _harden(enemy: dict, feedback: dict, lessons_text: str,
 
 
 def harden_and_write(enemy_id: str, feedback: dict, source_round: int,
-                     lessons_text: str = "") -> dict | None:
+                     lessons_text: str = "", target: str = ADVENTURE) -> dict | None:
     """Battle-mode lever: make one existing enemy harder, rollback-safe. Reuses the
     same patch/validation/clamp machinery as adaptation, so escalation stays capped
     (~50%/round) and can never ship an invalid or unkillable enemy."""
-    roster = load_roster()
+    roster = load_roster(target)
     enemy = next((e for e in roster if isinstance(e, dict) and e.get("id") == enemy_id), None)
     if enemy is None:
         print(f"  enemy hardener: no enemy with id '{enemy_id}'")
@@ -679,9 +708,9 @@ def harden_and_write(enemy_id: str, feedback: dict, source_round: int,
         new_roster, errors = apply_patch(roster, patch)
         previous = patch
         if not errors:
-            _backup_last_good()
-            _write_roster(new_roster)
-            _log_design(source_round, {"harden": enemy_id, **patch})
+            _backup_last_good(target)
+            _write_roster(new_roster, target)
+            _log_design(source_round, {"harden": enemy_id, **patch}, target)
             print(f"  enemy designer hardened '{enemy_id}' with {len(ops)} op(s): "
                   f"{str(patch.get('note', '')).strip()[:80]}")
             return patch

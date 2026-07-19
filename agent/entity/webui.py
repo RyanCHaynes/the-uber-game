@@ -88,16 +88,29 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, result)
         elif self.path == "/api/save":
             body = self._body()
-            try:
-                with _save_lock:
-                    saved = enemy_designer.save_entityspec(body.get("spec"), "workshop")
-            except FileExistsError as err:
-                self._send(409, {"error": str(err)})
+            spec = body.get("spec")
+            # Import into BOTH bestiaries. A ValueError means the spec itself is bad
+            # (fails identically for both) -> 422. A duplicate id in one bestiary must
+            # not block the other, so each target is saved independently; only when
+            # both reject as duplicates do we return 409.
+            saved, duplicates, invalid = {}, {}, None
+            with _save_lock:
+                for target in (enemy_designer.ADVENTURE, enemy_designer.BATTLE):
+                    try:
+                        saved[target] = enemy_designer.save_entityspec(spec, "workshop", target=target)
+                    except FileExistsError as err:
+                        duplicates[target] = str(err)
+                    except ValueError as err:
+                        invalid = str(err)
+                        break
+            if invalid is not None:
+                self._send(422, {"error": invalid})
                 return
-            except ValueError as err:
-                self._send(422, {"error": str(err)})
+            if not saved:
+                self._send(409, {"error": next(iter(duplicates.values()))})
                 return
-            self._send(201, saved)
+            primary = saved.get(enemy_designer.ADVENTURE) or next(iter(saved.values()))
+            self._send(201, {**primary, "saved_to": sorted(saved)})
         else:
             self._send(404, {"error": "not found"})
 

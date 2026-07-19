@@ -1,6 +1,6 @@
 {
-  "last_consolidated_at": "2026-07-18T21:02:15",
+  "last_consolidated_at": "2026-07-19T06:22:25",
   "lesson_count_after": 13,
-  "last_reason": "memory grew by 3 lessons",
-  "last_merged_groups": 5
+  "last_reason": "likely overlapping lessons",
+  "last_merged_groups": 1
 }

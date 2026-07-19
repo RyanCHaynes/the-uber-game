@@ -1254,5 +1254,199 @@
       }
     },
     "desc": "EntitySpec enemy generated from round 43"
+  },
+  {
+    "v": 1,
+    "id": "blink_striker",
+    "name": "Blink Striker",
+    "kind": "enemy",
+    "limits": {
+      "maxAlive": 6,
+      "maxSpawnsPerSecond": 2,
+      "maxSpawnDepth": 1
+    },
+    "defs": {
+      "strike_slash": {
+        "id": "strike_slash",
+        "tags": [
+          "projectile",
+          "enemy",
+          "slash"
+        ],
+        "visual": {
+          "shape": "diamond",
+          "size": [
+            0.6,
+            0.2
+          ],
+          "tint": "#ffcc00"
+        },
+        "body": {
+          "shape": "box",
+          "size": [
+            0.5,
+            0.15
+          ],
+          "gravity": 0
+        },
+        "motion": {
+          "type": "velocity",
+          "speed": 18
+        },
+        "contact": {
+          "damage": 2,
+          "destroySelf": true,
+          "knockback": 4
+        },
+        "life": {
+          "ttl": 0.5
+        }
+      }
+    },
+    "root": {
+      "id": "blink_striker",
+      "tags": [
+        "enemy",
+        "blink_striker"
+      ],
+      "visual": {
+        "shape": "capsule",
+        "size": [
+          0.9,
+          1.1
+        ],
+        "tint": "#e04040"
+      },
+      "body": {
+        "shape": "box",
+        "size": [
+          0.7,
+          1.0
+        ],
+        "gravity": 1
+      },
+      "health": {
+        "max": 10
+      },
+      "contact": {
+        "damage": 1,
+        "knockback": 3
+      },
+      "motion": {
+        "type": "patrol",
+        "speed": 2.5,
+        "turnAtEdges": true,
+        "turnAtWalls": true
+      },
+      "emitters": {
+        "slash": {
+          "at": [
+            0.6,
+            0.1
+          ],
+          "ref": "strike_slash",
+          "pattern": "aimed"
+        }
+      }
+    },
+    "brain": {
+      "start": "hunt",
+      "states": {
+        "hunt": {
+          "tracks": [
+            {
+              "id": "strike_cycle",
+              "loop": true,
+              "steps": [
+                {
+                  "telegraph": {
+                    "part": "blink_striker",
+                    "time": 0.5
+                  }
+                },
+                {
+                  "setMotion": {
+                    "type": "dash",
+                    "speed": 14,
+                    "duration": 0.35
+                  }
+                },
+                {
+                  "wait": 0.2
+                },
+                {
+                  "fire": {
+                    "emitter": "slash",
+                    "count": 1
+                  }
+                },
+                {
+                  "setMotion": {
+                    "type": "patrol",
+                    "speed": 2.5,
+                    "turnAtEdges": true,
+                    "turnAtWalls": true
+                  }
+                },
+                {
+                  "wait": 1.8
+                }
+              ]
+            }
+          ],
+          "transitions": [
+            {
+              "when": "self.hpPct < 0.35",
+              "to": "enraged"
+            }
+          ]
+        },
+        "enraged": {
+          "tracks": [
+            {
+              "id": "frenzy",
+              "loop": true,
+              "steps": [
+                {
+                  "telegraph": {
+                    "part": "blink_striker",
+                    "time": 0.3
+                  }
+                },
+                {
+                  "setMotion": {
+                    "type": "dash",
+                    "speed": 18,
+                    "duration": 0.25
+                  }
+                },
+                {
+                  "wait": 0.1
+                },
+                {
+                  "fire": {
+                    "emitter": "slash",
+                    "count": 2,
+                    "spread": 15
+                  }
+                },
+                {
+                  "setMotion": {
+                    "type": "patrol",
+                    "speed": 4,
+                    "turnAtEdges": true,
+                    "turnAtWalls": true
+                  }
+                },
+                {
+                  "wait": 0.9
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "desc": "EntitySpec enemy generated from round 47"
   }
 ]

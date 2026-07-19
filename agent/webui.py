@@ -165,6 +165,7 @@ def _reset():
             f.unlink()
     (LEVELS_DIR / "next_level.ready").unlink(missing_ok=True)
     (DATA_DIR / "battle_state.json").unlink(missing_ok=True)  # difficulty back to base
+    (DATA_DIR / "battle_enemies.json").write_text("[]\n")     # battle bestiary back to empty
     shutil.rmtree(ROUNDS_DIR, ignore_errors=True)
     shutil.rmtree(DATA_DIR / "store", ignore_errors=True)
     shutil.rmtree(DATA_DIR / "library", ignore_errors=True)
@@ -234,10 +235,15 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, _snapshot())
         elif self.path == "/api/llmlog":
             self._send(200, {"entries": llm.read_log(100)})
-        elif self.path == "/api/enemies":
-            enemies_path = DATA_DIR / "enemies.json"
-            roster = json.loads(enemies_path.read_text()) if enemies_path.exists() else []
-            self._send(200, {"enemies": roster})
+        elif self.path.split("?")[0] == "/api/enemies":
+            from urllib.parse import parse_qs, urlsplit
+            from . import battle, enemy_designer
+            mode = (parse_qs(urlsplit(self.path).query).get("mode", ["adventure"])[0])
+            target = enemy_designer.BATTLE if mode == "battle" else enemy_designer.ADVENTURE
+            roster = enemy_designer.load_roster(target)
+            enemies = [{**e, "threat": round(battle.difficulty_score(e), 2)}
+                       for e in roster if isinstance(e, dict)]
+            self._send(200, {"enemies": enemies})
         elif self.path == "/api/objects":
             from . import object_designer
             self._send(200, {"objects": object_designer.load_catalog()})

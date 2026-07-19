@@ -88,9 +88,20 @@ class EnemyDesignerTests(unittest.TestCase):
         self.assertEqual(backup, original)
 
     def test_workshop_save_refuses_duplicate_id(self):
-        spec = copy.deepcopy(self.roster()[-1])
-        with self.assertRaisesRegex(FileExistsError, "already in the roster"):
-            enemy_designer.save_entityspec(spec)
+        # Use a temp roster with room to spare so the duplicate-id guard is what
+        # fires (the shipped roster may be at the MAX_ARCHETYPES ceiling).
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            roster_path = root / "enemies.json"
+            existing = next(item for item in self.roster()
+                            if enemy_designer.is_entity_spec(item))
+            roster_path.write_text(json.dumps([existing]))
+            spec = copy.deepcopy(existing)
+            with mock.patch.object(enemy_designer, "ROSTER_PATH", roster_path), \
+                 mock.patch.object(enemy_designer, "LAST_GOOD_PATH", root / "lg.json"), \
+                 mock.patch.object(enemy_designer, "DESIGN_LOG_PATH", root / "log.jsonl"), \
+                 self.assertRaisesRegex(FileExistsError, "already in the roster"):
+                enemy_designer.save_entityspec(spec)
 
     def test_adapt_and_write_backs_up_and_logs_valid_change(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -121,6 +132,35 @@ class EnemyDesignerTests(unittest.TestCase):
                          round(original[2]["attack"]["speed"] * 0.8, 2))
         self.assertEqual(logged["source_round"], 8)
         self.assertEqual(logged["patch"], patch)
+
+    def test_battle_and_adventure_bestiaries_are_separate(self):
+        """A write to the BATTLE target must never touch the adventure roster."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            adv_path = root / "enemies.json"
+            battle_path = root / "battle_enemies.json"
+            adv_original = self.roster()[:2]                 # two valid adventure enemies
+            adv_path.write_text(json.dumps(adv_original))
+            battle_path.write_text("[]")                     # battle bestiary starts empty
+            spec = copy.deepcopy(next(item for item in self.roster()
+                                      if enemy_designer.is_entity_spec(item)))
+            spec["id"] = "battle_only_moth"
+            spec["name"] = "Battle Only Moth"
+            with mock.patch.object(enemy_designer, "ROSTER_PATH", adv_path), \
+                 mock.patch.object(enemy_designer, "LAST_GOOD_PATH", root / "adv_lg.json"), \
+                 mock.patch.object(enemy_designer, "DESIGN_LOG_PATH", root / "adv_log.jsonl"), \
+                 mock.patch.object(enemy_designer, "BATTLE_ROSTER_PATH", battle_path), \
+                 mock.patch.object(enemy_designer, "BATTLE_LAST_GOOD_PATH", root / "bat_lg.json"), \
+                 mock.patch.object(enemy_designer, "BATTLE_DESIGN_LOG_PATH", root / "bat_log.jsonl"):
+                saved = enemy_designer.save_entityspec(spec, "workshop",
+                                                       target=enemy_designer.BATTLE)
+                battle_roster = enemy_designer.load_roster(enemy_designer.BATTLE)
+                adventure_roster = enemy_designer.load_roster(enemy_designer.ADVENTURE)
+
+            self.assertEqual(saved["digit"], 1)
+            self.assertEqual([e["id"] for e in battle_roster], ["battle_only_moth"])
+            self.assertEqual(adventure_roster, adv_original)          # adventure untouched
+            self.assertEqual(json.loads(adv_path.read_text()), adv_original)
 
     @mock.patch("agent.enemy_designer.llm.complete_json")
     def test_no_combat_signal_skips_llm_and_write(self, complete_json):

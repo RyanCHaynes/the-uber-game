@@ -5,3 +5,4 @@
 {"ts": "2026-07-19T01:05:43", "source_round": 39, "patch": {"kind": "add_entityspec", "entity_id": "phase_striker", "name": "Phase Striker", "validation": {"ok": true, "errors": [], "warnings": []}}}
 {"ts": "2026-07-19T01:08:26", "source_round": 43, "patch": {"kind": "add_entityspec", "entity_id": "sky_striker", "name": "Sky Striker", "validation": {"ok": true, "errors": [], "warnings": []}}}
 {"ts": "2026-07-19T01:12:38", "source_round": 47, "patch": {"kind": "add_entityspec", "entity_id": "blink_striker", "name": "Blink Striker", "validation": {"ok": true, "errors": [], "warnings": []}}}
+{"ts": "2026-07-19T06:22:46", "source_round": 49, "patch": {"note": "Reduced Iron Moth seeker missile speed and turn rate to make the boss fairer on flat terrain where players have limited vertical evasion options.", "ops": [["mul", "iron_moth.entity.seeker.motion.speed", 0.75], ["mul", "iron_moth.entity.seeker.motion.turnRate", 0.75]]}}

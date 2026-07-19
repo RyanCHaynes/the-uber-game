@@ -56,6 +56,18 @@
                     letter-spacing: .06em; margin: 0 0 5px; }
   .lessonItem { margin-bottom: 8px; }
   .lessonMeta { color: var(--dim); font-size: 11px; }
+  /* battle bestiary / threat */
+  .rosterItem { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  .rosterItem:last-child { border-bottom: none; }
+  .rosterHead { display: flex; align-items: baseline; gap: 8px; }
+  .threatTag { margin-left: auto; font-size: 11px; padding: 1px 8px; border-radius: 10px;
+               border: 1px solid var(--line); white-space: nowrap; }
+  .threatTag.low { color: var(--green); } .threatTag.med { color: var(--accent); }
+  .threatTag.high { color: var(--red); }
+  .threatBar { height: 6px; background: var(--panel2); border-radius: 4px; overflow: hidden; margin: 5px 0; }
+  .threatFill { display: block; height: 100%; }
+  .threatFill.low { background: var(--green); } .threatFill.med { background: var(--accent); }
+  .threatFill.high { background: var(--red); }
   .dim { color: var(--dim); }
   #log { font: 12px/1.5 ui-monospace, monospace; white-space: pre-wrap; max-height: 240px;
          overflow-y: auto; background: #0e1015; border-radius: 6px; padding: 10px; }
@@ -107,7 +119,8 @@
 </header>
 
 <nav class="tabs">
-  <button class="on" id="tabBtnDash">Dashboard</button>
+  <button class="on" id="tabBtnAdv">Adventure</button>
+  <button id="tabBtnBattle">⚔ Battle</button>
   <button id="tabBtnLlm">LLM traffic <span id="llmBadge" class="dim"></span></button>
 </nav>
 
@@ -118,9 +131,6 @@
         <h2 style="margin:0">Playtest</h2>
         <span id="ptName" class="dim"></span>
         <span class="spacer"></span>
-        <label id="modeToggle" title="Battle mode: fight in a fixed arena — kill every enemy to win. Each round ramps up." style="display:flex;align-items:center;gap:4px;cursor:pointer">
-          <input type="checkbox" id="battleEnabled"> ⚔ <span id="modeState" class="dim">Adventure</span>
-        </label>
         <label id="padToggle" title="Use a connected gamepad — D-pad move, LT jump, right stick aim, RT fire" style="display:flex;align-items:center;gap:4px;cursor:pointer">
           <input type="checkbox" id="padEnabled"> 🎮 <span id="padState" class="dim">off</span>
         </label>
@@ -173,7 +183,7 @@
     <div class="panel"><h2>Playtest feedback <span id="fbRound" class="dim"></span></h2>
       <div id="feedback" class="dim">this level hasn't been played yet</div></div>
     <div class="panel"><h2>Analyst diagnosis</h2><div id="diagnosis" class="dim">—</div></div>
-    <div class="panel"><div class="lvlbar"><h2 style="margin:0">Persistent lesson catalog <span id="memoryStats" class="dim"></span></h2>
+    <div class="panel" id="lessonPanel"><div class="lvlbar"><h2 style="margin:0">Persistent lesson catalog <span id="memoryStats" class="dim"></span></h2>
       <span class="spacer"></span>
       <label class="dim">Role <select id="lessonRoleSel">
         <option value="level_designer">Level Designer</option>
@@ -181,6 +191,8 @@
       </select></label>
     </div>
       <div id="lessons" class="dim">none yet</div></div>
+    <div class="panel" id="rosterPanel" style="display:none"><div class="lvlbar"><h2 style="margin:0">Battle bestiary <span id="rosterStats" class="dim"></span></h2></div>
+      <div id="roster" class="dim">none yet</div></div>
     <div class="panel"><h2>Level library</h2><div id="library" class="dim">empty</div></div>
   </section>
 </main>
@@ -237,10 +249,11 @@ function render() {
     ? "MOCK (offline)"
     : "LLM (NVIDIA hosted · Nemotron 3 Ultra 550B)";
   $("mode").className = "badge " + state.mode;
-  if (state.game_mode) {
-    const isBattle = state.game_mode === "battle";
-    $("modeState").textContent = isBattle ? "Battle" : "Adventure";
-    if ($("battleEnabled").checked !== isBattle) $("battleEnabled").checked = isBattle;
+  if (state.game_mode && !tabInitialized) {
+    // Restore the mode tab the server is already in (e.g. after a reload) without
+    // re-POSTing /api/mode, which would trigger a fresh battle generation.
+    tabInitialized = true;
+    if (state.game_mode === "battle") setTab("battle", { post: false });
   }
   $("busy").style.display = state.running ? "" : "none";
   if (state.running && state.tokens) {
@@ -271,6 +284,7 @@ function render() {
   renderFeedback();
   renderHistory();
   renderLessons();
+  if (activeTab === "battle") renderRoster();
   $("library").innerHTML = state.library === "(library is empty)"
     ? '<span class="dim">empty</span>'
     : "<ul>" + state.library.split("\n").map(l => `<li>${esc(l.replace(/^- /,""))}</li>`).join("") + "</ul>";
@@ -480,19 +494,72 @@ $("cv").addEventListener("pointercancel", endMapDrag);
 setInterval(poll, 1200);
 poll();
 
-/* ================= LLM traffic tab ================= */
-let activeTab = "dash", llmEntries = [], llmSig = "";
+/* ================= mode / traffic tabs ================= */
+// The Adventure and Battle tabs ARE the game mode: switching to one sets the mode
+// server-side (Battle also auto-generates the next arena). The LLM tab is a view.
+let activeTab = "adventure", tabInitialized = false, llmEntries = [], llmSig = "";
 
-function setTab(name) {
-  activeTab = name;
-  $("tab-dash").style.display = name === "dash" ? "grid" : "none";
+function applyTabView(name) {
+  const dash = name === "adventure" || name === "battle";
+  $("tab-dash").style.display = dash ? "grid" : "none";
   $("tab-llm").style.display = name === "llm" ? "block" : "none";
-  $("tabBtnDash").className = name === "dash" ? "on" : "";
+  $("tabBtnAdv").className = name === "adventure" ? "on" : "";
+  $("tabBtnBattle").className = name === "battle" ? "on" : "";
   $("tabBtnLlm").className = name === "llm" ? "on" : "";
-  if (name === "llm") fetchLlmLog();
+  // side panel: adventure shows the lesson catalog, battle shows the bestiary.
+  $("lessonPanel").style.display = name === "battle" ? "none" : "";
+  $("rosterPanel").style.display = name === "battle" ? "" : "none";
 }
-$("tabBtnDash").onclick = () => setTab("dash");
+
+async function setTab(name, { post = true } = {}) {
+  activeTab = name;
+  applyTabView(name);
+  if (name === "llm") { fetchLlmLog(); return; }
+  if (name === "battle") renderRoster();
+  if (!post) return;                                  // view-only sync, no mode change
+  const mode = name === "battle" ? "battle" : "adventure";
+  if (state && state.game_mode === mode) return;      // already in this mode; don't regenerate
+  try {
+    await fetch("/api/mode", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode }),
+    });
+  } catch (e) { /* server restarting; the poll will resync */ }
+  if (mode === "battle") {
+    // The server is generating the first arena; wait for it like a normal cycle.
+    waitingForNext = true;
+    $("fbWaiting").style.display = "block";
+  }
+}
+$("tabBtnAdv").onclick = () => setTab("adventure");
+$("tabBtnBattle").onclick = () => setTab("battle");
 $("tabBtnLlm").onclick = () => setTab("llm");
+
+async function renderRoster() {
+  let enemies = [];
+  try { enemies = (await (await fetch("/api/enemies?mode=battle")).json()).enemies || []; }
+  catch (e) { return; }  // server busy; the next poll retries
+  const tier = t => t >= 8 ? "high" : t >= 4 ? "med" : "low";
+  const label = t => t >= 8 ? "High" : t >= 4 ? "Medium" : "Low";
+  $("rosterStats").textContent = enemies.length
+    ? `(${enemies.length} enem${enemies.length === 1 ? "y" : "ies"})` : "";
+  if (!enemies.length) {
+    $("roster").innerHTML = '<span class="dim">No battle enemies yet — design and import '
+      + 'some from the enemy workshop (⚔ save to main game).</span>';
+    return;
+  }
+  const maxThreat = Math.max(...enemies.map(e => e.threat || 0), 1);
+  $("roster").innerHTML = enemies.slice().sort((a, b) => (b.threat || 0) - (a.threat || 0))
+    .map(e => {
+      const t = e.threat || 0, k = tier(t);
+      return `<div class="rosterItem">
+        <div class="rosterHead"><b>${esc(e.name || e.id || "unnamed")}</b>
+          <span class="threatTag ${k}">${label(t)} · ${t.toFixed(1)}</span></div>
+        <div class="threatBar"><span class="threatFill ${k}" style="width:${Math.round(100 * t / maxThreat)}%"></span></div>
+        ${e.desc ? `<div class="lessonMeta">${esc(String(e.desc).slice(0, 140))}</div>` : ""}
+      </div>`;
+    }).join("");
+}
 
 async function fetchLlmLog() {
   try {
@@ -711,7 +778,10 @@ async function loadPlayLevel() {
   world.grid = parseCSV(d.csv);
   world.rows = world.grid.length;
   world.cols = Math.max(...world.grid.map(row => row.length));
-  try { roster = (await (await fetch("/api/enemies")).json()).enemies || []; }
+  // Battle arenas map CSV digits to the battle bestiary; adventure levels to the
+  // adventure one. Fetch the roster that matches the level being loaded.
+  const enemyMode = (state && state.game_mode === "battle") ? "battle" : "adventure";
+  try { roster = (await (await fetch(`/api/enemies?mode=${enemyMode}`)).json()).enemies || []; }
   catch (e) { roster = []; }
   try { objectCatalog = (await (await fetch("/api/objects")).json()).objects || []; }
   catch (e) { objectCatalog = []; }
@@ -846,23 +916,6 @@ $("padEnabled").addEventListener("change", () => {
 });
 window.addEventListener("gamepadconnected", updatePadState);
 window.addEventListener("gamepaddisconnected", updatePadState);
-
-// --- game mode toggle (Adventure / Battle) ---
-$("battleEnabled").addEventListener("change", async () => {
-  const mode = $("battleEnabled").checked ? "battle" : "adventure";
-  $("modeState").textContent = mode === "battle" ? "Battle" : "Adventure";
-  try {
-    await fetch("/api/mode", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode }),
-    });
-  } catch (e) { /* server restarting; the poll will resync */ }
-  if (mode === "battle") {
-    // The server is generating the first arena; wait for it like a normal cycle.
-    waitingForNext = true;
-    $("fbWaiting").style.display = "block";
-  }
-});
 
 function ptStep() {
   if (!player || phase !== "playing") return;
