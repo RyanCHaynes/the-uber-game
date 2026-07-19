@@ -101,6 +101,13 @@ Design guidance:
   one changes the fight.
 - Keep the spec sparse; omit anything that should take a default. Size units are
   roughly tiles (player ~1 wide).
+- Flying enemies set "body": {{..., "gravity": 0}}. Solid tiles/platforms BLOCK flyers
+  now, so give them open airspace to move in; ground enemies use "gravity": 1.
+- Player-seeking motions ("chase", "home", "hover", "orbit") take a "range" in tiles —
+  the awareness radius. The enemy only pursues the player within that range and returns
+  to its post otherwise. Use a small value (roughly 5-9 tiles); do NOT let enemies chase
+  from across the whole level. Fired projectile defs (velocity/home missiles) omit range
+  and always fly toward their target.
 
 Worked example of a correct attacking enemy — imitate this structure (attack lives
 in a LOOPING track, not in an event):
@@ -115,7 +122,7 @@ in a LOOPING track, not in an event):
     "visual": {{"shape": "capsule", "size": [1.0, 1.2], "tint": "#8bd450"}},
     "body": {{"shape": "box", "size": [0.9, 1.1], "gravity": 0}},
     "health": {{"max": 6}}, "contact": {{"damage": 1}},
-    "motion": {{"type": "hover", "speed": 3}},
+    "motion": {{"type": "hover", "speed": 3, "range": 6}},
     "emitters": {{ "mouth": {{"at": [0.4, 0], "ref": "glob", "pattern": "fan"}} }} }},
   "brain": {{ "start": "fight", "states": {{ "fight": {{ "tracks": [
     {{ "id": "shoot", "loop": true, "steps": [
@@ -153,7 +160,7 @@ def _mock_spec(description: str) -> dict:
             "body": {"shape": "box", "size": [0.9, 1.1], "gravity": 0 if flying else 1},
             "health": {"max": 4},
             "motion": {"type": "hover" if flying else ("dash" if fast else "chase"),
-                       "target": "player", "speed": 5 if fast else 2.5},
+                       "target": "player", "speed": 5 if fast else 2.5, "range": 7},
             "contact": {"damage": 1, "knockback": 3},
             "emitters": {"muzzle": {"at": [0.5, 0], "ref": "shard", "pattern": "aimed"}},
             "on": {"destroy": [{"signal": {"name": "gruntDown"}}]},

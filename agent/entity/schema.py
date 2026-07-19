@@ -127,6 +127,12 @@ def _check_motion(node: dict, path: str, r: ValidationResult):
         r.err(f"{path}.motion has no type")
     else:
         _enum_check(motion.get("type"), MOTIONS, f"{path}.motion.type", r)
+    # Numeric motion args must be non-negative numbers when present. `range` is the
+    # player awareness radius for seeking motions (chase/home/hover/orbit).
+    for arg in ("range", "speed", "radius", "turnRate", "rate"):
+        value = motion.get(arg)
+        if value is not None and (not _is_num(value) or value < 0):
+            r.err(f"{path}.motion.{arg} must be a non-negative number, got {value!r}")
 
 
 def _check_life(node: dict, path: str, r: ValidationResult):

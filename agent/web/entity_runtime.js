@@ -4,6 +4,7 @@
   const DEFAULT_TILE = 32;
   const NEAR_TILES = 5;
   const FAR_TILES = 8;
+  const DEFAULT_AGGRO_TILES = 7;   // awareness radius for player-seeking motions with no explicit range
 
   function isEntitySpec(value) {
     return !!(value && typeof value === "object" && value.root &&
@@ -347,6 +348,24 @@
     function stepMotion(instance, entity, dt) {
       const motion = entity.motion || {}, speed = (motion.speed != null ? motion.speed : 3) * tile;
       let vx = entity.vx, vy = entity.vy, angle;
+      // Awareness range: player-seeking motions only engage within a fixed radius; beyond
+      // it the enemy eases back to its post. Projectiles (fired missiles) always pursue.
+      const seeksPlayer = motion.type === "chase" || motion.type === "home" ||
+        motion.type === "hover" || motion.type === "orbit" ||
+        ((motion.type === "moveTo" || motion.type === "dash") && (motion.target || "player") === "player");
+      if (seeksPlayer && !entity.isProjectile) {
+        const range = (motion.range != null ? motion.range : DEFAULT_AGGRO_TILES) * tile;
+        if (Math.hypot(playerX() - entity.x, playerY() - entity.y) > range) {
+          if (entity.homeX == null) { entity.homeX = entity.x; entity.homeY = entity.y; }
+          const airborne = ["home", "hover", "orbit", "moveTo", "dash"].includes(motion.type);
+          const hx = entity.homeX - entity.x, hy = entity.homeY - entity.y, hd = Math.hypot(hx, hy) || 1;
+          const drift = speed * 0.5;
+          entity.vx = hd > 0.3 * tile ? hx / hd * drift : 0;
+          if (airborne) entity.vy = hd > 0.3 * tile ? hy / hd * drift : 0;
+          else entity.vy = entity.gravityOn ? entity.vy + 18 * tile * dt : 0;
+          return;   // disengaged — skip pursuit this frame
+        }
+      }
       if (motion.type === "static") { vx = 0; vy = 0; }
       else if (motion.type === "gravity") vy += 18 * tile * dt;
       else if (motion.type === "chase") { angle = Math.atan2(playerY() - entity.y, playerX() - entity.x); vx = Math.cos(angle) * speed; vy = Math.sin(angle) * speed; }
@@ -374,19 +393,32 @@
       const flying = ["home", "hover", "orbit", "moveTo", "dash"].includes(motion.type);
       entity.vx = vx; entity.vy = entity.gravityOn && !flying ? entity.vy + 18 * tile * dt : vy;
     }
+    function solidBox(x, y, w, h) {
+      // True if the entity's AABB overlaps any solid tile.
+      const eps = 0.001;
+      const c0 = Math.floor((x - w / 2) / tile), c1 = Math.floor((x + w / 2 - eps) / tile);
+      const r0 = Math.floor((y - h / 2) / tile), r1 = Math.floor((y + h / 2 - eps) / tile);
+      for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) if (isSolid(c, r)) return true;
+      return false;
+    }
     function integrate(entity, dt) {
-      entity.x += entity.vx * dt; entity.y += entity.vy * dt;
-      if (entity.isProjectile && isSolid(Math.floor(entity.x / tile), Math.floor(entity.y / tile))) {
-        entity.alive = false;
+      if (entity.isProjectile) {
+        entity.x += entity.vx * dt; entity.y += entity.vy * dt;
+        if (isSolid(Math.floor(entity.x / tile), Math.floor(entity.y / tile))) { entity.alive = false; return; }
+        const w = bounds();
+        if (entity.x < -tile || entity.x > w.width + tile || entity.y < -tile * 4 || entity.y > w.height + tile * 4) entity.alive = false;
         return;
       }
-      if (entity.gravityOn) {
-        const col = Math.floor(entity.x / tile), row = Math.floor((entity.y + entity.h / 2) / tile);
-        if (isSolid(col, row)) { entity.y = row * tile - entity.h / 2 - .01; if (entity.vy > 0) entity.vy = 0; }
-      }
+      // Non-projectile entities (flyers included) are blocked by solid tiles, resolved
+      // axis-by-axis so they slide along walls/platforms instead of phasing through.
+      const oldX = entity.x;
+      entity.x += entity.vx * dt;
+      if (solidBox(entity.x, entity.y, entity.w, entity.h)) { entity.x = oldX; entity.vx = 0; }
+      const oldY = entity.y;
+      entity.y += entity.vy * dt;
+      if (solidBox(entity.x, entity.y, entity.w, entity.h)) { entity.y = oldY; entity.vy = 0; }
       const world = bounds();
-      if (entity.isProjectile && (entity.x < -tile || entity.x > world.width + tile || entity.y < -tile * 4 || entity.y > world.height + tile * 4)) entity.alive = false;
-      if (!entity.isProjectile && entity.isRoot) {
+      if (entity.isRoot) {
         entity.x = Math.max(entity.w / 2, Math.min(world.width - entity.w / 2, entity.x));
         entity.y = Math.max(entity.h / 2, Math.min(world.height + tile * 2, entity.y));
       }

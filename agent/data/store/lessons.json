@@ -44,7 +44,7 @@
       35
     ],
     "seen_count": 12,
-    "applied_count": 33,
+    "applied_count": 34,
     "successful_applications": 3,
     "applications": [
       {
@@ -277,6 +277,9 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 40
       }
     ],
     "merged_from": [
@@ -361,7 +364,7 @@
       23
     ],
     "seen_count": 11,
-    "applied_count": 33,
+    "applied_count": 34,
     "successful_applications": 3,
     "applications": [
       {
@@ -594,6 +597,9 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 40
       }
     ],
     "merged_from": [
@@ -879,7 +885,7 @@
       2
     ],
     "seen_count": 1,
-    "applied_count": 22,
+    "applied_count": 23,
     "successful_applications": 1,
     "applications": [
       {
@@ -1035,6 +1041,9 @@
         "completed": false,
         "deaths": 0,
         "success": false
+      },
+      {
+        "design_round": 40
       }
     ],
     "merged_from": []
@@ -1174,7 +1183,7 @@
       4
     ],
     "seen_count": 3,
-    "applied_count": 29,
+    "applied_count": 30,
     "successful_applications": 3,
     "applications": [
       {
@@ -1379,6 +1388,9 @@
         "completed": true,
         "deaths": 0,
         "success": true
+      },
+      {
+        "design_round": 40
       }
     ],
     "merged_from": [
@@ -2093,7 +2105,7 @@
       29
     ],
     "seen_count": 1,
-    "applied_count": 10,
+    "applied_count": 11,
     "successful_applications": 3,
     "applications": [
       {
@@ -2165,6 +2177,9 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 40
       }
     ],
     "merged_from": []
@@ -2186,7 +2201,7 @@
       30
     ],
     "seen_count": 1,
-    "applied_count": 10,
+    "applied_count": 11,
     "successful_applications": 3,
     "applications": [
       {
@@ -2258,6 +2273,9 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 40
       }
     ],
     "merged_from": []
@@ -2280,7 +2298,7 @@
       32
     ],
     "seen_count": 1,
-    "applied_count": 8,
+    "applied_count": 9,
     "successful_applications": 2,
     "applications": [
       {
@@ -2338,6 +2356,9 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 40
       }
     ],
     "merged_from": []
@@ -2403,7 +2424,7 @@
       34
     ],
     "seen_count": 1,
-    "applied_count": 3,
+    "applied_count": 4,
     "successful_applications": 0,
     "applications": [
       {
@@ -2426,6 +2447,9 @@
         "completed": false,
         "deaths": 3,
         "success": false
+      },
+      {
+        "design_round": 40
       }
     ],
     "merged_from": []
@@ -2446,7 +2470,7 @@
       36
     ],
     "seen_count": 1,
-    "applied_count": 3,
+    "applied_count": 4,
     "successful_applications": 0,
     "applications": [
       {
@@ -2469,6 +2493,9 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 40
       }
     ],
     "merged_from": []
@@ -2546,7 +2573,7 @@
       37
     ],
     "seen_count": 1,
-    "applied_count": 3,
+    "applied_count": 4,
     "successful_applications": 1,
     "applications": [
       {
@@ -2569,6 +2596,9 @@
         "completed": false,
         "deaths": 1,
         "success": false
+      },
+      {
+        "design_round": 40
       }
     ],
     "merged_from": []
@@ -2588,9 +2618,13 @@
       40
     ],
     "seen_count": 1,
-    "applied_count": 0,
+    "applied_count": 1,
     "successful_applications": 0,
-    "applications": [],
+    "applications": [
+      {
+        "design_round": 40
+      }
+    ],
     "merged_from": []
   },
   {
@@ -2610,9 +2644,13 @@
       40
     ],
     "seen_count": 1,
-    "applied_count": 0,
+    "applied_count": 1,
     "successful_applications": 0,
-    "applications": [],
+    "applications": [
+      {
+        "design_round": 40
+      }
+    ],
     "merged_from": []
   }
 ]

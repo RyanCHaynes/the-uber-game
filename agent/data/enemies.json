@@ -510,7 +510,8 @@
       },
       "motion": {
         "type": "hover",
-        "speed": 2
+        "speed": 2,
+        "range": 8
       },
       "emitters": {
         "left_wing": {
@@ -786,7 +787,8 @@
         "type": "hover",
         "speed": 2.5,
         "amplitude": 1.2,
-        "frequency": 0.8
+        "frequency": 0.8,
+        "range": 8
       },
       "emitters": {
         "wing_tip": {
@@ -1041,7 +1043,8 @@
         "type": "hover",
         "speed": 2,
         "amplitude": 1.5,
-        "frequency": 0.5
+        "frequency": 0.5,
+        "range": 6
       },
       "emitters": {
         "deploy": {
@@ -1162,7 +1165,8 @@
         },
         "motion": {
           "type": "chase",
-          "speed": 5
+          "speed": 5,
+          "range": 7
         },
         "contact": {
           "damage": 1,
@@ -1201,7 +1205,8 @@
       },
       "motion": {
         "type": "hover",
-        "speed": 1.5
+        "speed": 1.5,
+        "range": 9
       },
       "contact": {
         "damage": 2,
