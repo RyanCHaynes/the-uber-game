@@ -272,7 +272,11 @@
         "success": true
       },
       {
-        "design_round": 39
+        "design_round": 39,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": [
@@ -585,7 +589,11 @@
         "success": true
       },
       {
-        "design_round": 39
+        "design_round": 39,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": [
@@ -850,7 +858,11 @@
         "success": true
       },
       {
-        "design_round": 39
+        "design_round": 39,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": []
@@ -1607,7 +1619,11 @@
         "success": true
       },
       {
-        "design_round": 39
+        "design_round": 39,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": [
@@ -2051,7 +2067,11 @@
         "success": true
       },
       {
-        "design_round": 39
+        "design_round": 39,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": []
@@ -2140,7 +2160,11 @@
         "success": true
       },
       {
-        "design_round": 39
+        "design_round": 39,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": []
@@ -2229,7 +2253,11 @@
         "success": true
       },
       {
-        "design_round": 39
+        "design_round": 39,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": []
@@ -2305,7 +2333,11 @@
         "success": true
       },
       {
-        "design_round": 39
+        "design_round": 39,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": []
@@ -2345,7 +2377,11 @@
         "success": false
       },
       {
-        "design_round": 39
+        "design_round": 39,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": []
@@ -2428,7 +2464,11 @@
         "success": false
       },
       {
-        "design_round": 39
+        "design_round": 39,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": []
@@ -2472,7 +2512,11 @@
         "success": true
       },
       {
-        "design_round": 39
+        "design_round": 39,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": [
@@ -2520,9 +2564,55 @@
         "success": true
       },
       {
-        "design_round": 39
+        "design_round": 39,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
+    "merged_from": []
+  },
+  {
+    "id": "lesson_0025",
+    "lesson": "Use the full enemy roster, not just the basic ground types. Vary enemy types across each level \u2014 draw from every digit available in the roster, and use flying enemies, ranged units, and bosses (higher digits) as deliberate mid- and late-level set-pieces. Levels that reuse only the first two or three enemy types feel monotonous even when the platforming is good.",
+    "category": "enemy_placement",
+    "conditions": [
+      "designing any combat level",
+      "roster contains more than three enemy types"
+    ],
+    "outcome": "more varied, memorable combat",
+    "confidence": 0.9,
+    "source_round": 40,
+    "evidence_rounds": [
+      40
+    ],
+    "seen_count": 1,
+    "applied_count": 0,
+    "successful_applications": 0,
+    "applications": [],
+    "merged_from": []
+  },
+  {
+    "id": "lesson_0026",
+    "lesson": "When a level exceeds ~100 tiles in width, enemy variety must scale with length \u2014 introducing new enemy types (flying, ranged, bosses) at deliberate intervals \u2014 to prevent combat from becoming a repetitive background texture that players ignore.",
+    "category": "enemy_placement",
+    "conditions": [
+      "level width > 100 tiles",
+      "enemy roster contains >3 types",
+      "current level uses only first 2-3 enemy types",
+      "player completes or attempts long horizontal traversal"
+    ],
+    "outcome": "player kills zero enemies, takes minimal damage, rates level 1/5 and explicitly requests more enemy variety",
+    "confidence": 0.95,
+    "source_round": 40,
+    "evidence_rounds": [
+      40
+    ],
+    "seen_count": 1,
+    "applied_count": 0,
+    "successful_applications": 0,
+    "applications": [],
     "merged_from": []
   }
 ]

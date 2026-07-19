@@ -96,6 +96,23 @@ class LevelPlanCompilerTests(unittest.TestCase):
         )
         self.assertIn("minimum-change connector", corrections[0])
 
+    def _airborne_enemy_plan(self):
+        plan = self.valid_plan()                       # floor at row 10; rows 0-9 open air
+        plan["enemies"] = [{"type": 4, "x": 50, "y": 4}]  # placed high in open air
+        return plan
+
+    def test_flyer_enemy_kept_airborne_and_not_removed(self):
+        repaired, _ = designer._repair_plan(self._airborne_enemy_plan(),
+                                            flying_types=frozenset({4}))
+        self.assertEqual(len(repaired["enemies"]), 1)   # not dropped as "unplaceable"
+        self.assertEqual((repaired["enemies"][0]["x"], repaired["enemies"][0]["y"]), (50, 4))
+
+    def test_non_flyer_enemy_is_snapped_to_ground(self):
+        # default flying_types is empty -> a mid-air enemy must be pulled down to ground
+        repaired, _ = designer._repair_plan(self._airborne_enemy_plan())
+        self.assertEqual(len(repaired["enemies"]), 1)
+        self.assertGreater(repaired["enemies"][0]["y"], 4)
+
     def test_compiles_catalog_object(self):
         plan = self.valid_plan()
         plan["objects"] = [{"symbol": "L", "x": 40, "y": 8}]

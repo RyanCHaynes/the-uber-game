@@ -121,7 +121,7 @@
       "type": "flyer",
       "speed": 53.76,
       "range": 110,
-      "bob": 21.12,
+      "bob": 24.29,
       "bob_hz": 0.9
     },
     "attack": {
@@ -177,7 +177,7 @@
           "type": "home",
           "target": "player",
           "speed": 1.73,
-          "turnRate": 51.41
+          "turnRate": 43.7
         },
         "contact": {
           "damage": 1,
@@ -887,7 +887,7 @@
         "motion": {
           "type": "home",
           "speed": 4.08,
-          "turnRate": 94.5
+          "turnRate": 80.33
         },
         "contact": {
           "damage": 2,

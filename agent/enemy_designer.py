@@ -82,16 +82,105 @@ def load_roster() -> list[dict]:
     return data if isinstance(data, list) else []
 
 
+# Motion controllers that keep an entity airborne (no ground needed under it).
+_AIRBORNE_MOTIONS = {"hover", "home", "orbit", "velocity", "dash"}
+
+
+def _is_airborne(enemy) -> bool:
+    """True when this enemy can live in the air (a flyer), so the Level Designer must
+    NOT snap it down to solid ground when placing it."""
+    if not isinstance(enemy, dict):
+        return False
+    if is_entity_spec(enemy):
+        root = enemy.get("root") if isinstance(enemy.get("root"), dict) else {}
+        body = root.get("body") if isinstance(root.get("body"), dict) else {}
+        if body.get("gravity", 1) == 0:
+            return True
+        motion = root.get("motion") if isinstance(root.get("motion"), dict) else {}
+        if motion.get("type") in _AIRBORNE_MOTIONS:
+            return True
+        tags = root.get("tags")
+        return isinstance(tags, list) and "flying" in tags
+    movement = enemy.get("movement") if isinstance(enemy.get("movement"), dict) else {}
+    return movement.get("type") == "flyer"
+
+
+def flying_digits() -> set[int]:
+    """CSV digits (array index + 1) of roster enemies that may be placed airborne.
+
+    The Level Designer's placement repair uses this so flyers/bosses are not forced to
+    solid ground (which mangles or silently drops them and trains the model to avoid
+    those digits)."""
+    return {i + 1 for i, e in enumerate(load_roster()) if _is_airborne(e)}
+
+
+def _enemy_traits(enemy) -> list[str]:
+    """Compact placement hints for one enemy, derived from its data — so the summary
+    tells the Level Designer what digits 4-9 actually are instead of boilerplate."""
+    if not isinstance(enemy, dict):
+        return []
+    if is_entity_spec(enemy):
+        traits = ["boss"] if enemy.get("kind") == "boss" else []
+        traits.append("flying" if _is_airborne(enemy) else "ground")
+        defs = enemy.get("defs") if isinstance(enemy.get("defs"), dict) else {}
+        ranged = summons = False
+        for node in _walk_spec_nodes(enemy):
+            emitters = node.get("emitters")
+            if isinstance(emitters, dict):
+                for em in emitters.values():
+                    ref = em.get("ref") if isinstance(em, dict) else None
+                    template = defs.get(ref) if isinstance(ref, str) else None
+                    if isinstance(template, dict) and isinstance(template.get("health"), dict):
+                        summons = True          # emitter fires a durable (has HP) minion
+                    else:
+                        ranged = True           # emitter fires a projectile
+            on = node.get("on")
+            if isinstance(on, dict):
+                for actions in on.values():
+                    if isinstance(actions, list) and any(
+                            isinstance(a, dict) and "spawn" in a for a in actions):
+                        summons = True
+        brain = enemy.get("brain") if isinstance(enemy.get("brain"), dict) else {}
+        for state in (brain.get("states") or {}).values():
+            if not isinstance(state, dict):
+                continue
+            for track in state.get("tracks") or []:
+                steps = track.get("steps") if isinstance(track, dict) else None
+                if isinstance(steps, list) and any(
+                        isinstance(s, dict) and "spawn" in s for s in steps):
+                    summons = True
+        if ranged:
+            traits.append("ranged")
+        if summons:
+            traits.append("spawns minions")
+        return traits
+    movement = enemy.get("movement") if isinstance(enemy.get("movement"), dict) else {}
+    mv = movement.get("type")
+    traits = ["flying" if mv == "flyer" else "stationary" if mv == "stationary" else "ground"]
+    attack = enemy.get("attack") if isinstance(enemy.get("attack"), dict) else {}
+    if attack.get("type", "none") != "none":
+        traits.append("ranged")
+    return traits
+
+
 def roster_summary() -> str:
-    """Digit -> type summary, matching the format the Level Designer already reads."""
+    """Digit -> type summary, matching the format the Level Designer already reads.
+
+    Each line ends with a compact `[traits]` tag (boss / flying / ground / ranged /
+    spawns minions) derived from the enemy's data, so the designer has real placement
+    signal for every digit — including EntitySpec enemies whose stored desc is boilerplate.
+    """
     roster = load_roster()
     if not roster:
         return ""
-    return "\n".join(
-        f"{i + 1}: {e.get('name', e.get('id', 'unnamed'))} — "
-        f"{e.get('desc', 'EntitySpec ' + e.get('kind', 'enemy'))}"
-        for i, e in enumerate(roster)
-    )
+    lines = []
+    for i, e in enumerate(roster):
+        name = e.get("name", e.get("id", "unnamed"))
+        desc = e.get("desc", "EntitySpec " + e.get("kind", "enemy"))
+        traits = _enemy_traits(e)
+        tag = f"  [{', '.join(traits)}]" if traits else ""
+        lines.append(f"{i + 1}: {name} — {desc}{tag}")
+    return "\n".join(lines)
 
 
 def is_entity_spec(enemy) -> bool:

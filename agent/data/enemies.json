@@ -1125,5 +1125,130 @@
       }
     },
     "desc": "EntitySpec enemy generated from round 34"
+  },
+  {
+    "v": 1,
+    "id": "drone_carrier",
+    "name": "Drone Carrier",
+    "kind": "enemy",
+    "limits": {
+      "maxAlive": 3,
+      "maxSpawnsPerSecond": 2,
+      "maxSpawnDepth": 1
+    },
+    "defs": {
+      "drone": {
+        "id": "drone",
+        "tags": [
+          "drone",
+          "enemy",
+          "projectile"
+        ],
+        "visual": {
+          "shape": "diamond",
+          "size": [
+            0.5,
+            0.5
+          ],
+          "tint": "#ff8800"
+        },
+        "body": {
+          "shape": "circle",
+          "radius": 0.25,
+          "gravity": 0
+        },
+        "health": {
+          "max": 2
+        },
+        "motion": {
+          "type": "chase",
+          "speed": 5
+        },
+        "contact": {
+          "damage": 1,
+          "destroySelf": false,
+          "knockback": 2
+        },
+        "life": {
+          "ttl": 10
+        }
+      }
+    },
+    "root": {
+      "id": "carrier",
+      "tags": [
+        "enemy",
+        "carrier"
+      ],
+      "visual": {
+        "shape": "ellipse",
+        "size": [
+          1.8,
+          1.2
+        ],
+        "tint": "#664488"
+      },
+      "body": {
+        "shape": "box",
+        "size": [
+          1.6,
+          1
+        ],
+        "gravity": 0
+      },
+      "health": {
+        "max": 50
+      },
+      "motion": {
+        "type": "hover",
+        "speed": 1.5
+      },
+      "contact": {
+        "damage": 2,
+        "knockback": 3
+      },
+      "emitters": {
+        "launch": {
+          "at": [
+            0,
+            0.6
+          ],
+          "ref": "drone",
+          "pattern": "single"
+        }
+      }
+    },
+    "brain": {
+      "start": "patrol",
+      "states": {
+        "patrol": {
+          "tracks": [
+            {
+              "id": "spawn_drones",
+              "loop": true,
+              "steps": [
+                {
+                  "telegraph": {
+                    "part": "carrier",
+                    "time": 0.8
+                  }
+                },
+                {
+                  "fire": {
+                    "emitter": "launch",
+                    "count": 1
+                  }
+                },
+                {
+                  "wait": 3
+                }
+              ]
+            }
+          ],
+          "transitions": []
+        }
+      }
+    },
+    "desc": "EntitySpec enemy saved from workshop"
   }
 ]

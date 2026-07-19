@@ -88,9 +88,20 @@ class EnemyDesignerTests(unittest.TestCase):
         self.assertEqual(backup, original)
 
     def test_workshop_save_refuses_duplicate_id(self):
-        spec = copy.deepcopy(self.roster()[-1])
-        with self.assertRaisesRegex(FileExistsError, "already in the roster"):
-            enemy_designer.save_entityspec(spec)
+        # Use a temp roster with room so the duplicate-id guard is what fires (the
+        # shipped roster may already be at the MAX_ARCHETYPES ceiling).
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            roster_path = root / "enemies.json"
+            existing = next(item for item in self.roster()
+                            if enemy_designer.is_entity_spec(item))
+            roster_path.write_text(json.dumps([existing]))
+            spec = copy.deepcopy(existing)
+            with mock.patch.object(enemy_designer, "ROSTER_PATH", roster_path), \
+                 mock.patch.object(enemy_designer, "LAST_GOOD_PATH", root / "lg.json"), \
+                 mock.patch.object(enemy_designer, "DESIGN_LOG_PATH", root / "log.jsonl"), \
+                 self.assertRaisesRegex(FileExistsError, "already in the roster"):
+                enemy_designer.save_entityspec(spec)
 
     def test_adapt_and_write_backs_up_and_logs_valid_change(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -131,6 +142,22 @@ class EnemyDesignerTests(unittest.TestCase):
         self.assertIsNone(result)
         complete_json.assert_not_called()
         write_roster.assert_not_called()
+
+
+    def test_flying_digits_marks_flyers_not_ground(self):
+        flying = enemy_designer.flying_digits()
+        self.assertIn(3, flying)       # wasp — legacy flyer
+        self.assertIn(4, flying)       # iron_moth — EntitySpec boss with gravity 0
+        self.assertNotIn(1, flying)    # grub — ground patroller
+
+    def test_roster_summary_appends_behavioral_trait_tags(self):
+        summary = enemy_designer.roster_summary()
+        lines = summary.splitlines()
+        self.assertEqual(len(lines), len(self.roster()))
+        self.assertTrue(all("[" in line and line.rstrip().endswith("]") for line in lines))
+        # the grub line is a plain ground enemy; an EntitySpec boss reads as boss + flying
+        self.assertIn("[ground]", lines[0])
+        self.assertTrue(any("boss" in line and "flying" in line for line in lines))
 
 
 if __name__ == "__main__":

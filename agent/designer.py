@@ -6,7 +6,7 @@ Python performs the fragile character counting and grid serialization.
 
 import json
 
-from . import csv_level, llm, object_designer
+from . import csv_level, enemy_designer, llm, object_designer
 
 MAX_ATTEMPTS = 4
 MIN_DESIGN_COLS = 80    # hard floor for designed levels — enforced by validation
@@ -51,8 +51,12 @@ Design guidance:
   descents, enemy gauntlets), and a finale near the exit.
 - Directly address the diagnosis. Too hard -> genuinely reduce demands (narrower pits,
   gentler climbs, fewer enemies). Boring -> add variety and encounters.
-- Place enemies deliberately: ground enemies (patrollers, turrets) on platforms with
-  room to matter; flyers guarding jumps. Space encounters out — clusters read as unfair.
+- Use the FULL enemy roster listed below, not just the first few basic types. Every digit
+  is a distinct enemy — vary the types across the level and favor a mix. Higher digits are
+  often special (flyers, ranged units, and bosses, tagged in the roster); place ground
+  enemies on platforms with room to matter, flyers to guard jumps and open air, and use
+  bosses / stronger enemies as deliberate mid-level and end-of-level set-pieces. Reusing
+  only types 1-3 makes combat monotonous. Space encounters out — clusters read as unfair.
 - Apply the accumulated lessons. Keep what the player enjoyed; change the rest.
 - Do not place scene objects. A separate Object Designer reads your completed game
   file and applies an independent object-placement pass after this one.
@@ -91,7 +95,7 @@ def _nearest_cell(grid, desired, occupied, require_ground: bool):
                                         abs(cell[0] - dx), cell[1], cell[0]))
 
 
-def _repair_plan(plan: dict) -> tuple[dict, list[str]]:
+def _repair_plan(plan: dict, flying_types: frozenset = frozenset()) -> tuple[dict, list[str]]:
     """Deterministically repair mechanical mistakes without redesigning geometry."""
     if not isinstance(plan, dict):
         raise ValueError("level plan must be a JSON object")
@@ -192,8 +196,9 @@ def _repair_plan(plan: dict) -> tuple[dict, list[str]]:
             removed_enemies += 1
             continue
         desired = (min(width - 1, max(0, raw[0])), min(height - 1, max(0, raw[1])))
-        # Type 3 is the current flying enemy; all other known types need ground.
-        repaired = _nearest_cell(grid, desired, occupied, require_ground=enemy_type != 3)
+        # Flyers (from the roster) may sit in open air; everything else needs ground.
+        repaired = _nearest_cell(grid, desired, occupied,
+                                 require_ground=enemy_type not in flying_types)
         if repaired is None:
             removed_enemies += 1
             continue
@@ -253,7 +258,7 @@ def _repair_plan(plan: dict) -> tuple[dict, list[str]]:
     }, corrections
 
 
-def _repair_reachability(candidate: str) -> tuple[str, list[str]]:
+def _repair_reachability(candidate: str, flying_types: frozenset = frozenset()) -> tuple[str, list[str]]:
     """Add a minimum-change standable route from spawn to exit.
 
     Dynamic programming searches one column at a time. Existing standable terrain
@@ -340,7 +345,7 @@ def _repair_reachability(candidate: str) -> tuple[str, list[str]]:
 
     relocated = 0
     for symbol, old_x, old_y in displaced:
-        requires_ground = symbol in csv_level.ENEMY_DIGITS and symbol != "3"
+        requires_ground = symbol in csv_level.ENEMY_DIGITS and int(symbol) not in flying_types
         legal = [
             (x, y)
             for y in range(rows - 1)
@@ -448,8 +453,10 @@ def design(level_csv: str, analysis: dict, lessons_text: str, library_text: str,
     """Return a validated new level as comma-CSV text. Raises RuntimeError on repeated failure."""
     grid, _ = csv_level.parse(level_csv)
     compact_current = csv_level.serialize_compact(grid)
+    flying_types = frozenset(enemy_designer.flying_digits())   # roster flyers -> no ground-snap
     user = (
-        (f"ENEMY ROSTER (digit -> type):\n{roster_text}\n\n" if roster_text else "")
+        (f"ENEMY ROSTER (digit -> type; draw from the FULL range, not just 1-3):\n"
+         f"{roster_text}\n\n" if roster_text else "")
         + f"CURRENT LEVEL:\n{compact_current}\n"
         f"ANALYST DIAGNOSIS:\n{analysis.get('diagnosis', '(none)')}\n\n"
         + (f"THE PLAYER'S OWN WORDS (verbatim — honor explicit requests where the "
@@ -478,14 +485,14 @@ def design(level_csv: str, analysis: dict, lessons_text: str, library_text: str,
             label=f"designer (attempt {attempt + 1})" if attempt else "designer",
         )
         try:
-            plan, corrections = _repair_plan(raw_plan)
+            plan, corrections = _repair_plan(raw_plan, flying_types)
             candidate = _compile_plan(plan)
             validation_errors = csv_level.validate_text(
                 candidate, min_cols=MIN_DESIGN_COLS
             )
             if any(error.startswith("exit is not reachable from spawn")
                    for error in validation_errors):
-                candidate, connector_corrections = _repair_reachability(candidate)
+                candidate, connector_corrections = _repair_reachability(candidate, flying_types)
                 corrections.extend(connector_corrections)
                 validation_errors = csv_level.validate_text(
                     candidate, min_cols=MIN_DESIGN_COLS
