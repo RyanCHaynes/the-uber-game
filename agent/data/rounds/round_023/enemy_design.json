@@ -1,0 +1,15 @@
+{
+  "note": "Removed wasp stinger part to eliminate persistent hazard after death; slightly reduced wasp body HP to compensate for lost weak point.",
+  "ops": [
+    [
+      "set",
+      "wasp.parts.stinger.hp",
+      0
+    ],
+    [
+      "set",
+      "wasp.parts.body.hp",
+      12
+    ]
+  ]
+}

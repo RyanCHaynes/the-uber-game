@@ -4,11 +4,41 @@
     "name": "Grub",
     "desc": "Slow ground patroller. No ranged attack - only dangerous to touch. Fully vulnerable.",
     "parts": [
-      { "id": "body", "shape": "rect", "w": 30, "h": 18, "color": "#f07178", "offset": { "x": 0, "y": 6 }, "vulnerable": true, "hp": 20 },
-      { "id": "head", "shape": "circle", "r": 8, "color": "#ff9e9e", "parent": "body", "offset": { "x": 12, "y": -12 }, "vulnerable": true, "hp": 10 }
+      {
+        "id": "body",
+        "shape": "rect",
+        "w": 30,
+        "h": 18,
+        "color": "#f07178",
+        "offset": {
+          "x": 0,
+          "y": 6
+        },
+        "vulnerable": true,
+        "hp": 20
+      },
+      {
+        "id": "head",
+        "shape": "circle",
+        "r": 8,
+        "color": "#ff9e9e",
+        "parent": "body",
+        "offset": {
+          "x": 12,
+          "y": -12
+        },
+        "vulnerable": true,
+        "hp": 10
+      }
     ],
-    "movement": { "type": "patrol", "speed": 45, "range": 96 },
-    "attack": { "type": "none" },
+    "movement": {
+      "type": "patrol",
+      "speed": 45,
+      "range": 96
+    },
+    "attack": {
+      "type": "none"
+    },
     "contact_damage": 1
   },
   {
@@ -16,11 +46,43 @@
     "name": "Dome Turret",
     "desc": "Stationary. Armored dome blocks shots from above - hit the glowing core. Lobs arcing bombs at the player.",
     "parts": [
-      { "id": "dome", "shape": "rect", "w": 36, "h": 14, "color": "#5d6b80", "offset": { "x": 0, "y": -10 }, "vulnerable": false },
-      { "id": "core", "shape": "circle", "r": 9, "color": "#ffb454", "offset": { "x": 0, "y": 6 }, "vulnerable": true, "hp": 30 }
+      {
+        "id": "dome",
+        "shape": "rect",
+        "w": 36,
+        "h": 14,
+        "color": "#5d6b80",
+        "offset": {
+          "x": 0,
+          "y": -10
+        },
+        "vulnerable": false
+      },
+      {
+        "id": "core",
+        "shape": "circle",
+        "r": 9,
+        "color": "#ffb454",
+        "offset": {
+          "x": 0,
+          "y": 6
+        },
+        "vulnerable": true,
+        "hp": 30
+      }
     ],
-    "movement": { "type": "stationary" },
-    "attack": { "type": "lob", "cooldown_s": 2.4, "speed": 6.0, "damage": 1, "range": 420, "gravity": 0.3, "color": "#ffb454" },
+    "movement": {
+      "type": "stationary"
+    },
+    "attack": {
+      "type": "lob",
+      "cooldown_s": 2.4,
+      "speed": 6,
+      "damage": 1,
+      "range": 420,
+      "gravity": 0.3,
+      "color": "#ffb454"
+    },
     "contact_damage": 1
   },
   {
@@ -28,11 +90,49 @@
     "name": "Wasp",
     "desc": "Flies in a bobbing patrol. Fires straight stingers at the player. Small and fragile but hard to hit.",
     "parts": [
-      { "id": "body", "shape": "circle", "r": 10, "color": "#c792ea", "offset": { "x": 0, "y": 0 }, "vulnerable": true, "hp": 15 },
-      { "id": "stinger", "shape": "tri", "w": 12, "h": 10, "color": "#e2b6ff", "parent": "body", "offset": { "x": -13, "y": 4 }, "vulnerable": true, "hp": 5 }
+      {
+        "id": "body",
+        "shape": "circle",
+        "r": 10,
+        "color": "#c792ea",
+        "offset": {
+          "x": 0,
+          "y": 0
+        },
+        "vulnerable": true,
+        "hp": 12
+      },
+      {
+        "id": "stinger",
+        "shape": "tri",
+        "w": 12,
+        "h": 10,
+        "color": "#e2b6ff",
+        "parent": "body",
+        "offset": {
+          "x": -13,
+          "y": 4
+        },
+        "vulnerable": true,
+        "hp": 1
+      }
     ],
-    "movement": { "type": "flyer", "speed": 55, "range": 110, "bob": 22, "bob_hz": 0.9 },
-    "attack": { "type": "shoot", "cooldown_s": 1.8, "speed": 4.5, "damage": 1, "range": 380, "gravity": 0, "color": "#c792ea" },
+    "movement": {
+      "type": "flyer",
+      "speed": 55,
+      "range": 110,
+      "bob": 22,
+      "bob_hz": 0.9
+    },
+    "attack": {
+      "type": "shoot",
+      "cooldown_s": 1.8,
+      "speed": 4.5,
+      "damage": 1,
+      "range": 380,
+      "gravity": 0,
+      "color": "#c792ea"
+    },
     "contact_damage": 1
   }
 ]

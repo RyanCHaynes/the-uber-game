@@ -1,0 +1,19 @@
+{
+  "diagnosis": "The level is a 300+ tile wide flat corridor with a solid floor at y=690px and only minor floating platforms near the top. The player spent the first 21 seconds stationary at spawn (x=176), then moved right in a straight line with zero vertical traversal \u2014 no ladders, climbs, or elevation changes. A single combat death occurred at x=2930 from a wasp enemy whose stinger persisted after death, which the player explicitly called out as unfair. Completion took 110s with 5 hits taken, indicating repetitive, low-engagement traversal punctuated by one frustrating enemy mechanic.",
+  "lessons": [
+    {
+      "lesson": "Persistent projectiles or hazards from dead enemies (e.g., stingers, bullets) that remain active after the enemy is killed create perceived unfairness, as players expect threat removal on kill.",
+      "category": "fairness",
+      "conditions": [
+        "enemy dies but its projectile/hazard remains active",
+        "player can be damaged by remnant hazard after kill",
+        "no visual cue that hazard persists"
+      ],
+      "outcome": "player takes damage they feel is unavoidable and unjust, rates level poorly, calls out mechanic explicitly",
+      "confidence": 0.9
+    }
+  ],
+  "fun_score": 2,
+  "save_level": false,
+  "save_reason": ""
+}

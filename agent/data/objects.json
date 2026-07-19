@@ -48,5 +48,18 @@
     "params": {},
     "source_round": 0,
     "design_reason": "Supports recovery shortly before historical combat-death hotspots."
+  },
+  {
+    "id": "spike_trap",
+    "symbol": "D",
+    "name": "Spike Trap",
+    "description": "A damaging floor hazard that punishes mindless forward movement and forces the player to time jumps or use vertical traversal. Place on flat corridors to break up hold-right gameplay, or combine with springboards/ladders to create risk/rewa",
+    "behavior": "hazard",
+    "color": "#8b0000",
+    "params": {
+      "damage": 1.0
+    },
+    "source_round": 22,
+    "design_reason": "Addresses lesson_0001 and lesson_0023: the level is a 200+ tile horizontal walk with zero obstacles, enemies, or elevation changes. The player stood still for 6.7s then quit, rating it 3/5 with 'needs more interesting enemies.' A hazard object introduces the first meaningful interaction \u2014 forcing ju"
   }
 ]

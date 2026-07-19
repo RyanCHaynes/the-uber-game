@@ -17,7 +17,7 @@
       3
     ],
     "seen_count": 5,
-    "applied_count": 15,
+    "applied_count": 18,
     "successful_applications": 0,
     "applications": [
       {
@@ -119,7 +119,28 @@
         "success": false
       },
       {
-        "design_round": 21
+        "design_round": 21,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 22,
+        "rating": 2,
+        "completed": true,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 23,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 24
       }
     ],
     "merged_from": [
@@ -154,7 +175,7 @@
       5
     ],
     "seen_count": 3,
-    "applied_count": 15,
+    "applied_count": 18,
     "successful_applications": 0,
     "applications": [
       {
@@ -256,7 +277,28 @@
         "success": false
       },
       {
-        "design_round": 21
+        "design_round": 21,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 22,
+        "rating": 2,
+        "completed": true,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 23,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 24
       }
     ],
     "merged_from": [
@@ -282,7 +324,7 @@
       2
     ],
     "seen_count": 1,
-    "applied_count": 14,
+    "applied_count": 17,
     "successful_applications": 0,
     "applications": [
       {
@@ -382,6 +424,23 @@
         "completed": false,
         "deaths": 0,
         "success": false
+      },
+      {
+        "design_round": 22,
+        "rating": 2,
+        "completed": true,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 23,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 24
       }
     ],
     "merged_from": []
@@ -398,7 +457,7 @@
       2
     ],
     "seen_count": 1,
-    "applied_count": 9,
+    "applied_count": 11,
     "successful_applications": 0,
     "applications": [
       {
@@ -458,7 +517,25 @@
         "success": false
       },
       {
-        "design_round": 21
+        "design_round": 21,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 22,
+        "rating": 2,
+        "completed": true,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 23,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
       }
     ],
     "merged_from": []
@@ -475,7 +552,7 @@
       2
     ],
     "seen_count": 1,
-    "applied_count": 8,
+    "applied_count": 9,
     "successful_applications": 0,
     "applications": [
       {
@@ -528,7 +605,14 @@
         "success": false
       },
       {
-        "design_round": 21
+        "design_round": 21,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 24
       }
     ],
     "merged_from": []
@@ -545,7 +629,7 @@
       4
     ],
     "seen_count": 3,
-    "applied_count": 13,
+    "applied_count": 15,
     "successful_applications": 0,
     "applications": [
       {
@@ -633,7 +717,25 @@
         "success": false
       },
       {
-        "design_round": 21
+        "design_round": 21,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 22,
+        "rating": 2,
+        "completed": true,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 23,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
       }
     ],
     "merged_from": [
@@ -659,7 +761,7 @@
       4
     ],
     "seen_count": 2,
-    "applied_count": 8,
+    "applied_count": 9,
     "successful_applications": 0,
     "applications": [
       {
@@ -712,7 +814,14 @@
         "success": false
       },
       {
-        "design_round": 21
+        "design_round": 21,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 24
       }
     ],
     "merged_from": [
@@ -738,7 +847,7 @@
       5
     ],
     "seen_count": 3,
-    "applied_count": 11,
+    "applied_count": 13,
     "successful_applications": 0,
     "applications": [
       {
@@ -812,7 +921,25 @@
         "success": false
       },
       {
-        "design_round": 21
+        "design_round": 21,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 22,
+        "rating": 2,
+        "completed": true,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 23,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
       }
     ],
     "merged_from": [
@@ -905,7 +1032,7 @@
       6
     ],
     "seen_count": 1,
-    "applied_count": 10,
+    "applied_count": 12,
     "successful_applications": 0,
     "applications": [
       {
@@ -977,6 +1104,20 @@
         "completed": false,
         "deaths": 0,
         "success": false
+      },
+      {
+        "design_round": 22,
+        "rating": 2,
+        "completed": true,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 23,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
       }
     ],
     "merged_from": []
@@ -993,7 +1134,7 @@
       6
     ],
     "seen_count": 1,
-    "applied_count": 11,
+    "applied_count": 12,
     "successful_applications": 0,
     "applications": [
       {
@@ -1072,6 +1213,13 @@
         "completed": true,
         "deaths": 2,
         "success": false
+      },
+      {
+        "design_round": 23,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
       }
     ],
     "merged_from": []
@@ -1092,7 +1240,7 @@
       7
     ],
     "seen_count": 1,
-    "applied_count": 14,
+    "applied_count": 16,
     "successful_applications": 0,
     "applications": [
       {
@@ -1187,7 +1335,21 @@
         "success": false
       },
       {
-        "design_round": 21
+        "design_round": 21,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 22,
+        "rating": 2,
+        "completed": true,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 24
       }
     ],
     "merged_from": []
@@ -1216,7 +1378,7 @@
       12
     ],
     "seen_count": 3,
-    "applied_count": 14,
+    "applied_count": 17,
     "successful_applications": 0,
     "applications": [
       {
@@ -1311,7 +1473,28 @@
         "success": false
       },
       {
-        "design_round": 21
+        "design_round": 21,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 22,
+        "rating": 2,
+        "completed": true,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 23,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 24
       }
     ],
     "merged_from": [
@@ -1341,7 +1524,7 @@
       17
     ],
     "seen_count": 1,
-    "applied_count": 5,
+    "applied_count": 8,
     "successful_applications": 0,
     "applications": [
       {
@@ -1373,7 +1556,28 @@
         "success": false
       },
       {
-        "design_round": 21
+        "design_round": 21,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 22,
+        "rating": 2,
+        "completed": true,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 23,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 24
       }
     ],
     "merged_from": []
@@ -1401,7 +1605,7 @@
       19
     ],
     "seen_count": 2,
-    "applied_count": 5,
+    "applied_count": 8,
     "successful_applications": 0,
     "applications": [
       {
@@ -1433,7 +1637,28 @@
         "success": false
       },
       {
-        "design_round": 21
+        "design_round": 21,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 22,
+        "rating": 2,
+        "completed": true,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 23,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 24
       }
     ],
     "merged_from": [
@@ -1460,7 +1685,7 @@
       19
     ],
     "seen_count": 2,
-    "applied_count": 3,
+    "applied_count": 5,
     "successful_applications": 0,
     "applications": [
       {
@@ -1478,7 +1703,21 @@
         "success": false
       },
       {
-        "design_round": 21
+        "design_round": 21,
+        "rating": 3,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 22,
+        "rating": 2,
+        "completed": true,
+        "deaths": 1,
+        "success": false
+      },
+      {
+        "design_round": 24
       }
     ],
     "merged_from": [
@@ -1487,5 +1726,63 @@
         "lesson": "When a level's horizontal span exceeds 200 tiles without mid-level checkpoints, any fall in the latter half forces players to re-traverse 5+ minutes of content, converting challenge into tedium and causing disengagement."
       }
     ]
+  },
+  {
+    "id": "lesson_0019",
+    "lesson": "Persistent projectiles or hazards from dead enemies (e.g., stingers, bullets) that remain active after the enemy is killed create perceived unfairness, as players expect threat removal on kill.",
+    "category": "fairness",
+    "conditions": [
+      "enemy dies but its projectile/hazard remains active",
+      "player can be damaged by remnant hazard after kill",
+      "no visual cue that hazard persists"
+    ],
+    "outcome": "player takes damage they feel is unavoidable and unjust, rates level poorly, calls out mechanic explicitly",
+    "confidence": 0.9,
+    "source_round": 23,
+    "evidence_rounds": [
+      23
+    ],
+    "seen_count": 1,
+    "applied_count": 2,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 23,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 24
+      }
+    ],
+    "merged_from": []
+  },
+  {
+    "id": "lesson_0024",
+    "lesson": "Vertical shafts built from repeating identical platform clusters without visual or spatial differentiation create navigation ambiguity \u2014 players cannot distinguish progress-critical paths from dead ends, leading to oscillation and perceived impossibility.",
+    "category": "traversal",
+    "conditions": [
+      "vertical shaft exceeds 10 tiles height",
+      "platform clusters repeat at uniform spacing",
+      "no landmarks, color cues, or structural breaks to mark the critical path",
+      "multiple enemy types placed without spatial hierarchy"
+    ],
+    "outcome": "player oscillates vertically at same x-positions for 30+ seconds, fails to locate exit, rates level 1/5",
+    "confidence": 0.88,
+    "source_round": 24,
+    "evidence_rounds": [
+      24
+    ],
+    "seen_count": 1,
+    "applied_count": 1,
+    "successful_applications": 0,
+    "applications": [
+      {
+        "design_round": 24
+      }
+    ],
+    "merged_from": []
   }
 ]
