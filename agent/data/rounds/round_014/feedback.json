@@ -1,0 +1,23 @@
+{
+  "round": 14,
+  "level": "level_013",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 1,
+      "completed": false,
+      "deaths": 1,
+      "fall_locations": [
+        {
+          "x": 1273,
+          "y": 484
+        }
+      ],
+      "time_seconds": 107.5,
+      "enemies_killed": 3,
+      "hits_taken": 3,
+      "objects_collected": 0,
+      "comment": "The level is far too flat, it needs more options for verticle and horizontal movement paths, not one single path"
+    }
+  ]
+}

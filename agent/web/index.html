@@ -34,6 +34,9 @@
   .panel h2 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase;
               letter-spacing: .08em; color: var(--dim); }
   canvas { width: 100%; background: #0e1015; border-radius: 6px; display: block; }
+  #cv { cursor: grab; touch-action: none; }
+  #cv.dragging { cursor: grabbing; }
+  .zoomBtn { padding: 4px 9px; min-width: 32px; }
   .lvlbar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   select { background: var(--panel2); color: var(--text); border: 1px solid var(--line);
            border-radius: 6px; padding: 5px 8px; }
@@ -139,12 +142,18 @@
         <h2 style="margin:0">Level map</h2>
         <select id="lvlSel"></select>
         <label class="follow"><input type="checkbox" id="follow" checked> follow latest</label>
+        <span class="spacer"></span>
+        <button id="mapZoomOut" class="zoomBtn" title="Zoom out">−</button>
+        <span id="mapZoomLabel" class="dim">100%</span>
+        <button id="mapZoomIn" class="zoomBtn" title="Zoom in">+</button>
+        <button id="mapZoomReset" class="zoomBtn" title="Fit the full level">Fit</button>
       </div>
       <canvas id="cv" width="960" height="420"></canvas>
       <div class="legend">
         <span style="color:#4a5568">solid tile</span>
         <span style="color:#7bd88f">spawn</span>
         <span style="color:#ffb454">exit</span>
+        <span style="color:#a970ff">player trace (750 ms)</span>
         <span style="color:#ff3333">✕ fall</span>
       </div>
       <div id="stats" class="stat"></div>
@@ -158,7 +167,13 @@
     <div class="panel"><h2>Playtest feedback <span id="fbRound" class="dim"></span></h2>
       <div id="feedback" class="dim">this level hasn't been played yet</div></div>
     <div class="panel"><h2>Analyst diagnosis</h2><div id="diagnosis" class="dim">—</div></div>
-    <div class="panel"><h2>Persistent lesson catalog <span id="memoryStats" class="dim"></span></h2>
+    <div class="panel"><div class="lvlbar"><h2 style="margin:0">Persistent lesson catalog <span id="memoryStats" class="dim"></span></h2>
+      <span class="spacer"></span>
+      <label class="dim">Role <select id="lessonRoleSel">
+        <option value="level_designer">Level Designer</option>
+        <option value="object_designer">Object Designer</option>
+      </select></label>
+    </div>
       <div id="lessons" class="dim">none yet</div></div>
     <div class="panel"><h2>Level library</h2><div id="library" class="dim">empty</div></div>
   </section>
@@ -184,6 +199,7 @@ window.addEventListener("unhandledrejection", e => {
 let state = null, selected = null, waitingForNext = false;
 const $ = id => document.getElementById(id);
 const TILE = 32;
+let mapZoom = 1, mapPan = { x: 0, y: 0 }, mapDragging = null;
 
 function parseCSV(text) {
   return text.trim().split(/\r?\n/).map(line => line.split(",").map(c => c.trim()));
@@ -226,8 +242,12 @@ function render() {
 
   const names = levelNames();
   if (!names.length) return;
+  const priorSelected = selected;
   if (!selected || !names.includes(selected) || $("follow").checked)
     selected = names[names.length - 1];
+  if (priorSelected && selected !== priorSelected) {
+    mapZoom = 1; mapPan = { x: 0, y: 0 };
+  }
 
   const sel = $("lvlSel");
   if (sel.options.length !== names.length) {
@@ -263,7 +283,8 @@ function renderFeedback() {
       <b>${esc(p.player)}</b>
       <span class="stars">${"★".repeat(p.rating)}${"☆".repeat(5 - p.rating)}</span>
       <div class="meta">${p.deaths} deaths · ${p.completed ? "finished" : "gave up"} ·
-        ${p.time_seconds}s${p.enemies_killed != null ? ` · ⚔ ${p.enemies_killed} kills · ${p.hits_taken} hits taken` : ""}</div>
+        ${p.time_seconds}s${p.enemies_killed != null ? ` · ⚔ ${p.enemies_killed} kills · ${p.hits_taken} hits taken` : ""}
+        · ${(p.player_trace || []).length} position samples</div>
       ${p.comment ? `<div class="quote">“${esc(p.comment)}”</div>` : ""}
     </div>`).join("");
   $("diagnosis").textContent = round.analysis ? round.analysis.diagnosis : "—";
@@ -280,19 +301,25 @@ function renderHistory() {
   }).join("");
 }
 
-function pick(name) { selected = name; $("follow").checked = false; render(); }
+function pick(name) {
+  selected = name; $("follow").checked = false;
+  mapZoom = 1; mapPan = { x: 0, y: 0 }; render();
+}
 
 function renderLessons() {
   const memory = state.memory || {};
-  $("memoryStats").textContent = state.lessons.length
-    ? `(${state.lessons.length} lessons · ${memory.categories || 0} categories${memory.last_consolidated_at ? ` · consolidated ${memory.last_consolidated_at.replace("T", " ")}` : ""})`
+  const objectRole = $("lessonRoleSel").value === "object_designer";
+  const roleLessons = objectRole ? (state.object_lessons || []) : state.lessons;
+  const categoryCount = new Set(roleLessons.map(item => item.category || "object_placement")).size;
+  $("memoryStats").textContent = roleLessons.length
+    ? `(${roleLessons.length} lessons · ${categoryCount} categories${!objectRole && memory.last_consolidated_at ? ` · consolidated ${memory.last_consolidated_at.replace("T", " ")}` : ""})`
     : "";
-  if (!state.lessons.length) {
+  if (!roleLessons.length) {
     $("lessons").innerHTML = '<span class="dim">none yet</span>';
     return;
   }
   const groups = {};
-  for (const lesson of state.lessons) (groups[lesson.category || "other"] ||= []).push(lesson);
+  for (const lesson of roleLessons) (groups[lesson.category || (objectRole ? "object_placement" : "other")] ||= []).push(lesson);
   $("lessons").innerHTML = Object.keys(groups).sort().map(category => `
     <div class="lessonGroup">
       <h3>${esc(category.replace(/_/g, " "))} (${groups[category].length})</h3>
@@ -302,10 +329,13 @@ function renderLessons() {
           <div class="lessonMeta">
             ${esc(lesson.id)} · confidence ${Number(lesson.confidence || 0).toFixed(2)} ·
             seen ${lesson.seen_count}x · evidence rounds ${(lesson.evidence_rounds || []).join(", ") || "—"} ·
-            applied ${lesson.applied_count || 0}x · successful ${lesson.successful_applications || 0}x${lesson.merged_from?.length ? ` · merged ${lesson.merged_from.length} prior lessons` : ""}
+            ${objectRole
+              ? `role object designer${lesson.failure_type ? ` · failure ${esc(lesson.failure_type)}` : ""} · corrected ${lesson.successful_corrections || 0}x`
+              : `applied ${lesson.applied_count || 0}x · successful ${lesson.successful_applications || 0}x`}${lesson.merged_from?.length ? ` · merged ${lesson.merged_from.length} prior lessons` : ""}
           </div>
           ${lesson.conditions?.length ? `<div class="lessonMeta">when: ${lesson.conditions.map(esc).join(", ")}</div>` : ""}
           ${lesson.outcome ? `<div class="lessonMeta">outcome: ${esc(lesson.outcome)}</div>` : ""}
+          ${objectRole && lesson.last_error ? `<div class="lessonMeta">latest rejection: ${esc(lesson.last_error)}</div>` : ""}
         </li>`).join("")}</ul>
     </div>`).join("");
 }
@@ -316,8 +346,13 @@ function drawMap(csvText) {
   ctx.clearRect(0, 0, cv.width, cv.height);
   const grid = parseCSV(csvText);
   const rows = grid.length, cols = Math.max(...grid.map(r => r.length));
-  const s = Math.min(cv.width / (cols * TILE), cv.height / (rows * TILE));
-  ctx.setTransform(s, 0, 0, s, 0, 0);
+  const fitScale = Math.min(cv.width / (cols * TILE), cv.height / (rows * TILE));
+  const s = fitScale * mapZoom;
+  const scaledWidth = cols * TILE * s, scaledHeight = rows * TILE * s;
+  mapPan.x = Math.max(0, Math.min(mapPan.x, Math.max(0, scaledWidth - cv.width)));
+  mapPan.y = Math.max(0, Math.min(mapPan.y, Math.max(0, scaledHeight - cv.height)));
+  if (mapZoom === 1) mapPan = { x: 0, y: 0 };
+  ctx.setTransform(s, 0, 0, s, -mapPan.x, -mapPan.y);
 
   let solids = 0;
   for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
@@ -346,7 +381,19 @@ function drawMap(csvText) {
 
   // fall markers from the round that played this level
   const round = state.rounds[levelNum(selected) + 1];
+  if (world.name === selected && (phase === "playing" || phase === "rating")) {
+    ctx.fillStyle = "rgba(169,112,255,.8)";
+    for (const sample of playerTrace) {
+      ctx.beginPath(); ctx.arc(sample.x, sample.y, 3.2 / s, 0, Math.PI * 2); ctx.fill();
+    }
+  }
   if (round && round.feedback) {
+    ctx.fillStyle = "rgba(169,112,255,.8)";
+    for (const p of round.feedback.players) {
+      for (const sample of (p.player_trace || [])) {
+        ctx.beginPath(); ctx.arc(sample.x, sample.y, 3.2 / s, 0, Math.PI * 2); ctx.fill();
+      }
+    }
     const m = 7 / s;                       // constant on-screen size at any map scale
     ctx.strokeStyle = "#ff3333"; ctx.lineWidth = 2.5 / s;
     for (const p of round.feedback.players) {
@@ -360,7 +407,21 @@ function drawMap(csvText) {
     ctx.lineWidth = 1;
   }
 
-  $("stats").textContent = `${selected} — ${cols}×${rows} tiles · ${solids} solid blocks`;
+  $("mapZoomLabel").textContent = `${Math.round(mapZoom * 100)}%`;
+  const traceCount = round?.feedback?.players.reduce(
+    (total, player) => total + (player.player_trace || []).length, 0
+  ) || (world.name === selected ? playerTrace.length : 0);
+  $("stats").textContent = `${selected} — ${cols}×${rows} tiles · ${solids} solid blocks · ` +
+    `${traceCount} trace samples${mapZoom > 1 ? " · drag map to pan" : ""}`;
+}
+
+function setMapZoom(nextZoom, anchorX = $("cv").width / 2, anchorY = $("cv").height / 2) {
+  const previous = mapZoom;
+  mapZoom = Math.max(1, Math.min(10, nextZoom));
+  const ratio = mapZoom / previous;
+  mapPan.x = (mapPan.x + anchorX) * ratio - anchorX;
+  mapPan.y = (mapPan.y + anchorY) * ratio - anchorY;
+  if (state?.levels?.[selected]) drawMap(state.levels[selected]);
 }
 
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
@@ -373,8 +434,37 @@ $("resetBtn").onclick = async () => {
     await loadPlayLevel();
   }
 };
-$("lvlSel").onchange = e => { selected = e.target.value; $("follow").checked = false; render(); };
+$("lvlSel").onchange = e => {
+  selected = e.target.value; $("follow").checked = false;
+  mapZoom = 1; mapPan = { x: 0, y: 0 }; render();
+};
 $("follow").onchange = render;
+$("lessonRoleSel").onchange = renderLessons;
+$("mapZoomIn").onclick = () => setMapZoom(mapZoom * 1.4);
+$("mapZoomOut").onclick = () => setMapZoom(mapZoom / 1.4);
+$("mapZoomReset").onclick = () => { mapZoom = 1; mapPan = { x: 0, y: 0 }; render(); };
+$("cv").addEventListener("wheel", event => {
+  event.preventDefault();
+  const rect = $("cv").getBoundingClientRect();
+  const x = (event.clientX - rect.left) * ($("cv").width / rect.width);
+  const y = (event.clientY - rect.top) * ($("cv").height / rect.height);
+  setMapZoom(mapZoom * (event.deltaY < 0 ? 1.2 : 1 / 1.2), x, y);
+}, { passive: false });
+$("cv").addEventListener("pointerdown", event => {
+  if (mapZoom <= 1) return;
+  mapDragging = { x: event.clientX, y: event.clientY, panX: mapPan.x, panY: mapPan.y };
+  $("cv").setPointerCapture(event.pointerId); $("cv").classList.add("dragging");
+});
+$("cv").addEventListener("pointermove", event => {
+  if (!mapDragging) return;
+  const rect = $("cv").getBoundingClientRect();
+  mapPan.x = mapDragging.panX - (event.clientX - mapDragging.x) * ($("cv").width / rect.width);
+  mapPan.y = mapDragging.panY - (event.clientY - mapDragging.y) * ($("cv").height / rect.height);
+  drawMap(state.levels[selected]);
+});
+function endMapDrag() { mapDragging = null; $("cv").classList.remove("dragging"); }
+$("cv").addEventListener("pointerup", endMapDrag);
+$("cv").addEventListener("pointercancel", endMapDrag);
 setInterval(poll, 1200);
 poll();
 
@@ -436,6 +526,7 @@ function renderLlmLog() {
 const cv2 = $("cv2"), ctx2 = cv2.getContext("2d");
 const world = { grid: [], rows: 0, cols: 0, spawn: null, exit: null, name: null };
 let player = null, keys = {}, falls = 0, fallLocations = [], startedAt = 0;
+let playerTrace = [];
 let phase = "playing";   // playing | rating | waiting
 let ptLoopStarted = false, chosenRating = 0, runCompleted = false;
 let fps = 0, fpsFrames = 0, fpsWindowStart = performance.now();
@@ -443,6 +534,7 @@ let fps = 0, fpsFrames = 0, fpsWindowStart = performance.now();
 // combat state
 const MAX_HP = 3, SHOT_COOLDOWN = 320, SHOT_SPEED = 10, SHOT_G = 0.35, SHOT_LOFT = 1.5;
 let roster = [], enemySpawns = [], enemies = [], playerShots = [], enemyShots = [];
+let objectCatalog = [], objectBySymbol = {}, collectedObjects = new Set(), objectsCollected = 0;
 let mouse = { x: 0, y: 0 };
 let hp = MAX_HP, kills = 0, hitsTaken = 0, invulnUntil = 0, lastShotAt = 0;
 let cam = { x: 0, y: 0 };
@@ -582,6 +674,9 @@ async function loadPlayLevel() {
   world.cols = Math.max(...world.grid.map(row => row.length));
   try { roster = (await (await fetch("/api/enemies")).json()).enemies || []; }
   catch (e) { roster = []; }
+  try { objectCatalog = (await (await fetch("/api/objects")).json()).objects || []; }
+  catch (e) { objectCatalog = []; }
+  objectBySymbol = Object.fromEntries(objectCatalog.map(item => [item.symbol, item]));
   world.spawn = world.exit = null;
   enemySpawns = [];
   world.grid.forEach((row, r) => row.forEach((cell, c) => {
@@ -599,21 +694,46 @@ function restartRun() {
   player = { x: world.spawn.c * TILE + 6, y: world.spawn.r * TILE + 2,
              w: 20, h: 28, vx: 0, vy: 0, grounded: false };
   keys = {};
-  falls = 0; fallLocations = []; startedAt = performance.now();
+  falls = 0; fallLocations = []; playerTrace = []; startedAt = performance.now();
   spawnEnemies();
   playerShots = []; enemyShots = [];
   hp = MAX_HP; kills = 0; hitsTaken = 0; invulnUntil = 0; lastShotAt = 0;
+  collectedObjects = new Set(); objectsCollected = 0;
   phase = "playing"; runCompleted = false; chosenRating = 0;
+  samplePlayerPosition();
   $("ptRestart").disabled = false;
   $("fbForm").style.display = "none";
   $("fbWaiting").style.display = "none";
   $("fbComment").value = "";
 }
 
+function samplePlayerPosition() {
+  if (!player || phase !== "playing" || playerTrace.length >= 4800) return;
+  playerTrace.push({
+    x: Math.round((player.x + player.w / 2) * 10) / 10,
+    y: Math.round((player.y + player.h / 2) * 10) / 10,
+    t_ms: Math.max(0, Math.round(performance.now() - startedAt)),
+  });
+  if (state?.levels?.[selected] && world.name === selected) drawMap(state.levels[selected]);
+}
+setInterval(samplePlayerPosition, 750);
+
 function isSolid(c, r) {
   if (c < 0 || c >= world.cols) return true;         // walls at level edges
   if (r < 0 || r >= world.rows) return false;        // open sky / open pit
   return world.grid[r]?.[c] === "X";
+}
+
+function touchingObjects() {
+  if (!player) return [];
+  const left = Math.floor(player.x / TILE), right = Math.floor((player.x + player.w - 1) / TILE);
+  const top = Math.floor(player.y / TILE), bottom = Math.floor((player.y + player.h - 1) / TILE);
+  const hits = [];
+  for (let r = top; r <= bottom; r++) for (let c = left; c <= right; c++) {
+    const symbol = world.grid[r]?.[c], def = objectBySymbol[symbol];
+    if (def) hits.push({ c, r, symbol, def, key: `${c},${r}` });
+  }
+  return hits;
 }
 
 cv2.addEventListener("keydown", e => {
@@ -650,10 +770,17 @@ function ptStep() {
   if (!player || phase !== "playing") return;
   const SPEED = 3.2, JUMP = 9.6, GRAVITY = 0.5, MAX_FALL = 12;
   player.vx = (keys.ArrowLeft || keys.KeyA ? -SPEED : 0) + (keys.ArrowRight || keys.KeyD ? SPEED : 0);
-  if ((keys.ArrowUp || keys.Space || keys.KeyW) && player.grounded) {
+  const onLadder = touchingObjects().find(hit => hit.def.behavior === "ladder");
+  if (onLadder && !keys.Space) {
+    const climbSpeed = +(onLadder.def.params?.climb_speed || 3.2);
+    player.vy = (keys.ArrowUp || keys.KeyW ? -climbSpeed : 0)
+              + (keys.ArrowDown || keys.KeyS ? climbSpeed : 0);
+    player.grounded = true;
+  } else if ((keys.ArrowUp || keys.Space || keys.KeyW) && player.grounded) {
     player.vy = -JUMP; player.grounded = false;
+  } else {
+    player.vy = Math.min(player.vy + GRAVITY, MAX_FALL);
   }
-  player.vy = Math.min(player.vy + GRAVITY, MAX_FALL);
 
   // horizontal move + collide
   player.x += player.vx;
@@ -701,6 +828,16 @@ function ptStep() {
   }
 
   const now = performance.now();
+  for (const hit of touchingObjects()) {
+    const params = hit.def.params || {};
+    if (hit.def.behavior === "bounce" && player.vy >= 0) {
+      player.vy = -(+params.launch_speed || 11.5); player.grounded = false;
+    } else if (hit.def.behavior === "hazard") {
+      damagePlayer(+params.damage || 1, now);
+    } else if (hit.def.behavior === "collectible" && !collectedObjects.has(hit.key)) {
+      collectedObjects.add(hit.key); objectsCollected++;
+    }
+  }
   updateEnemies(now);
   updateShots(now);
 }
@@ -744,6 +881,8 @@ $("fbSubmit").onclick = async () => {
         fall_locations: fallLocations,
         kills: kills,
         hits_taken: hitsTaken,
+        objects_collected: objectsCollected,
+        player_trace: playerTrace,
         time_seconds: (performance.now() - startedAt) / 1000,
       }),
     });
@@ -799,11 +938,31 @@ function ptDraw() {
         r0 = Math.max(0, Math.floor(camY / TILE)),
         r1 = Math.min(world.rows - 1, Math.ceil((camY + cv2.height) / TILE));
   for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
-    if (world.grid[r]?.[c] === "X") {
+    const symbol = world.grid[r]?.[c];
+    if (symbol === "X") {
       ctx2.fillStyle = "#4a5568";
       ctx2.fillRect(c * TILE, r * TILE, TILE, TILE);
       ctx2.fillStyle = "#5d6b80";
       ctx2.fillRect(c * TILE, r * TILE, TILE, 4);
+    } else if (objectBySymbol[symbol]) {
+      const def = objectBySymbol[symbol], x = c * TILE, y = r * TILE;
+      if (def.behavior === "collectible" && collectedObjects.has(`${c},${r}`)) continue;
+      ctx2.fillStyle = def.color || "#6fc3ff";
+      if (def.behavior === "ladder") {
+        ctx2.fillRect(x + 7, y, 4, TILE); ctx2.fillRect(x + 21, y, 4, TILE);
+        for (let ry = 5; ry < TILE; ry += 8) ctx2.fillRect(x + 7, y + ry, 18, 3);
+      } else if (def.behavior === "bounce") {
+        ctx2.fillRect(x + 4, y + 23, 24, 5);
+        ctx2.beginPath(); ctx2.moveTo(x + 6, y + 23); ctx2.lineTo(x + 16, y + 8);
+        ctx2.lineTo(x + 26, y + 23); ctx2.closePath(); ctx2.fill();
+      } else if (def.behavior === "hazard") {
+        for (let sx = 2; sx < 30; sx += 8) {
+          ctx2.beginPath(); ctx2.moveTo(x + sx, y + 30); ctx2.lineTo(x + sx + 4, y + 10);
+          ctx2.lineTo(x + sx + 8, y + 30); ctx2.closePath(); ctx2.fill();
+        }
+      } else {
+        ctx2.beginPath(); ctx2.arc(x + 16, y + 16, 8, 0, Math.PI * 2); ctx2.fill();
+      }
     }
   }
   if (world.exit) {
@@ -904,6 +1063,10 @@ function ptDraw() {
     ctx2.fillStyle = "#d8dce8";
     ctx2.fillText(`⚔ ${kills}/${enemies.length}`, 10, 30);
   }
+  if (objectCatalog.some(item => item.behavior === "collectible")) {
+    ctx2.fillStyle = "#d8dce8";
+    ctx2.fillText(`◆ ${objectsCollected}`, 10, enemies.length ? 52 : 30);
+  }
 
   if (phase !== "playing") {
     ctx2.fillStyle = "rgba(14,16,21,.6)";
@@ -930,8 +1093,9 @@ function ptFrame() {
   ptDraw();
   if (player && phase === "playing") {
     $("ptStatus").textContent =
-      `⏱ ${((now - startedAt) / 1000).toFixed(1)}s · falls: ${falls} · ${fps.toFixed(0)} fps · ` +
-      "← → / A D move · ↑ / space jump · R restart";
+      `⏱ ${((now - startedAt) / 1000).toFixed(1)}s · falls: ${falls} · ` +
+      `trace: ${playerTrace.length} · ${fps.toFixed(0)} fps · ` +
+      "← → / A D move · ↑↓ / W S climb · space jump · R restart";
   }
   requestAnimationFrame(ptFrame);
 }

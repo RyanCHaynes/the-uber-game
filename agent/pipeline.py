@@ -94,7 +94,6 @@ def run_cycle(round_number: int, level_path: Path) -> Path:
         )
         print(f"  saved to library: levels/{level_path.stem}")
 
-    print(f"  designing next level ({brain})...")
     player_comment = feedback["players"][0].get("comment", "")
     memory_query = " ".join([
         str(analysis.get("diagnosis", "")),
@@ -105,9 +104,49 @@ def run_cycle(round_number: int, level_path: Path) -> Path:
         ),
     ])
     selected_memory = store.relevant_lessons(memory_query, limit=12)
-    new_csv = design(level_csv, analysis, store.format_lessons(selected_memory),
-                     store.library_summary(),
-                     player_comment=player_comment, roster_text=roster_summary())
+    from . import object_designer
+    if brain == "llm":
+        print("  evaluating scene-object needs (object designer)...")
+        try:
+            proposals = object_designer.propose(
+                analysis, feedback, store.format_lessons(selected_memory)
+            )
+            added_objects = object_designer.apply_proposals(proposals, round_number)
+            if added_objects:
+                print("  added object type(s): " + ", ".join(
+                    f"{item['name']} [{item['symbol']}]" for item in added_objects
+                ))
+            else:
+                print("  existing object catalog is sufficient")
+        except Exception as err:
+            # Object ideation is optional; it must never block the next level.
+            print(f"  object designer skipped after error: {err}")
+
+    print(f"  designing next level ({brain})...")
+    new_csv, generated_plan = design(
+        level_csv, analysis, store.format_lessons(selected_memory),
+        store.library_summary(), player_comment=player_comment,
+        roster_text=roster_summary(),
+        object_roster_text=object_designer.roster_summary(), return_plan=True,
+    )
+
+    if brain == "llm":
+        print("  placing scene objects in a separate game-file pass (object designer)...")
+        try:
+            new_csv, object_patch = object_designer.place_objects(
+                new_csv, generated_plan, analysis, feedback, round_number
+            )
+            print(
+                f"  object designer applied {len(object_patch.get('placements', []))} "
+                "prevalidated ladder placement(s)"
+            )
+            (feedback_path.parent / "object_design.json").write_text(
+                json.dumps(object_patch, indent=2)
+            )
+        except Exception as err:
+            # Capacity or a malformed object patch should not discard the valid
+            # level produced by the primary designer.
+            print(f"  object placement pass skipped after error: {err}")
 
     errors = csv_level.validate_text(new_csv)
     if errors:  # llm designer validates internally; this guards the mock path too

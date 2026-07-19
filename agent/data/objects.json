@@ -1,0 +1,41 @@
+[
+  {
+    "id": "ladder",
+    "symbol": "L",
+    "name": "Ladder",
+    "description": "A climbable vertical route that connects platforms at different elevations.",
+    "behavior": "ladder",
+    "color": "#c9955d",
+    "params": {
+      "climb_speed": 3.2
+    },
+    "source_round": 0,
+    "design_reason": "Enables genuine vertical traversal instead of relying only on hills and jumps."
+  },
+  {
+    "id": "springboard",
+    "symbol": "B",
+    "name": "Springboard",
+    "description": "A floor-mounted spring that launches the player upward, creating vertical traversal and breaking up flat horizontal corridors. Use to add elevation changes, reach higher platforms, or create dynamic movement arcs in otherwise single-plane l",
+    "behavior": "bounce",
+    "color": "#4ecdc4",
+    "params": {
+      "launch_speed": 12.0
+    },
+    "source_round": 13,
+    "design_reason": "Addresses the core issue of flat, horizontal-only level design (lesson_0001, lesson_0023, lesson_0004) by introducing a vertical traversal mechanic that forces elevation changes, breaks the 'hold one direction' pattern, and creates spatial variety without requiring complex terrain authoring."
+  },
+  {
+    "id": "checkpoint_flag",
+    "symbol": "C",
+    "name": "Checkpoint Flag",
+    "description": "A collectible flag that sets the player's respawn position when touched. Place before demanding vertical sequences or after long horizontal stretches to prevent full-level restarts on failure.",
+    "behavior": "collectible",
+    "color": "#ff6b35",
+    "params": {
+      "value": 50.0
+    },
+    "source_round": 17,
+    "design_reason": "Addresses lesson_0014: the player fell at the final vertical climb (x=8479,y=36) after 145s, then respawned at the start and repeated 100+ seconds of content. A mid-level checkpoint before the finale would preserve progress and reduce perceived difficulty spikes without changing traversal mechanics."
+  }
+]

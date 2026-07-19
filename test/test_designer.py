@@ -16,6 +16,7 @@ class LevelPlanCompilerTests(unittest.TestCase):
                 {"type": 1, "x": 20, "y": 9},
                 {"type": 2, "x": 100, "y": 9},
             ],
+            "objects": [],
         }
 
     def test_compiles_valid_plan_to_reachable_grid(self):
@@ -94,6 +95,26 @@ class LevelPlanCompilerTests(unittest.TestCase):
             csv_level.validate_text(repaired, min_cols=designer.MIN_DESIGN_COLS), []
         )
         self.assertIn("minimum-change connector", corrections[0])
+
+    def test_compiles_catalog_object(self):
+        plan = self.valid_plan()
+        plan["objects"] = [{"symbol": "L", "x": 40, "y": 8}]
+        compact = designer._compile_plan(plan)
+        self.assertEqual(compact.splitlines()[8][40], "L")
+
+    def test_ladder_route_is_reachable(self):
+        grid = [list("." * 15) for _ in range(12)]
+        grid[9][4] = "S"
+        grid[10] = list("X" * 15)
+        for row in range(4, 10):
+            grid[row][7] = "L"
+        for col in range(8, 15):
+            grid[5][col] = "X"
+        grid[4][10] = "E"
+        self.assertEqual(csv_level.validate(grid), [])
+        for row in range(4, 9):
+            grid[row][7] = "."
+        self.assertIn("exit is not reachable", " ".join(csv_level.validate(grid)))
 
     @mock.patch("agent.designer.llm.complete_json")
     def test_design_compiles_model_plan_to_pipeline_csv(self, complete_json):

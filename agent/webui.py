@@ -64,6 +64,25 @@ def _run_agent_cycle(round_number: int, level_path: Path):
             _state["running"] = False
 
 
+def _sanitize_trace(raw_trace) -> list[dict]:
+    """Bound and normalize browser telemetry before persisting or prompting."""
+    trace = []
+    if not isinstance(raw_trace, list):
+        return trace
+    for sample in raw_trace[:4800]:  # one hour at 750 ms plus headroom
+        if not isinstance(sample, dict):
+            continue
+        x, y, t_ms = sample.get("x"), sample.get("y"), sample.get("t_ms")
+        if any(isinstance(value, bool) or not isinstance(value, (int, float))
+               for value in (x, y, t_ms)):
+            continue
+        trace.append({
+            "x": round(float(x), 1), "y": round(float(y), 1),
+            "t_ms": max(0, round(float(t_ms))),
+        })
+    return trace
+
+
 def _handle_feedback(body: dict) -> tuple[int, dict]:
     rating = body.get("rating")
     if not isinstance(rating, int) or not 1 <= rating <= 5:
@@ -76,6 +95,8 @@ def _handle_feedback(body: dict) -> tuple[int, dict]:
 
     level_path = pipeline.latest_level()
     round_number = int(level_path.stem.split("_")[1]) + 1
+    trace = _sanitize_trace(body.get("player_trace", []))
+
     feedback = {
         "round": round_number,
         "level": level_path.stem,
@@ -88,6 +109,8 @@ def _handle_feedback(body: dict) -> tuple[int, dict]:
             "time_seconds": round(float(body.get("time_seconds", 0)), 1),
             "enemies_killed": int(body.get("kills", 0)),
             "hits_taken": int(body.get("hits_taken", 0)),
+            "objects_collected": int(body.get("objects_collected", 0)),
+            "player_trace": trace,
             "comment": str(body.get("comment", ""))[:500],
         }],
     }
@@ -98,7 +121,8 @@ def _handle_feedback(body: dict) -> tuple[int, dict]:
         p = feedback["players"][0]
         _state["log"].append(
             f"=== ROUND {round_number}: playtest of {level_path.stem} — "
-            f"{p['rating']}/5, {p['deaths']} falls, {p['time_seconds']}s — \"{p['comment']}\""
+            f"{p['rating']}/5, {p['deaths']} falls, {p['time_seconds']}s, "
+            f"{len(p['player_trace'])} position samples — \"{p['comment']}\""
         )
     threading.Thread(target=_run_agent_cycle, args=(round_number, level_path), daemon=True).start()
     return 200, {"ok": True, "round": round_number}
@@ -124,13 +148,14 @@ def _snapshot() -> dict:
     if ROUNDS_DIR.exists():
         for d in sorted(ROUNDS_DIR.glob("round_*")):
             entry = {}
-            for name in ("feedback", "analysis"):
+            for name in ("feedback", "analysis", "object_design"):
                 p = d / f"{name}.json"
                 if p.exists():
                     entry[name] = json.loads(p.read_text())
             rounds[int(d.name.split("_")[1])] = entry
     with _lock:
         running, log, error = _state["running"], list(_state["log"]), _state["error"]
+    from . import object_designer
     return {
         "mode": "mock" if pipeline._use_mock() else "llm",
         "backend": llm.backend(),
@@ -142,6 +167,7 @@ def _snapshot() -> dict:
         "levels": levels,
         "rounds": rounds,
         "lessons": store.load_lessons(),
+        "object_lessons": object_designer.load_lessons(),
         "memory": store.memory_status(),
         "library": store.library_summary(),
     }
@@ -176,6 +202,9 @@ class Handler(BaseHTTPRequestHandler):
             enemies_path = DATA_DIR / "enemies.json"
             roster = json.loads(enemies_path.read_text()) if enemies_path.exists() else []
             self._send(200, {"enemies": roster})
+        elif self.path == "/api/objects":
+            from . import object_designer
+            self._send(200, {"objects": object_designer.load_catalog()})
         elif self.path == "/api/playlevel":
             csvs = sorted(LEVELS_DIR.glob("level_*.csv"))
             if not csvs:

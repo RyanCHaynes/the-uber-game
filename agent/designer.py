@@ -6,7 +6,7 @@ Python performs the fragile character counting and grid serialization.
 
 import json
 
-from . import csv_level, llm
+from . import csv_level, llm, object_designer
 
 MAX_ATTEMPTS = 4
 MIN_DESIGN_COLS = 250   # hard floor for designed levels — enforced by validation
@@ -54,6 +54,8 @@ Design guidance:
 - Place enemies deliberately: ground enemies (patrollers, turrets) on platforms with
   room to matter; flyers guarding jumps. Space encounters out — clusters read as unfair.
 - Apply the accumulated lessons. Keep what the player enjoyed; change the rest.
+- Do not place scene objects. A separate Object Designer reads your completed game
+  file and applies an independent object-placement pass after this one.
 - Falling into a pit respawns the player at S (costs time, not a life).
 
 Return JSON only. Do not include analysis, markdown, code fences, row strings, or ASCII art."""
@@ -203,6 +205,43 @@ def _repair_plan(plan: dict) -> tuple[dict, list[str]]:
     if removed_enemies:
         corrections.append(f"removed {removed_enemies} malformed or unplaceable enemies")
 
+    raw_objects = plan.get("objects", [])
+    if not isinstance(raw_objects, list):
+        raw_objects = []
+        corrections.append("replaced malformed objects value with an empty list")
+    if len(raw_objects) > 128:
+        corrections.append(f"trimmed objects from {len(raw_objects)} to 128 tiles")
+    allowed_object_symbols = object_designer.symbols()
+    objects = []
+    moved_objects = 0
+    removed_objects = 0
+    for index, scene_object in enumerate(raw_objects[:128]):
+        if not isinstance(scene_object, dict):
+            removed_objects += 1
+            continue
+        symbol = str(scene_object.get("symbol") or "")
+        try:
+            raw = (_integer(scene_object.get("x"), f"objects[{index}].x"),
+                   _integer(scene_object.get("y"), f"objects[{index}].y"))
+        except ValueError:
+            removed_objects += 1
+            continue
+        if symbol not in allowed_object_symbols:
+            removed_objects += 1
+            continue
+        desired = (min(width - 1, max(0, raw[0])), min(height - 1, max(0, raw[1])))
+        repaired = _nearest_cell(grid, desired, occupied, require_ground=False)
+        if repaired is None:
+            removed_objects += 1
+            continue
+        occupied.add(repaired)
+        moved_objects += repaired != raw
+        objects.append({"symbol": symbol, "x": repaired[0], "y": repaired[1]})
+    if moved_objects:
+        corrections.append(f"moved {moved_objects} objects to legal unoccupied cells")
+    if removed_objects:
+        corrections.append(f"removed {removed_objects} unknown, malformed, or unplaceable objects")
+
     return {
         "width": width,
         "height": height,
@@ -210,6 +249,7 @@ def _repair_plan(plan: dict) -> tuple[dict, list[str]]:
         "exit": exit_point,
         "solids": solids,
         "enemies": enemies,
+        "objects": objects,
     }, corrections
 
 
@@ -283,13 +323,13 @@ def _repair_reachability(candidate: str) -> tuple[str, list[str]]:
     terrain_edits = 0
     for x, y in path:
         if grid[y][x] not in ".SE":
-            if grid[y][x] in csv_level.ENEMY_DIGITS:
+            if grid[y][x] in csv_level.ENEMY_DIGITS | csv_level.OBJECT_SYMBOLS:
                 displaced.append((grid[y][x], x, y))
             grid[y][x] = "."
             terrain_edits += 1
         below = grid[y + 1][x]
         if below != "X":
-            if below in csv_level.ENEMY_DIGITS:
+            if below in csv_level.ENEMY_DIGITS | csv_level.OBJECT_SYMBOLS:
                 displaced.append((below, x, y + 1))
             grid[y + 1][x] = "X"
             terrain_edits += 1
@@ -299,22 +339,23 @@ def _repair_reachability(candidate: str) -> tuple[str, list[str]]:
     grid[ey][ex] = "E"
 
     relocated = 0
-    for enemy_type, old_x, old_y in displaced:
+    for symbol, old_x, old_y in displaced:
+        requires_ground = symbol in csv_level.ENEMY_DIGITS and symbol != "3"
         legal = [
             (x, y)
             for y in range(rows - 1)
             for x in range(len(grid[0]))
-            if grid[y][x] == "." and grid[y + 1][x] == "X"
+            if grid[y][x] == "." and (not requires_ground or grid[y + 1][x] == "X")
         ]
         if legal:
             x, y = min(legal, key=lambda cell: abs(cell[0] - old_x) + abs(cell[1] - old_y))
-            grid[y][x] = enemy_type
+            grid[y][x] = symbol
             relocated += 1
 
     repaired = "\n".join("".join(row) for row in grid)
     return repaired, [
         f"built a minimum-change connector path with {terrain_edits} terrain edits"
-        + (f" and relocated {relocated} enemies" if relocated else "")
+        + (f" and relocated {relocated} entities/objects" if relocated else "")
     ]
 
 
@@ -332,6 +373,7 @@ def _compile_plan(plan: dict) -> str:
 
     solids = plan.get("solids")
     enemies = plan.get("enemies", [])
+    objects = plan.get("objects", [])
     if not isinstance(solids, list) or not solids:
         raise ValueError("solids must be a non-empty array")
     if len(solids) > 200:
@@ -340,6 +382,10 @@ def _compile_plan(plan: dict) -> str:
         raise ValueError("enemies must be an array")
     if len(enemies) > csv_level.MAX_ENEMIES:
         raise ValueError(f"enemies may contain at most {csv_level.MAX_ENEMIES} entries")
+    if not isinstance(objects, list):
+        raise ValueError("objects must be an array")
+    if len(objects) > 128:
+        raise ValueError("objects may contain at most 128 entries")
 
     grid = [["." for _ in range(width)] for _ in range(height)]
     for index, rect in enumerate(solids):
@@ -382,11 +428,23 @@ def _compile_plan(plan: dict) -> str:
             raise ValueError(f"enemies[{index}].type must be between 1 and 9")
         place(x, y, str(enemy_type), f"enemies[{index}]")
 
+    allowed_object_symbols = object_designer.symbols()
+    for index, scene_object in enumerate(objects):
+        if not isinstance(scene_object, dict):
+            raise ValueError(f"objects[{index}] must be an object")
+        symbol = str(scene_object.get("symbol") or "")
+        if symbol not in allowed_object_symbols:
+            raise ValueError(f"objects[{index}].symbol is not in the object catalog")
+        x = _integer(scene_object.get("x"), f"objects[{index}].x")
+        y = _integer(scene_object.get("y"), f"objects[{index}].y")
+        place(x, y, symbol, f"objects[{index}]")
+
     return "\n".join("".join(row) for row in grid)
 
 
 def design(level_csv: str, analysis: dict, lessons_text: str, library_text: str,
-           player_comment: str = "", roster_text: str = "") -> str:
+           player_comment: str = "", roster_text: str = "",
+           object_roster_text: str = "", return_plan: bool = False):
     """Return a validated new level as comma-CSV text. Raises RuntimeError on repeated failure."""
     grid, _ = csv_level.parse(level_csv)
     compact_current = csv_level.serialize_compact(grid)
@@ -441,6 +499,7 @@ def design(level_csv: str, analysis: dict, lessons_text: str, library_text: str,
         previous_plan = plan
         if not errors:
             new_grid, _ = csv_level.parse(candidate)
-            return csv_level.serialize(new_grid)   # normalize to comma-CSV on disk
+            normalized = csv_level.serialize(new_grid)  # normalize to comma-CSV on disk
+            return (normalized, plan) if return_plan else normalized
         print(f"  designer attempt {attempt + 1} failed validation ({len(errors)} errors), retrying...")
     raise RuntimeError(f"designer produced no valid level after {MAX_ATTEMPTS} attempts: {errors}")

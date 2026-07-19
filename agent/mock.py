@@ -47,7 +47,8 @@ def _bottom_gap_columns(grid) -> list[int]:
 
 
 def design(level_csv: str, analysis: dict, lessons_text: str, library_text: str,
-           player_comment: str = "", roster_text: str = "") -> str:
+           player_comment: str = "", roster_text: str = "",
+           object_roster_text: str = "", return_plan: bool = False):
     grid, _ = csv_level.parse(level_csv)
     rng = random.Random(analysis["diagnosis"])
     rows, cols = len(grid), len(grid[0])
@@ -84,6 +85,8 @@ def design(level_csv: str, analysis: dict, lessons_text: str, library_text: str,
                         g[r][cc] = "X"
 
         if not csv_level.validate(g):
-            return csv_level.serialize(g)
+            result = csv_level.serialize(g)
+            return (result, None) if return_plan else result
 
-    return csv_level.serialize(grid)  # every mutation broke the level; keep it unchanged
+    result = csv_level.serialize(grid)  # every mutation broke the level; keep it unchanged
+    return (result, None) if return_plan else result

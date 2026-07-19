@@ -1,0 +1,31 @@
+{
+  "round": 12,
+  "level": "level_011",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 2,
+      "completed": false,
+      "deaths": 3,
+      "fall_locations": [
+        {
+          "x": 2224,
+          "y": 325
+        },
+        {
+          "x": 2217,
+          "y": 346
+        },
+        {
+          "x": 2722,
+          "y": 228
+        }
+      ],
+      "time_seconds": 693.2,
+      "enemies_killed": 5,
+      "hits_taken": 9,
+      "objects_collected": 0,
+      "comment": "needs some ladders"
+    }
+  ]
+}

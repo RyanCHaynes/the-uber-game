@@ -28,6 +28,10 @@ Respond with ONLY a JSON object in this exact shape:
 Guidelines:
 - Ground everything in evidence: fall locations, completion, and time are stronger
   signals than the comment alone — but take the comment seriously, it's a real human.
+- player_trace is sampled every 750 ms in world-pixel coordinates. Use its timestamped
+  path to identify stalls, backtracking, repeated failed approaches, skipped regions,
+  traversal speed changes, and where the player disengaged. Do not treat dense nearby
+  samples as separate failures; they usually mean the player paused or was blocked.
 - Falls cluster where the level is unfair or too demanding; zero falls plus a fast
   time plus a low rating means the level is under-stimulating.
 - Lessons should generalize ("wide pits right after spawn frustrate players"),

@@ -10,7 +10,10 @@ strings meant to be fed back to the LLM designer on retry.
 
 TILE = 32
 ENEMY_DIGITS = set("123456789")  # cell N spawns enemy type N from data/enemies.json
-ALLOWED = {".", "X", "S", "E"} | ENEMY_DIGITS
+# Uppercase symbols are reserved for safe, data-driven scene objects. S, E and X
+# remain structural level markers; object_designer assigns the remaining letters.
+OBJECT_SYMBOLS = set("ABCDEFGHIJKLMNOPQRSTUVWYZ") - {"S", "E", "X"}
+ALLOWED = {".", "X", "S", "E"} | ENEMY_DIGITS | OBJECT_SYMBOLS
 MAX_ENEMIES = 24
 
 # Player jump reach in tiles — must stay in sync with the physics constants in
@@ -39,7 +42,10 @@ def parse(text: str) -> tuple[list[list[str]], list[str]]:
         row.extend(["."] * (width - len(row)))
     bad = sorted({c for row in grid for c in row if c not in ALLOWED})
     if bad:
-        errors.append(f"invalid cell values {bad} — only '.', 'X', 'S', 'E', and enemy digits 1-9 are allowed")
+        errors.append(
+            f"invalid cell values {bad} — use '.', 'X', 'S', 'E', enemy digits 1-9, "
+            "or registered uppercase object symbols"
+        )
     return grid, errors
 
 
@@ -110,19 +116,29 @@ def validate(grid: list[list[str]], min_cols: int | None = None) -> list[str]:
     if errors:
         return errors
 
-    # Reachability: BFS over standable cells with coarse jump rules.
+    # Reachability: BFS over standable cells and climbable ladder cells with
+    # coarse jump rules. This mirrors the browser's data-driven ladder physics.
     # From a standable cell you can reach standable cells at most MAX_JUMP_DX
     # columns away, rising at most MAX_JUMP_UP rows (drops are unlimited).
     # Standables are indexed by column so long levels stay fast to check.
     by_col: dict[int, list[int]] = {}
     for r in range(rows):
         for c in range(cols):
-            if _standable(grid, c, r):
+            if _standable(grid, c, r) or grid[r][c] == "L":
                 by_col.setdefault(c, []).append(r)
     seen = {landing}
     frontier = [landing]
     while frontier:
         c, r = frontier.pop()
+        # A ladder permits one-tile vertical movement in either direction. It
+        # is enough for either endpoint to be ladder so the player can mount or
+        # step off the top/bottom of a contiguous ladder run.
+        for r2 in (r - 1, r + 1):
+            if (0 <= r2 < rows and (c, r2) not in seen
+                    and (grid[r][c] == "L" or grid[r2][c] == "L")
+                    and (_standable(grid, c, r2) or grid[r2][c] == "L")):
+                seen.add((c, r2))
+                frontier.append((c, r2))
         for c2 in range(c - MAX_JUMP_DX, c + MAX_JUMP_DX + 1):
             for r2 in by_col.get(c2, ()):
                 if (c2, r2) not in seen and (r - r2) <= MAX_JUMP_UP:

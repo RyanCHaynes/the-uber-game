@@ -1,0 +1,18 @@
+{
+  "round": 11,
+  "level": "level_010",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 2,
+      "completed": false,
+      "deaths": 0,
+      "fall_locations": [],
+      "time_seconds": 50.4,
+      "enemies_killed": 2,
+      "hits_taken": 1,
+      "objects_collected": 0,
+      "comment": "There needs to be some ladders in the level to help with the long scaling things!"
+    }
+  ]
+}

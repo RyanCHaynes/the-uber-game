@@ -1,0 +1,22 @@
+{
+  "round": 10,
+  "level": "level_009",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 1,
+      "completed": false,
+      "deaths": 1,
+      "fall_locations": [
+        {
+          "x": 1312,
+          "y": 612
+        }
+      ],
+      "time_seconds": 104.8,
+      "enemies_killed": 3,
+      "hits_taken": 3,
+      "comment": "Theres still a lot of 3 block jumps, make more 2 block jumps"
+    }
+  ]
+}
