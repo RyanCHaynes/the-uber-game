@@ -1,0 +1,25 @@
+{
+  "note": "Reduced Wasp projectile speed and Iron Moth seeker turn rate to ease projectile density in long horizontal corridors; lowered Missile Patroller missile turn rate and homing speed for fairer dodging on flat terrain.",
+  "ops": [
+    [
+      "mul",
+      "wasp.attack.speed",
+      0.85
+    ],
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.turnRate",
+      0.8
+    ],
+    [
+      "mul",
+      "missile_patroller.entity.homing_missile.motion.turnRate",
+      0.75
+    ],
+    [
+      "mul",
+      "missile_patroller.entity.homing_missile.motion.speed",
+      0.85
+    ]
+  ]
+}

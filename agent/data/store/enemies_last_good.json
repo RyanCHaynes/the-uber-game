@@ -119,15 +119,15 @@
     ],
     "movement": {
       "type": "flyer",
-      "speed": 63.25,
+      "speed": 53.76,
       "range": 110,
-      "bob": 26.4,
+      "bob": 21.12,
       "bob_hz": 0.9
     },
     "attack": {
       "type": "shoot",
       "cooldown_s": 1.8,
-      "speed": 5.17,
+      "speed": 4.39,
       "damage": 1,
       "range": 380,
       "gravity": 0,
@@ -176,8 +176,8 @@
         "motion": {
           "type": "home",
           "target": "player",
-          "speed": 2.55,
-          "turnRate": 100.8
+          "speed": 1.73,
+          "turnRate": 51.41
         },
         "contact": {
           "damage": 1,
@@ -855,5 +855,275 @@
       }
     },
     "desc": "EntitySpec enemy generated from round 33"
+  },
+  {
+    "v": 1,
+    "id": "missile_patroller",
+    "name": "Missile Patroller",
+    "kind": "enemy",
+    "defs": {
+      "homing_missile": {
+        "id": "homing_missile",
+        "tags": [
+          "projectile",
+          "enemy"
+        ],
+        "visual": {
+          "shape": "capsule",
+          "size": [
+            0.5,
+            0.25
+          ],
+          "tint": "#ff6600"
+        },
+        "body": {
+          "shape": "box",
+          "size": [
+            0.45,
+            0.2
+          ],
+          "gravity": 0
+        },
+        "motion": {
+          "type": "home",
+          "speed": 4.08,
+          "turnRate": 94.5
+        },
+        "contact": {
+          "damage": 2,
+          "destroySelf": true,
+          "knockback": 2
+        },
+        "life": {
+          "ttl": 5
+        }
+      }
+    },
+    "root": {
+      "id": "missile_patroller",
+      "tags": [
+        "enemy",
+        "ground"
+      ],
+      "visual": {
+        "shape": "box",
+        "size": [
+          1.2,
+          1
+        ],
+        "tint": "#884422"
+      },
+      "body": {
+        "shape": "box",
+        "size": [
+          1.1,
+          0.9
+        ],
+        "gravity": 1
+      },
+      "health": {
+        "max": 12
+      },
+      "contact": {
+        "damage": 1,
+        "knockback": 3
+      },
+      "motion": {
+        "type": "patrol",
+        "speed": 2,
+        "distance": 4
+      },
+      "emitters": {
+        "launcher": {
+          "at": [
+            0.6,
+            -0.2
+          ],
+          "ref": "homing_missile",
+          "pattern": "aimed"
+        }
+      }
+    },
+    "brain": {
+      "start": "patrol_fire",
+      "states": {
+        "patrol_fire": {
+          "tracks": [
+            {
+              "id": "attack_loop",
+              "loop": true,
+              "steps": [
+                {
+                  "telegraph": {
+                    "part": "missile_patroller",
+                    "time": 0.6
+                  }
+                },
+                {
+                  "fire": {
+                    "emitter": "launcher",
+                    "count": 1
+                  }
+                },
+                {
+                  "wait": 2.5
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "desc": "EntitySpec enemy saved from workshop"
+  },
+  {
+    "v": 1,
+    "id": "pit_rescue_drone",
+    "name": "Rescue Drone",
+    "kind": "enemy",
+    "defs": {
+      "rescue_platform": {
+        "id": "rescue_platform",
+        "tags": [
+          "platform",
+          "rescue"
+        ],
+        "visual": {
+          "shape": "box",
+          "size": [
+            2.0,
+            0.3
+          ],
+          "tint": "#4ec9b0"
+        },
+        "body": {
+          "shape": "box",
+          "size": [
+            2.0,
+            0.3
+          ],
+          "gravity": 0
+        },
+        "motion": {
+          "type": "static"
+        },
+        "life": {
+          "ttl": 8
+        }
+      }
+    },
+    "root": {
+      "id": "pit_rescue_drone",
+      "tags": [
+        "enemy",
+        "helper"
+      ],
+      "visual": {
+        "shape": "capsule",
+        "size": [
+          0.8,
+          0.6
+        ],
+        "tint": "#4ec9b0"
+      },
+      "body": {
+        "shape": "box",
+        "size": [
+          0.7,
+          0.5
+        ],
+        "gravity": 0
+      },
+      "health": {
+        "max": 1
+      },
+      "motion": {
+        "type": "hover",
+        "speed": 2,
+        "amplitude": 1.5,
+        "frequency": 0.5
+      },
+      "emitters": {
+        "deploy": {
+          "at": [
+            0,
+            0.8
+          ],
+          "ref": "rescue_platform",
+          "pattern": "single"
+        }
+      }
+    },
+    "brain": {
+      "start": "patrol",
+      "states": {
+        "patrol": {
+          "tracks": [
+            {
+              "id": "hover_patrol",
+              "loop": true,
+              "steps": [
+                {
+                  "wait": 3
+                },
+                {
+                  "telegraph": {
+                    "part": "pit_rescue_drone",
+                    "time": 0.5
+                  }
+                },
+                {
+                  "fire": {
+                    "emitter": "deploy",
+                    "count": 1
+                  }
+                },
+                {
+                  "wait": 5
+                }
+              ]
+            }
+          ],
+          "transitions": [
+            {
+              "when": "playerBelow && distance(self, player) < 6",
+              "to": "rescue"
+            }
+          ]
+        },
+        "rescue": {
+          "tracks": [
+            {
+              "id": "rapid_deploy",
+              "loop": true,
+              "steps": [
+                {
+                  "telegraph": {
+                    "part": "pit_rescue_drone",
+                    "time": 0.3
+                  }
+                },
+                {
+                  "fire": {
+                    "emitter": "deploy",
+                    "count": 1
+                  }
+                },
+                {
+                  "wait": 2
+                }
+              ]
+            }
+          ],
+          "transitions": [
+            {
+              "when": "!playerBelow || distance(self, player) > 8",
+              "to": "patrol"
+            }
+          ]
+        }
+      }
+    },
+    "desc": "EntitySpec enemy generated from round 34"
   }
 ]

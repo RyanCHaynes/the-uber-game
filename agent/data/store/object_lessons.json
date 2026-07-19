@@ -85,14 +85,15 @@
     ],
     "outcome": "Avoids repeating mechanically invalid placement patches.",
     "confidence": 0.98,
-    "seen_count": 1,
+    "seen_count": 2,
     "evidence_rounds": [
-      26
+      26,
+      36
     ],
     "role": "object_designer",
     "category": "validation_failure",
     "failure_type": "other_validation",
-    "last_error": "selected ladders exceed the 128-tile maximum",
+    "last_error": "the ladder-free level has prevalidated L candidates; select at least one ladder ID",
     "last_attempt": 1,
     "source": "python_validator"
   }

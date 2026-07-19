@@ -1,0 +1,15 @@
+{
+  "note": "Reduced Iron Moth seeker missile speed and turn rate to make the boss finale more readable and fair, addressing the player's death near the exit and request for a dramatic but beatable ending.",
+  "ops": [
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.speed",
+      0.8
+    ],
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.turnRate",
+      0.85
+    ]
+  ]
+}

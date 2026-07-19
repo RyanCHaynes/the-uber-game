@@ -1,0 +1,13 @@
+{
+  "added": {
+    "kind": "add_entityspec",
+    "entity_id": "pit_rescue_drone",
+    "name": "Rescue Drone",
+    "validation": {
+      "ok": true,
+      "errors": [],
+      "warnings": []
+    }
+  },
+  "patch": null
+}
