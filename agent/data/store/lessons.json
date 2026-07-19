@@ -172,7 +172,11 @@
         "success": false
       },
       {
-        "design_round": 28
+        "design_round": 28,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": [
@@ -373,7 +377,11 @@
         "success": false
       },
       {
-        "design_round": 28
+        "design_round": 28,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": [
@@ -551,7 +559,11 @@
         "success": false
       },
       {
-        "design_round": 28
+        "design_round": 28,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": []
@@ -670,7 +682,11 @@
         "success": false
       },
       {
-        "design_round": 28
+        "design_round": 28,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": []
@@ -768,7 +784,11 @@
         "success": false
       },
       {
-        "design_round": 28
+        "design_round": 28,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": []
@@ -915,7 +935,11 @@
         "success": false
       },
       {
-        "design_round": 28
+        "design_round": 28,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": [
@@ -1079,7 +1103,11 @@
         "success": false
       },
       {
-        "design_round": 28
+        "design_round": 28,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": [
@@ -1241,7 +1269,11 @@
         "success": false
       },
       {
-        "design_round": 28
+        "design_round": 28,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": [
@@ -1448,7 +1480,11 @@
         "success": false
       },
       {
-        "design_round": 28
+        "design_round": 28,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": []
@@ -1574,7 +1610,11 @@
         "success": false
       },
       {
-        "design_round": 28
+        "design_round": 28,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": []
@@ -1747,7 +1787,11 @@
         "success": false
       },
       {
-        "design_round": 28
+        "design_round": 28,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": [
@@ -1821,7 +1865,11 @@
         "success": false
       },
       {
-        "design_round": 28
+        "design_round": 28,
+        "rating": 1,
+        "completed": false,
+        "deaths": 1,
+        "success": false
       }
     ],
     "merged_from": [

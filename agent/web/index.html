@@ -118,6 +118,9 @@
         <h2 style="margin:0">Playtest</h2>
         <span id="ptName" class="dim"></span>
         <span class="spacer"></span>
+        <label id="padToggle" title="Use a connected gamepad — D-pad move, LT jump, right stick aim, RT fire" style="display:flex;align-items:center;gap:4px;cursor:pointer">
+          <input type="checkbox" id="padEnabled"> 🎮 <span id="padState" class="dim">off</span>
+        </label>
         <button id="endRun">🏳 End run &amp; rate</button>
         <button id="ptRestart" title="Restart this level and clear the current run's telemetry">↻ Restart level</button>
       </div>
@@ -540,6 +543,7 @@ let objectCatalog = [], objectBySymbol = {}, collectedObjects = new Set(), objec
 let mouse = { x: 0, y: 0 };
 let hp = MAX_HP, kills = 0, hitsTaken = 0, invulnUntil = 0, lastShotAt = 0;
 let cam = { x: 0, y: 0 };
+let padEnabled = false, aimVec = { x: 1, y: 0 };   // gamepad opt-in + last aim direction
 
 function spawnEnemies() {
   entityRootCount = 0;
@@ -779,36 +783,81 @@ cv2.addEventListener("mousemove", e => {
   mouse.x = (e.clientX - rect.left) * (cv2.width / rect.width);
   mouse.y = (e.clientY - rect.top) * (cv2.height / rect.height);
 });
-cv2.addEventListener("mousedown", e => {
-  cv2.focus();
-  if (e.button !== 0 || phase !== "playing" || !player) return;
+// Shared fire routine: mouse click and gamepad right trigger both call this.
+function firePlayerShot(dirX, dirY) {
+  if (phase !== "playing" || !player) return;
   const now = performance.now();
   if (now - lastShotAt < SHOT_COOLDOWN) return;
   lastShotAt = now;
   const px = player.x + player.w / 2, py = player.y + player.h / 2;
-  const wx = mouse.x + cam.x, wy = mouse.y + cam.y;
-  const dx = wx - px, dy = wy - py, d = Math.hypot(dx, dy) || 1;
+  const d = Math.hypot(dirX, dirY) || 1;
   playerShots.push({ x: px, y: py,
-                     vx: dx / d * SHOT_SPEED, vy: dy / d * SHOT_SPEED - SHOT_LOFT });
+                     vx: dirX / d * SHOT_SPEED, vy: dirY / d * SHOT_SPEED - SHOT_LOFT });
+}
+cv2.addEventListener("mousedown", e => {
+  cv2.focus();
+  if (e.button !== 0 || phase !== "playing" || !player) return;
+  const px = player.x + player.w / 2, py = player.y + player.h / 2;
+  firePlayerShot(mouse.x + cam.x - px, mouse.y + cam.y - py);
 });
+
+// --- gamepad support (opt-in via the 🎮 toggle) ---
+// Standard-mapping indices: D-pad 12/13/14/15, LT 6, RT 7, right stick axes 2/3.
+const PAD_DEADZONE = 0.35;
+function pollGamepad() {
+  const intent = { left: false, right: false, up: false, down: false, jump: false, fire: false };
+  if (!padEnabled || !navigator.getGamepads) return intent;
+  const gp = [...navigator.getGamepads()].find(p => p);
+  if (!gp) return intent;
+  const down = i => !!gp.buttons[i] && (gp.buttons[i].pressed || gp.buttons[i].value > 0.4);
+  const lx = gp.axes[0] || 0, ly = gp.axes[1] || 0;  // left stick -> move (with the D-pad)
+  intent.left  = down(14) || lx < -PAD_DEADZONE;     // D-pad left  or left stick
+  intent.right = down(15) || lx >  PAD_DEADZONE;     // D-pad right or left stick
+  intent.up    = down(12) || ly < -PAD_DEADZONE;     // up / down = ladder climb
+  intent.down  = down(13) || ly >  PAD_DEADZONE;
+  intent.jump = down(6);                             // left trigger
+  intent.fire = down(7);                             // right trigger
+  const ax = gp.axes[2] || 0, ay = gp.axes[3] || 0;  // right stick -> aim
+  // Only the right stick changes aim; when it is idle the last aim is held.
+  if (Math.hypot(ax, ay) > PAD_DEADZONE) aimVec = { x: ax, y: ay };
+  return intent;
+}
+function updatePadState() {
+  const el = $("padState");
+  if (!padEnabled) { el.textContent = "off"; el.className = "dim"; return; }
+  const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : [];
+  el.textContent = pads.length ? "ready" : "press a button…";
+  el.className = pads.length ? "" : "dim";
+}
+$("padEnabled").addEventListener("change", () => {
+  padEnabled = $("padEnabled").checked;
+  cv2.focus();
+  updatePadState();
+});
+window.addEventListener("gamepadconnected", updatePadState);
+window.addEventListener("gamepaddisconnected", updatePadState);
 
 function ptStep() {
   if (!player || phase !== "playing") return;
   // 11.76 is sqrt(1.5) times the old 9.6 impulse, producing 50% more
   // jump height under the unchanged gravity rather than 125% more height.
   const SPEED = 3.2, JUMP = 11.76, GRAVITY = 0.5, MAX_FALL = 12;
-  player.vx = (keys.ArrowLeft || keys.KeyA ? -SPEED : 0) + (keys.ArrowRight || keys.KeyD ? SPEED : 0);
+  const pad = pollGamepad();
+  const jumpHeld = keys.Space || pad.jump;   // space / left trigger: also "jump off ladder"
+  player.vx = (keys.ArrowLeft || keys.KeyA || pad.left ? -SPEED : 0)
+            + (keys.ArrowRight || keys.KeyD || pad.right ? SPEED : 0);
   const onLadder = touchingObjects().find(hit => hit.def.behavior === "ladder");
-  if (onLadder && !keys.Space) {
+  if (onLadder && !jumpHeld) {
     const climbSpeed = +(onLadder.def.params?.climb_speed || 3.2);
-    player.vy = (keys.ArrowUp || keys.KeyW ? -climbSpeed : 0)
-              + (keys.ArrowDown || keys.KeyS ? climbSpeed : 0);
+    player.vy = (keys.ArrowUp || keys.KeyW || pad.up ? -climbSpeed : 0)
+              + (keys.ArrowDown || keys.KeyS || pad.down ? climbSpeed : 0);
     player.grounded = true;
-  } else if ((keys.ArrowUp || keys.Space || keys.KeyW) && player.grounded) {
+  } else if ((keys.ArrowUp || keys.Space || keys.KeyW || pad.jump) && player.grounded) {
     player.vy = -JUMP; player.grounded = false;
   } else {
     player.vy = Math.min(player.vy + GRAVITY, MAX_FALL);
   }
+  if (pad.fire) firePlayerShot(aimVec.x, aimVec.y);
 
   // horizontal move + collide
   player.x += player.vx;
@@ -1067,15 +1116,26 @@ function ptDraw() {
   // aim: trajectory preview + crosshair (world space)
   if (phase === "playing" && player) {
     const px = player.x + player.w / 2, py = player.y + player.h / 2;
-    const wx = mouse.x + camX, wy = mouse.y + camY;
-    const dx = wx - px, dy = wy - py, d = Math.hypot(dx, dy) || 1;
+    // Aim direction: gamepad uses the held right-stick vector, mouse uses the cursor.
+    let dx, dy;
+    if (padEnabled) {
+      dx = aimVec.x; dy = aimVec.y;
+    } else {
+      dx = (mouse.x + camX) - px; dy = (mouse.y + camY) - py;
+    }
+    const d = Math.hypot(dx, dy) || 1;
     let sx = px, sy = py, svx = dx / d * SHOT_SPEED, svy = dy / d * SHOT_SPEED - SHOT_LOFT;
+    let endX = px, endY = py;   // last free-space point of the arc
     ctx2.fillStyle = "rgba(123,216,143,.35)";
     for (let i = 0; i < 16; i++) {
       svy += SHOT_G; sx += svx; sy += svy;
       if (isSolid(Math.floor(sx / TILE), Math.floor(sy / TILE))) break;
+      endX = sx; endY = sy;
       if (i % 2) { ctx2.beginPath(); ctx2.arc(sx, sy, 2.5, 0, 7); ctx2.fill(); }
     }
+    // Mouse pins the reticle to the cursor; gamepad rides the end of the arc.
+    const wx = padEnabled ? endX : mouse.x + camX;
+    const wy = padEnabled ? endY : mouse.y + camY;
     ctx2.strokeStyle = "#7bd88f"; ctx2.lineWidth = 1.5;
     ctx2.beginPath(); ctx2.arc(wx, wy, 7, 0, 7); ctx2.stroke();
     ctx2.beginPath();
@@ -1134,7 +1194,8 @@ function ptFrame() {
     $("ptStatus").textContent =
       `⏱ ${((now - startedAt) / 1000).toFixed(1)}s · falls: ${falls} · ` +
       `trace: ${playerTrace.length} · ${fps.toFixed(0)} fps · ` +
-      "← → / A D move · ↑↓ / W S climb · space jump · R restart";
+      (padEnabled ? "🎮 D-pad move · ↕ D-pad climb · LT jump · R-stick aim · RT fire"
+                  : "← → / A D move · ↑↓ / W S climb · space jump · R restart");
   }
   requestAnimationFrame(ptFrame);
 }
