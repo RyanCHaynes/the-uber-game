@@ -33,13 +33,13 @@
     ],
     "movement": {
       "type": "patrol",
-      "speed": 43.47,
+      "speed": 54.34,
       "range": 96
     },
     "attack": {
       "type": "none"
     },
-    "contact_damage": 1
+    "contact_damage": 0
   },
   {
     "id": "turret",
@@ -76,7 +76,7 @@
     },
     "attack": {
       "type": "lob",
-      "cooldown_s": 2.04,
+      "cooldown_s": 2.29,
       "speed": 5.52,
       "damage": 1,
       "range": 357,
@@ -119,21 +119,21 @@
     ],
     "movement": {
       "type": "flyer",
-      "speed": 53.76,
+      "speed": 64.51,
       "range": 99,
-      "bob": 17.55,
+      "bob": 20.18,
       "bob_hz": 0.9
     },
     "attack": {
       "type": "shoot",
-      "cooldown_s": 2.29,
+      "cooldown_s": 2.41,
       "speed": 3.91,
       "damage": 1,
       "range": 380,
       "gravity": 0,
       "color": "#c792ea"
     },
-    "contact_damage": 2
+    "contact_damage": 1
   },
   {
     "v": 1,
@@ -176,8 +176,8 @@
         "motion": {
           "type": "home",
           "target": "player",
-          "speed": 1.52,
-          "turnRate": 33.41
+          "speed": 1.98,
+          "turnRate": 40.09
         },
         "contact": {
           "damage": 1,
@@ -888,8 +888,8 @@
         },
         "motion": {
           "type": "home",
-          "speed": 4.08,
-          "turnRate": 56.23
+          "speed": 4.69,
+          "turnRate": 35.15
         },
         "contact": {
           "damage": 2,
@@ -1165,8 +1165,8 @@
         },
         "motion": {
           "type": "chase",
-          "speed": 5,
-          "range": 7
+          "speed": 6,
+          "range": 8.75
         },
         "contact": {
           "damage": 1,

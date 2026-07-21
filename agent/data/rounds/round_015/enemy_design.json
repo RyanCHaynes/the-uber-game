@@ -1,0 +1,40 @@
+{
+  "note": "Increased enemy threat to address 'wayy too easy' feedback: faster grub patrols, quicker turret lobs, more aggressive wasp firing and movement, and faster iron_moth seeker missiles with tighter turning.",
+  "ops": [
+    [
+      "mul",
+      "grub.movement.speed",
+      1.25
+    ],
+    [
+      "mul",
+      "turret.attack.cooldown_s",
+      0.75
+    ],
+    [
+      "mul",
+      "wasp.attack.cooldown_s",
+      0.7
+    ],
+    [
+      "mul",
+      "wasp.movement.speed",
+      1.2
+    ],
+    [
+      "mul",
+      "wasp.movement.bob",
+      1.15
+    ],
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.speed",
+      1.3
+    ],
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.turnRate",
+      1.2
+    ]
+  ]
+}

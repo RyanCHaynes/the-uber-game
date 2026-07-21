@@ -1,0 +1,7 @@
+{
+  "diagnosis": "The player completed the level in 220 seconds with zero deaths and zero falls, but rated it 2/5 and explicitly called it 'wayy too eays'. The trace shows long horizontal stretches (e.g., 758-822px at y=306 for ~15 seconds, 1359px at y=434-562 for ~30 seconds) with minimal vertical variation and only 5 enemies killed across the entire run. The level's structure is dominated by flat corridors and repetitive ladder climbs without meaningful combat pressure or path choices, confirming the low rating stems from under-stimulation rather than frustration.",
+  "lessons": [],
+  "fun_score": 2,
+  "save_level": false,
+  "save_reason": ""
+}

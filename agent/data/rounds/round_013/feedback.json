@@ -1,0 +1,40 @@
+{
+  "round": 13,
+  "level": "level_012",
+  "players": [
+    {
+      "player": "playtester",
+      "rating": 1,
+      "completed": false,
+      "deaths": 0,
+      "fall_locations": [],
+      "time_seconds": 38.7,
+      "enemies_killed": 0,
+      "hits_taken": 0,
+      "objects_collected": 0,
+      "player_trace": [
+        {
+          "x": 208.0,
+          "y": 752.0,
+          "t_ms": 1
+        },
+        {
+          "x": 208.0,
+          "y": 754.0,
+          "t_ms": 103
+        },
+        {
+          "x": 208.0,
+          "y": 754.0,
+          "t_ms": 853
+        },
+        {
+          "x": 208.0,
+          "y": 754.0,
+          "t_ms": 1603
+        }
+      ],
+      "comment": "I like that this level is fortess-like. But you put the player spawn inside a tiny box that the player cannot get out of. The player cannot beat the level. Very bad!"
+    }
+  ]
+}

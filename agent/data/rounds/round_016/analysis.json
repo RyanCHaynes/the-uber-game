@@ -1,0 +1,20 @@
+{
+  "diagnosis": "The player spawned at (80, 880) on a solid floor with empty space above, but remained completely stationary for ~55 seconds before moving right along the bottom corridor. They traversed horizontally to ~x=1590, backtracked to ~x=1225, then stalled at x=1308 for the remaining ~20 seconds. No vertical movement occurred despite the level's multi-tier structure with ladders (marked by numbers 1-5) and an exit at the top right. The player never reached any ladder, enemy, or the exit, rating the level 1/5 and stating it 'cannot be beaten.' The spawn corridor is a long, flat hallway with no enemies, hazards, or vertical connections \u2014 the first ladder appears hundreds of pixels to the right, and the critical path upward is not visible or signposted from spawn.",
+  "lessons": [
+    {
+      "lesson": "A spawn corridor that extends horizontally without any vertical connection, enemy, hazard, or visible path upward within the first 10\u201315 seconds of movement causes players to perceive the level as unbeatable or empty, even if vertical content exists further ahead.",
+      "category": "pacing",
+      "conditions": [
+        "spawn on a long horizontal corridor with no vertical branches",
+        "first ladder or climb point > 500px from spawn",
+        "no enemies, hazards, or signage in initial corridor",
+        "exit or goal located in upper tiers not visible from spawn"
+      ],
+      "outcome": "player moves horizontally but never attempts vertical traversal, stalls, and quits believing the level is broken or empty",
+      "confidence": 0.92
+    }
+  ],
+  "fun_score": 1,
+  "save_level": false,
+  "save_reason": ""
+}

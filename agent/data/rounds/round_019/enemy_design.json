@@ -1,0 +1,15 @@
+{
+  "note": "Reduced Iron Moth seeker missile turn rate and speed to make homing projectiles more dodgeable during boss fight, addressing combat deaths near exit area.",
+  "ops": [
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.turnRate",
+      0.7
+    ],
+    [
+      "mul",
+      "iron_moth.entity.seeker.motion.speed",
+      0.85
+    ]
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "diagnosis": "The player spawned at (80, 880) inside a 1-tile-wide vertical shaft bounded by solid tiles on all four sides (row 24 has 'H' at x=224 and 'X' at x=256; row 25-26 are solid 'X' floors). The trace shows zero movement for 134 seconds \u2014 the player could not move, jump, or interact. This is a hard lock at spawn, confirming the level is unplayable.",
+  "lessons": [],
+  "fun_score": 1,
+  "save_level": false,
+  "save_reason": ""
+}

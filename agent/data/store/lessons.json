@@ -1,9 +1,15 @@
 [
   {
     "id": "lesson_0001",
-    "lesson": "Levels that lack early interaction (enemies, hazards, or meaningful choices) cause player disengagement and low ratings even when the layout is otherwise competent and completable.",
+    "lesson": "Levels that open with extended safe traversal (horizontal corridors or linear platforming) lacking enemies, hazards, vertical connections, or meaningful choices within the first 10\u201315 seconds cause players to disengage, perceive the level as empty or too easy, and quit before gameplay meaningfully begins, even when competent content exists further ahead.",
     "category": "pacing",
     "conditions": [
+      "spawn area has no enemies, hazards, or path choices for 10+ seconds",
+      "linear traversal dominates early level",
+      "first ladder or climb point > 500px from spawn",
+      "long horizontal spans >2000px with sparse verticality",
+      "enemy density <0.01 per tile in opening segment",
+      "no vertical branches, signage, or meaningful choices early",
       "no enemies or hazards in opening segment",
       "no branching paths or meaningful choices early",
       "linear traversal dominates first 10+ seconds",
@@ -11,19 +17,26 @@
       "no enemies present",
       "no environmental hazards",
       "linear platforming only",
-      "spawn area has no enemies, hazards, or path choices for 10+ seconds",
-      "linear traversal dominates early level"
+      "long horizontal spans >2000px",
+      "enemy density <0.01 per tile",
+      "vertical variation limited to isolated platforms",
+      "completion time >240s with <5 deaths",
+      "spawn on a long horizontal corridor with no vertical branches",
+      "no enemies, hazards, or signage in initial corridor",
+      "exit or goal located in upper tiers not visible from spawn"
     ],
-    "outcome": "player completes level but rates experience as boring/too easy and disengages before gameplay meaningfully begins",
-    "confidence": 0.9,
+    "outcome": "player completes level or stalls but rates experience as boring/too easy/empty and disengages before gameplay meaningfully begins",
+    "confidence": 0.92,
     "source_round": 1,
     "evidence_rounds": [
       1,
-      7
+      7,
+      8,
+      16
     ],
-    "seen_count": 2,
-    "applied_count": 11,
-    "successful_applications": 3,
+    "seen_count": 4,
+    "applied_count": 20,
+    "successful_applications": 5,
     "applications": [
       {
         "design_round": 1,
@@ -101,12 +114,79 @@
         "completed": true,
         "deaths": 0,
         "success": true
+      },
+      {
+        "design_round": 12,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 13,
+        "rating": 1,
+        "completed": false,
+        "deaths": 6,
+        "success": false
+      },
+      {
+        "design_round": 14,
+        "rating": 2,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 15,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 16,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 5,
+        "completed": true,
+        "deaths": 3,
+        "success": true
+      },
+      {
+        "design_round": 18,
+        "rating": 4,
+        "completed": true,
+        "deaths": 6,
+        "success": true
+      },
+      {
+        "design_round": 19,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 20
       }
     ],
     "merged_from": [
       {
         "id": "lesson_0009",
         "lesson": "A level that opens with a long safe corridor and no immediate interaction (enemies, hazards, or branching) causes players to disengage before gameplay begins."
+      },
+      {
+        "id": "lesson_0009",
+        "lesson": "Extended horizontal corridors with sparse verticality and minimal enemy pressure create a 'hallway' feel that players complete but rate as trivial, even with a high fun score, because the challenge never escalates."
+      },
+      {
+        "id": "lesson_0015",
+        "lesson": "A spawn corridor that extends horizontally without any vertical connection, enemy, hazard, or visible path upward within the first 10\u201315 seconds of movement causes players to perceive the level as unbeatable or empty, even if vertical content exists further ahead."
       }
     ]
   },
@@ -138,8 +218,8 @@
       10
     ],
     "seen_count": 3,
-    "applied_count": 10,
-    "successful_applications": 3,
+    "applied_count": 19,
+    "successful_applications": 5,
     "applications": [
       {
         "design_round": 2,
@@ -210,6 +290,65 @@
         "completed": true,
         "deaths": 0,
         "success": true
+      },
+      {
+        "design_round": 12,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 13,
+        "rating": 1,
+        "completed": false,
+        "deaths": 6,
+        "success": false
+      },
+      {
+        "design_round": 14,
+        "rating": 2,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 15,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 16,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 5,
+        "completed": true,
+        "deaths": 3,
+        "success": true
+      },
+      {
+        "design_round": 18,
+        "rating": 4,
+        "completed": true,
+        "deaths": 6,
+        "success": true
+      },
+      {
+        "design_round": 19,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 20
       }
     ],
     "merged_from": [
@@ -239,8 +378,8 @@
       2
     ],
     "seen_count": 1,
-    "applied_count": 10,
-    "successful_applications": 3,
+    "applied_count": 19,
+    "successful_applications": 5,
     "applications": [
       {
         "design_round": 2,
@@ -311,6 +450,65 @@
         "completed": true,
         "deaths": 0,
         "success": true
+      },
+      {
+        "design_round": 12,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 13,
+        "rating": 1,
+        "completed": false,
+        "deaths": 6,
+        "success": false
+      },
+      {
+        "design_round": 14,
+        "rating": 2,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 15,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 16,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 5,
+        "completed": true,
+        "deaths": 3,
+        "success": true
+      },
+      {
+        "design_round": 18,
+        "rating": 4,
+        "completed": true,
+        "deaths": 6,
+        "success": true
+      },
+      {
+        "design_round": 19,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 20
       }
     ],
     "merged_from": []
@@ -331,8 +529,8 @@
       4
     ],
     "seen_count": 1,
-    "applied_count": 8,
-    "successful_applications": 3,
+    "applied_count": 17,
+    "successful_applications": 5,
     "applications": [
       {
         "design_round": 4,
@@ -389,28 +587,91 @@
         "completed": true,
         "deaths": 0,
         "success": true
+      },
+      {
+        "design_round": 12,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 13,
+        "rating": 1,
+        "completed": false,
+        "deaths": 6,
+        "success": false
+      },
+      {
+        "design_round": 14,
+        "rating": 2,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 15,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 16,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 5,
+        "completed": true,
+        "deaths": 3,
+        "success": true
+      },
+      {
+        "design_round": 18,
+        "rating": 4,
+        "completed": true,
+        "deaths": 6,
+        "success": true
+      },
+      {
+        "design_round": 19,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 20
       }
     ],
     "merged_from": []
   },
   {
     "id": "lesson_0006",
-    "lesson": "When a level opens with a dense cluster of enemies right at the spawn corridor, players who lack offensive upgrades or clear dodge space take repeated unavoidable damage before they can even orient themselves.",
+    "lesson": "A spawn corridor that is narrow (\u22644 tiles wide) and/or densely populated with enemies (\u22651 per 2 tiles in first 10 tiles) creates an inescapable damage zone before the player can orient, move, or use tools, causing immediate repeated deaths and zero forward progress.",
     "category": "enemy_placement",
     "conditions": [
+      "spawn corridor width \u2264 4 tiles",
+      "enemy density \u2265 1 per 2 tiles in first 10 tiles from spawn",
       "multiple enemies placed in the first horizontal corridor",
       "narrow corridor limits dodge movement",
-      "player starts with minimal combat tools"
+      "player starts with minimal combat tools",
+      "no invincibility frames or safe zone at spawn"
     ],
-    "outcome": "early deaths, frustration, long stall at spawn before first meaningful movement",
-    "confidence": 0.88,
+    "outcome": "immediate repeated deaths, zero forward progress, player quits within 90 seconds",
+    "confidence": 0.97,
     "source_round": 4,
     "evidence_rounds": [
-      4
+      4,
+      14
     ],
-    "seen_count": 1,
-    "applied_count": 8,
-    "successful_applications": 3,
+    "seen_count": 2,
+    "applied_count": 17,
+    "successful_applications": 5,
     "applications": [
       {
         "design_round": 4,
@@ -467,9 +728,73 @@
         "completed": true,
         "deaths": 0,
         "success": true
+      },
+      {
+        "design_round": 12,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 13,
+        "rating": 1,
+        "completed": false,
+        "deaths": 6,
+        "success": false
+      },
+      {
+        "design_round": 14,
+        "rating": 2,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 15,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 16,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 5,
+        "completed": true,
+        "deaths": 3,
+        "success": true
+      },
+      {
+        "design_round": 18,
+        "rating": 4,
+        "completed": true,
+        "deaths": 6,
+        "success": true
+      },
+      {
+        "design_round": 19,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 20
       }
     ],
-    "merged_from": []
+    "merged_from": [
+      {
+        "id": "lesson_0014",
+        "lesson": "A spawn corridor that is both narrow and densely populated with enemies creates an inescapable damage zone before the player can orient, move, or use any tools."
+      }
+    ]
   },
   {
     "id": "lesson_0007",
@@ -486,8 +811,8 @@
       5
     ],
     "seen_count": 1,
-    "applied_count": 7,
-    "successful_applications": 3,
+    "applied_count": 15,
+    "successful_applications": 5,
     "applications": [
       {
         "design_round": 5,
@@ -537,6 +862,58 @@
         "completed": true,
         "deaths": 0,
         "success": true
+      },
+      {
+        "design_round": 12,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 13,
+        "rating": 1,
+        "completed": false,
+        "deaths": 6,
+        "success": false
+      },
+      {
+        "design_round": 14,
+        "rating": 2,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 16,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 5,
+        "completed": true,
+        "deaths": 3,
+        "success": true
+      },
+      {
+        "design_round": 18,
+        "rating": 4,
+        "completed": true,
+        "deaths": 6,
+        "success": true
+      },
+      {
+        "design_round": 19,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 20
       }
     ],
     "merged_from": []
@@ -558,8 +935,8 @@
       6
     ],
     "seen_count": 1,
-    "applied_count": 6,
-    "successful_applications": 2,
+    "applied_count": 15,
+    "successful_applications": 4,
     "applications": [
       {
         "design_round": 6,
@@ -602,6 +979,65 @@
         "completed": true,
         "deaths": 0,
         "success": true
+      },
+      {
+        "design_round": 12,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 13,
+        "rating": 1,
+        "completed": false,
+        "deaths": 6,
+        "success": false
+      },
+      {
+        "design_round": 14,
+        "rating": 2,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 15,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 16,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 5,
+        "completed": true,
+        "deaths": 3,
+        "success": true
+      },
+      {
+        "design_round": 18,
+        "rating": 4,
+        "completed": true,
+        "deaths": 6,
+        "success": true
+      },
+      {
+        "design_round": 19,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 20
       }
     ],
     "merged_from": []
@@ -622,8 +1058,8 @@
       7
     ],
     "seen_count": 1,
-    "applied_count": 5,
-    "successful_applications": 2,
+    "applied_count": 14,
+    "successful_applications": 4,
     "applications": [
       {
         "design_round": 7,
@@ -659,57 +1095,65 @@
         "completed": true,
         "deaths": 0,
         "success": true
-      }
-    ],
-    "merged_from": []
-  },
-  {
-    "id": "lesson_0009",
-    "lesson": "Extended horizontal corridors with sparse verticality and minimal enemy pressure create a 'hallway' feel that players complete but rate as trivial, even with a high fun score, because the challenge never escalates.",
-    "category": "pacing",
-    "conditions": [
-      "long horizontal spans >2000px",
-      "enemy density <0.01 per tile",
-      "vertical variation limited to isolated platforms",
-      "completion time >240s with <5 deaths"
-    ],
-    "outcome": "player completes quickly, backtracks extensively, rates experience as too easy despite length",
-    "confidence": 0.85,
-    "source_round": 8,
-    "evidence_rounds": [
-      8
-    ],
-    "seen_count": 1,
-    "applied_count": 4,
-    "successful_applications": 1,
-    "applications": [
+      },
       {
-        "design_round": 8,
-        "rating": 3,
-        "completed": true,
+        "design_round": 12,
+        "rating": 1,
+        "completed": false,
         "deaths": 0,
         "success": false
       },
       {
-        "design_round": 9,
-        "rating": 3,
+        "design_round": 13,
+        "rating": 1,
         "completed": false,
-        "deaths": 2,
-        "success": false
-      },
-      {
-        "design_round": 10,
-        "rating": 3,
-        "completed": true,
         "deaths": 6,
         "success": false
       },
       {
-        "design_round": 11,
-        "rating": 5,
+        "design_round": 14,
+        "rating": 2,
         "completed": true,
         "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 15,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 16,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 5,
+        "completed": true,
+        "deaths": 3,
         "success": true
+      },
+      {
+        "design_round": 18,
+        "rating": 4,
+        "completed": true,
+        "deaths": 6,
+        "success": true
+      },
+      {
+        "design_round": 19,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 20
       }
     ],
     "merged_from": []
@@ -731,8 +1175,8 @@
       9
     ],
     "seen_count": 1,
-    "applied_count": 3,
-    "successful_applications": 1,
+    "applied_count": 12,
+    "successful_applications": 3,
     "applications": [
       {
         "design_round": 9,
@@ -754,30 +1198,93 @@
         "completed": true,
         "deaths": 0,
         "success": true
+      },
+      {
+        "design_round": 12,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 13,
+        "rating": 1,
+        "completed": false,
+        "deaths": 6,
+        "success": false
+      },
+      {
+        "design_round": 14,
+        "rating": 2,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 15,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 16,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 5,
+        "completed": true,
+        "deaths": 3,
+        "success": true
+      },
+      {
+        "design_round": 18,
+        "rating": 4,
+        "completed": true,
+        "deaths": 6,
+        "success": true
+      },
+      {
+        "design_round": 19,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 20
       }
     ],
     "merged_from": []
   },
   {
     "id": "lesson_0012",
-    "lesson": "Enemy clusters at ladder exits or corridor chokepoints where the player must commit to a climb or jump create unavoidable damage zones that feel unfair rather than challenging.",
+    "lesson": "Enemy clusters at ladder exits or corridor chokepoints where the player must commit to a climb or jump create unavoidable damage zones that feel unfair rather than challenging, while ground-only enemies in tall vertical shafts fail to contest the player's climb, creating a difficulty vacuum that flying or projectile enemies would fill.",
     "category": "enemy_placement",
     "conditions": [
       "enemies positioned at ladder tops or narrow corridor entries",
       "player has no invincibility frames or dodge tools during climb/jump commitment",
       "no safe observation point before engagement",
+      "vertical level with long ladder shafts or climbable structures",
+      "enemies limited to ground-based types",
+      "player has ranged or upward attack capability",
       "enemies positioned at ladder exits or narrow corridor entries"
     ],
-    "outcome": "repeated combat deaths at same locations, high hits taken, player stalls or quits",
+    "outcome": "repeated combat deaths at same locations, high hits taken, player stalls or quits; player ascends unchallenged in vertical sections, combat feels trivial despite imposing architecture",
     "confidence": 0.9,
     "source_round": 11,
     "evidence_rounds": [
       10,
-      11
+      11,
+      12
     ],
-    "seen_count": 2,
-    "applied_count": 2,
-    "successful_applications": 1,
+    "seen_count": 4,
+    "applied_count": 11,
+    "successful_applications": 3,
     "applications": [
       {
         "design_round": 10,
@@ -792,34 +1299,148 @@
         "completed": true,
         "deaths": 0,
         "success": true
+      },
+      {
+        "design_round": 12,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 13,
+        "rating": 1,
+        "completed": false,
+        "deaths": 6,
+        "success": false
+      },
+      {
+        "design_round": 14,
+        "rating": 2,
+        "completed": true,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 15,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 16,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 17,
+        "rating": 5,
+        "completed": true,
+        "deaths": 3,
+        "success": true
+      },
+      {
+        "design_round": 18,
+        "rating": 4,
+        "completed": true,
+        "deaths": 6,
+        "success": true
+      },
+      {
+        "design_round": 19,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 20
       }
     ],
     "merged_from": [
       {
         "id": "lesson_0013",
         "lesson": "Enemy clusters placed at ladder tops or corridor chokepoints where the player must commit to a jump or climb create unavoidable damage zones that feel unfair, not challenging."
+      },
+      {
+        "id": "lesson_0013",
+        "lesson": "In tall, fortress-style levels with extended vertical shafts, ground-only enemies fail to contest the player's climb, creating a difficulty vacuum that flying or projectile enemies would fill."
       }
     ]
   },
   {
     "id": "lesson_0013",
-    "lesson": "In tall, fortress-style levels with extended vertical shafts, ground-only enemies fail to contest the player's climb, creating a difficulty vacuum that flying or projectile enemies would fill.",
+    "lesson": "High enemy variety and fair combat encounters can compensate for unclear critical paths in vertical layouts, maintaining player engagement despite backtracking.",
     "category": "enemy_placement",
     "conditions": [
-      "vertical level with long ladder shafts or climbable structures",
-      "enemies limited to ground-based types",
-      "player has ranged or upward attack capability"
+      "multi-tier vertical layout with multiple similar ladders",
+      "no visual signposting for critical path",
+      "diverse enemy types distributed across tiers",
+      "combat deaths feel fair rather than unavoidable"
     ],
-    "outcome": "player ascends unchallenged, combat feels trivial despite imposing architecture",
-    "confidence": 0.85,
-    "source_round": 12,
+    "outcome": "player explores extensively, backtracks repeatedly, but rates experience highly due to enjoyable combat variety",
+    "confidence": 0.78,
+    "source_round": 18,
     "evidence_rounds": [
-      12
+      18
     ],
-    "seen_count": 2,
-    "applied_count": 0,
+    "seen_count": 1,
+    "applied_count": 3,
+    "successful_applications": 1,
+    "applications": [
+      {
+        "design_round": 18,
+        "rating": 4,
+        "completed": true,
+        "deaths": 6,
+        "success": true
+      },
+      {
+        "design_round": 19,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 20
+      }
+    ],
+    "merged_from": []
+  },
+  {
+    "id": "lesson_0014",
+    "lesson": "When a level's critical path requires defeating a specific enemy or boss to unlock the exit, that requirement must be visibly telegraphed (e.g., locked door, visual tether, UI prompt) at the exit location, otherwise players reach the goal and stall, unaware of the missing condition.",
+    "category": "fairness",
+    "conditions": [
+      "exit is gated by a hidden condition (boss kill, switch, key)",
+      "no visual indicator at the exit shows the requirement",
+      "player can physically reach the exit before condition is met"
+    ],
+    "outcome": "player reaches exit, waits or loops in confusion, fails to understand why progression is blocked, rates experience negatively despite competent play",
+    "confidence": 0.95,
+    "source_round": 19,
+    "evidence_rounds": [
+      19
+    ],
+    "seen_count": 1,
+    "applied_count": 2,
     "successful_applications": 0,
-    "applications": [],
+    "applications": [
+      {
+        "design_round": 19,
+        "rating": 1,
+        "completed": false,
+        "deaths": 0,
+        "success": false
+      },
+      {
+        "design_round": 20
+      }
+    ],
     "merged_from": []
   }
 ]

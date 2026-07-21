@@ -551,6 +551,9 @@ let fps = 0, fpsFrames = 0, fpsWindowStart = performance.now();
 
 // combat state
 const MAX_HP = 3, SHOT_COOLDOWN = 320, SHOT_SPEED = 15, SHOT_G = 0.35, SHOT_LOFT = 1.5;
+// Max straight-line distance a player shot travels before expiring (~50% of the old
+// effective reach, which was ~270px to a ground enemy / unlimited over pits).
+const SHOT_RANGE = 135;
 let roster = [], enemySpawns = [], enemies = [], playerShots = [], enemyShots = [];
 let entityHost = null, entityRootCount = 0;
 let objectCatalog = [], objectBySymbol = {}, collectedObjects = new Set(), objectsCollected = 0;
@@ -874,7 +877,7 @@ function firePlayerShot(dirX, dirY) {
   lastShotAt = now;
   const px = player.x + player.w / 2, py = player.y + player.h / 2;
   const d = Math.hypot(dirX, dirY) || 1;
-  playerShots.push({ x: px, y: py,
+  playerShots.push({ x: px, y: py, x0: px, y0: py,
                      vx: dirX / d * SHOT_SPEED, vy: dirY / d * SHOT_SPEED - SHOT_LOFT });
   sfx.shoot();
 }

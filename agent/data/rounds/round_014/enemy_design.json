@@ -1,0 +1,30 @@
+{
+  "note": "Reduced early-game enemy lethality: lowered Grub contact damage, Wasp contact damage and fire rate, Turret bomb frequency, and Missile Patroller missile turn rate to give the player breathing room in the spawn corridor.",
+  "ops": [
+    [
+      "mul",
+      "grub.contact_damage",
+      0.5
+    ],
+    [
+      "mul",
+      "wasp.contact_damage",
+      0.5
+    ],
+    [
+      "mul",
+      "wasp.attack.cooldown_s",
+      1.5
+    ],
+    [
+      "mul",
+      "turret.attack.cooldown_s",
+      1.5
+    ],
+    [
+      "mul",
+      "missile_patroller.defs.homing_missile.motion.turnRate",
+      0.5
+    ]
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "diagnosis": "The player spawns at (80, 880) inside a fully enclosed 32x32 solid-tile box formed by solid tiles at row 23 (y=736-768) above, row 25 (y=800-832) below, column 1 (x=32-64) left, and column 3 (x=96-128) right. The trace shows the player never moves vertically (y stays 882) and only shifts horizontally \u00b170px over 10 seconds, confirming total immobility. Zero deaths, falls, or progress in 23.6s with a 1/5 rating and explicit complaint about being 'in a box' validate this as a hard lock.",
+  "lessons": [],
+  "fun_score": 1,
+  "save_level": false,
+  "save_reason": ""
+}
